@@ -7,7 +7,7 @@ on:
     types: [opened]
 
 env:
-  DISCORD_WEBHOOK_URL: ${{ secrets.BOTEM_DISCORD_PR_ISSUE_WEBHOOK_URL }}
+  DISCORD_WEBHOOK_URL: ${{ secrets.CLOUDCOST_DISCORD_PR_ISSUE_WEBHOOK_URL }}
 
 jobs:
   # PR 열림 → 리뷰 요청 알림
