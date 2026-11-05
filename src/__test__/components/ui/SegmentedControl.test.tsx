@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { useState } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { SegmentedControl } from "./SegmentedControl";
+import { SegmentedControl } from "@/components/ui/SegmentedControl";
 
 type Period = "day" | "week" | "month";
 

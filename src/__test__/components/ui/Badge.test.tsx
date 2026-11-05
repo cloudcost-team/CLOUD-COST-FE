@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Badge, type BadgeTone } from "./Badge";
+import { Badge, type BadgeTone } from "@/components/ui/Badge";
 
 describe("Badge", () => {
   it("children 글자를 표시하고 tone이 없으면 neutral 색을 쓴다", () => {

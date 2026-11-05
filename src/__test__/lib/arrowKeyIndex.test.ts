@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getArrowKeyIndex } from "./arrowKeyIndex";
+import { getArrowKeyIndex } from "@/lib/arrowKeyIndex";
 
 describe("getArrowKeyIndex", () => {
   it.each([

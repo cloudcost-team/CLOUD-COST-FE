@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { FieldHelpText, type FieldHelpTextTone } from "./FieldHelpText";
+import {
+  FieldHelpText,
+  type FieldHelpTextTone,
+} from "@/components/ui/FieldHelpText";
 
 describe("FieldHelpText", () => {
   it.each<[FieldHelpTextTone, string]>([

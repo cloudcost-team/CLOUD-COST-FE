@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Input } from "./Input";
+import { Input } from "@/components/ui/Input";
 
 describe("Input", () => {
   it("라벨로 input을 찾을 수 있고 입력하면 onChange가 호출된다", () => {
@@ -79,6 +79,19 @@ describe("Input", () => {
     expect(screen.getByText("3/10")).toBeInTheDocument();
   });
 
+  it("비제어 입력은 defaultValue와 사용자 입력을 글자 수에 반영한다", () => {
+    render(
+      <Input label="계정 이름" defaultValue="abc" maxLength={10} showCounter />,
+    );
+    const input = screen.getByLabelText("계정 이름");
+
+    expect(screen.getByText("3/10")).toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: "hello" } });
+
+    expect(screen.getByText("5/10")).toBeInTheDocument();
+  });
+
   describe("onClear", () => {
     it("값이 있으면 지우기 버튼을 누를 때 onClear가 호출된다", () => {
       const onClear = vi.fn();
@@ -125,6 +138,26 @@ describe("Input", () => {
       expect(
         screen.queryByRole("button", { name: "입력값 지우기" }),
       ).not.toBeInTheDocument();
+    });
+
+    it("비제어 입력을 지우면 값과 카운터를 비우고 input에 포커스한다", () => {
+      const onClear = vi.fn();
+      render(
+        <Input
+          label="계정 이름"
+          defaultValue="abc"
+          maxLength={10}
+          showCounter
+          onClear={onClear}
+        />,
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: "입력값 지우기" }));
+
+      expect(screen.getByLabelText("계정 이름")).toHaveValue("");
+      expect(screen.getByLabelText("계정 이름")).toHaveFocus();
+      expect(screen.getByText("0/10")).toBeInTheDocument();
+      expect(onClear).toHaveBeenCalledTimes(1);
     });
   });
 

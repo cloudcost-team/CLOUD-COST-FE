@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ErrorReason } from "./ErrorReason";
+import { ErrorReason } from "@/components/ui/ErrorReason";
 
 const message = "AccessDenied: cloudwatch:GetMetricStatistics 권한이 없습니다.";
 

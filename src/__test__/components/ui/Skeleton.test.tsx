@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Skeleton, type SkeletonShape } from "./Skeleton";
+import { Skeleton, type SkeletonShape } from "@/components/ui/Skeleton";
 
 describe("Skeleton", () => {
   it.each<[SkeletonShape, string[]]>([

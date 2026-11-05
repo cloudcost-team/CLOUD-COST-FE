@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Icon } from "./Icon";
+import { Icon } from "@/components/ui/Icon";
 
 describe("Icon", () => {
   it("name에 맞는 개수의 path를 그린다 (grid는 4개)", () => {

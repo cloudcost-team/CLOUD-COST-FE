@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { TextLink } from "./TextLink";
+import { TextLink } from "@/components/ui/TextLink";
 
 const FOLLOWING = Node.DOCUMENT_POSITION_FOLLOWING;
 

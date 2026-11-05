@@ -1,6 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Button, type ButtonSize, type ButtonVariant } from "./Button";
+import {
+  Button,
+  type ButtonSize,
+  type ButtonVariant,
+} from "@/components/ui/Button";
 
 describe("Button", () => {
   it("누르면 onClick이 호출된다", () => {

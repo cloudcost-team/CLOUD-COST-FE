@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Card } from "./Card";
+import { Card } from "@/components/ui/Card";
 
 describe("Card", () => {
   it("title을 주면 제목 heading이 있고 같은 이름의 카드 구역이 찾힌다", () => {

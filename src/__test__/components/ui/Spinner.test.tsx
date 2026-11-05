@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Spinner } from "./Spinner";
+import { Spinner } from "@/components/ui/Spinner";
 
 describe("Spinner", () => {
   it("size가 없으면 medium(size-6)이고 회전하며 스크린 리더에서 숨겨진다", () => {

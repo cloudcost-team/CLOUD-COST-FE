@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { EmptyState } from "./EmptyState";
-import { iconPaths } from "./iconPaths";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { iconPaths } from "@/components/ui/iconPaths";
 
 describe("EmptyState", () => {
   it("title과 description을 표시하고 기본 아이콘은 file-text다", () => {

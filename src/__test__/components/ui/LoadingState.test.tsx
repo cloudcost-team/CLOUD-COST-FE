@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { LoadingState } from "./LoadingState";
+import { LoadingState } from "@/components/ui/LoadingState";
 
 describe("LoadingState", () => {
   it("status 안에 title과 description, 회전하는 스피너를 보여 준다", () => {

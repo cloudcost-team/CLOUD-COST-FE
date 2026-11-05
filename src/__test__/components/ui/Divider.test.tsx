@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { Divider } from "./Divider";
+import { Divider } from "@/components/ui/Divider";
 
 describe("Divider", () => {
   it("label이 없으면 separator 하나만 있고 문구는 없다", () => {

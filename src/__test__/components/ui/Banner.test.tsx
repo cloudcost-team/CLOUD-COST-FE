@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Banner, type BannerTone } from "./Banner";
-import { iconPaths, type IconName } from "./iconPaths";
+import { Banner, type BannerTone } from "@/components/ui/Banner";
+import { iconPaths, type IconName } from "@/components/ui/iconPaths";
 
 describe("Banner", () => {
   it("title과 description을 표시한다", () => {

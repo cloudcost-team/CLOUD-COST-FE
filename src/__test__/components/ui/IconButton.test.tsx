@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { IconButton } from "./IconButton";
+import { IconButton } from "@/components/ui/IconButton";
 
 describe("IconButton", () => {
   it("aria-label이 버튼의 접근 이름이 된다", () => {

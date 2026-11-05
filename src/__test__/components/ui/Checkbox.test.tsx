@@ -1,7 +1,8 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { createRef } from "react";
 import { describe, expect, it, vi } from "vitest";
-import { Checkbox } from "./Checkbox";
-import { iconPaths } from "./iconPaths";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { iconPaths } from "@/components/ui/iconPaths";
 
 describe("Checkbox", () => {
   it("라벨을 누르면 체크가 토글되고 onChange가 호출된다", () => {
@@ -60,5 +61,13 @@ describe("Checkbox", () => {
     expect(
       screen.getByRole("checkbox", { name: "행 선택" }),
     ).toBeInTheDocument();
+  });
+
+  it("외부 ref와 indeterminate 상태를 함께 유지한다", () => {
+    const ref = createRef<HTMLInputElement>();
+    render(<Checkbox ref={ref} label="전체 선택" indeterminate />);
+
+    expect(ref.current).toBe(screen.getByRole("checkbox"));
+    expect(ref.current?.indeterminate).toBe(true);
   });
 });
