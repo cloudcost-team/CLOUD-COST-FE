@@ -1,6 +1,11 @@
 "use client";
 
-import type { ComponentProps } from "react";
+import {
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  type ComponentProps,
+} from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "./Icon";
 
@@ -13,9 +18,18 @@ export function Checkbox({
   label,
   indeterminate = false,
   disabled,
+  ref,
   className,
   ...rest
 }: CheckboxProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useImperativeHandle(ref, () => inputRef.current as HTMLInputElement, []);
+
+  useLayoutEffect(() => {
+    if (inputRef.current) inputRef.current.indeterminate = indeterminate;
+  }, [indeterminate]);
+
   return (
     <label
       className={cn(
@@ -27,9 +41,7 @@ export function Checkbox({
       <span className="relative inline-flex size-5 shrink-0">
         <input
           type="checkbox"
-          ref={(element) => {
-            if (element) element.indeterminate = indeterminate;
-          }}
+          ref={inputRef}
           disabled={disabled}
           className={cn(
             "peer size-5 cursor-[inherit] appearance-none rounded-small border-[1.5px] border-border-strong bg-background-default",

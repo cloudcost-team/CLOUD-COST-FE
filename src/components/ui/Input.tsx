@@ -1,6 +1,12 @@
 "use client";
 
-import { useId, type ComponentProps } from "react";
+import {
+  useCallback,
+  useId,
+  useRef,
+  useState,
+  type ComponentProps,
+} from "react";
 import { cn } from "@/lib/cn";
 import { FieldHelpText } from "./FieldHelpText";
 import { Icon } from "./Icon";
@@ -28,17 +34,35 @@ export function Input({
   disabled,
   maxLength,
   value,
+  defaultValue,
+  onChange,
+  ref: forwardedRef,
   className,
   ...rest
 }: InputProps) {
   const generatedId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uncontrolledValue, setUncontrolledValue] = useState(() =>
+    String(defaultValue ?? ""),
+  );
+  const isControlled = value !== undefined;
   const inputId = id ?? generatedId;
   const helpId = `${inputId}-help`;
   const hasError = Boolean(error);
   const helpMessage = error ?? helperText;
-  const length = String(value ?? "").length;
+  const length = isControlled
+    ? String(value ?? "").length
+    : uncontrolledValue.length;
   const counterVisible = showCounter && maxLength !== undefined;
   const hasHelpRow = Boolean(helpMessage) || counterVisible;
+  const setInputRef = useCallback(
+    (element: HTMLInputElement | null) => {
+      inputRef.current = element;
+      if (typeof forwardedRef === "function") forwardedRef(element);
+      else if (forwardedRef) forwardedRef.current = element;
+    },
+    [forwardedRef],
+  );
 
   return (
     <div
@@ -75,13 +99,20 @@ export function Input({
             </span>
           )}
           <input
+            ref={setInputRef}
             id={inputId}
             value={value}
+            defaultValue={isControlled ? undefined : defaultValue}
             required={required}
             disabled={disabled}
             maxLength={maxLength}
             aria-invalid={hasError || undefined}
             aria-describedby={helpMessage ? helpId : undefined}
+            onChange={(event) => {
+              if (!isControlled)
+                setUncontrolledValue(event.currentTarget.value);
+              onChange?.(event);
+            }}
             className="min-w-0 flex-1 bg-transparent text-body-medium text-text-strong caret-fill-brand outline-none placeholder:text-text-quaternary disabled:cursor-not-allowed"
             {...rest}
           />
@@ -89,7 +120,14 @@ export function Input({
             <button
               type="button"
               aria-label="입력값 지우기"
-              onClick={onClear}
+              onClick={() => {
+                if (!isControlled) {
+                  if (inputRef.current) inputRef.current.value = "";
+                  setUncontrolledValue("");
+                }
+                onClear();
+                inputRef.current?.focus();
+              }}
               className="hidden size-[18px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-fill-neutral-medium text-icon-on-fill group-focus-within:flex"
             >
               <Icon name="close" className="size-3" />
