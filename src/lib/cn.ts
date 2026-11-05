@@ -73,6 +73,7 @@ const twMerge = extendTailwindMerge({
       spacing,
       radius,
       shadow: shadows,
+      animate: ["dot-pulse"],
     },
   },
 });

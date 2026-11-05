@@ -15,7 +15,7 @@
     var(--font-pretendard), -apple-system, BlinkMacSystemFont, system-ui,
     "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
 
-  /* Base — 원본 색. 화면에서 직접 쓰지 않는다 (500이 Main) */
+  /* Base (500이 Main) */
   --color-gray-0: #ffffff;
   --color-gray-50: #f9fafc;
   --color-gray-100: #f0f2f5;
@@ -94,6 +94,7 @@
   --color-fill-default: var(--color-gray-0);
   --color-fill-neutral: var(--color-gray-900);
   --color-fill-neutral-weak: var(--color-gray-100);
+  --color-fill-neutral-medium: var(--color-gray-300);
   --color-fill-brand: var(--color-indigo-500);
   --color-fill-brand-strong: var(--color-indigo-600);
   --color-fill-brand-weak: var(--color-indigo-50);
@@ -277,7 +278,7 @@
   --spacing-margin-screen-wide: 24px;
   --spacing-margin-section: 32px;
 
-  /* Radius (none·full은 Tailwind 기본 rounded-none·rounded-full) */
+  /* Radius */
   --radius-xsmall: 4px;
   --radius-small: 6px;
   --radius-medium: 8px;
@@ -290,9 +291,24 @@
   --shadow-weak: 0 1px 3px 0 rgb(32 33 36 / 0.05);
   --shadow-default: 0 4px 12px 0 rgb(32 33 36 / 0.08);
   --shadow-strong: 0 12px 32px 0 rgb(32 33 36 / 0.12);
+
+  /* Motion */
+  --animate-dot-pulse: dot-pulse 1.2s ease-in-out infinite;
+
+  @keyframes dot-pulse {
+    0%,
+    100% {
+      opacity: 0.3;
+      transform: scale(0.5);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+  }
 }
 
-/* Brand/Gradient — 로고·앱 아이콘·히어로 전용 */
+/* Brand & Gradient */
 @utility bg-brand-gradient {
   background-image: linear-gradient(
     135deg,
