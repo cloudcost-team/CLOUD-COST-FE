@@ -1,0 +1,312 @@
+@import "tailwindcss";
+
+/*
+ * 디자인 토큰 — Figma [클코] UI/UX 파일 Guide 프레임 (Base 33:2 · Color Token 34:2 · Typography 34:573 · Spacing 35:2)
+ * 이름은 Figma 토큰 이름을 그대로 따른다. 컴포넌트에서는 Base 팔레트보다 Color Token(text·fill·border·icon·background)을 쓴다.
+ * Tailwind 기본 색·글자 크기·radius·그림자는 지우고 이 토큰만 쓴다.
+ */
+@theme {
+  --color-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+
+  --font-sans:
+    var(--font-pretendard), -apple-system, BlinkMacSystemFont, system-ui,
+    "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+
+  /* Base — 원본 색. 화면에서 직접 쓰지 않는다 (500이 Main) */
+  --color-gray-0: #ffffff;
+  --color-gray-50: #f9fafc;
+  --color-gray-100: #f0f2f5;
+  --color-gray-200: #e6e8eb;
+  --color-gray-300: #dbdee1;
+  --color-gray-400: #b4b8bc;
+  --color-gray-500: #95999c;
+  --color-gray-600: #71767a;
+  --color-gray-700: #4e5257;
+  --color-gray-800: #333639;
+  --color-gray-900: #202124;
+  --color-indigo-50: #eef0fe;
+  --color-indigo-100: #e0e3fd;
+  --color-indigo-200: #c6cbfb;
+  --color-indigo-300: #a3aaf7;
+  --color-indigo-400: #7c82f0;
+  --color-indigo-500: #5a60ea;
+  --color-indigo-600: #3e43cc;
+  --color-indigo-700: #3236a8;
+  --color-indigo-800: #292c84;
+  --color-indigo-900: #1f2163;
+  --color-mint-50: #ecfcf8;
+  --color-mint-100: #d2f8ee;
+  --color-mint-200: #a9f2e0;
+  --color-mint-300: #7af0d6;
+  --color-mint-400: #4adbc0;
+  --color-mint-500: #22c3a8;
+  --color-mint-600: #12a08c;
+  --color-mint-700: #0f7f70;
+  --color-mint-800: #0f655a;
+  --color-mint-900: #0d4f47;
+  --color-sky-50: #eef8fd;
+  --color-sky-100: #e1f3fb;
+  --color-sky-200: #b9e3f5;
+  --color-sky-300: #76c8e8;
+  --color-sky-400: #52b7e0;
+  --color-sky-500: #3aa6d6;
+  --color-sky-600: #2a8bba;
+  --color-sky-700: #23719a;
+  --color-sky-800: #1d5b7c;
+  --color-sky-900: #174862;
+  --color-amber-50: #fff7e6;
+  --color-amber-100: #ffebc2;
+  --color-amber-200: #ffda8f;
+  --color-amber-300: #fcc55a;
+  --color-amber-400: #f8b032;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+  --color-amber-800: #92400e;
+  --color-amber-900: #78350f;
+  --color-red-50: #fff0f1;
+  --color-red-100: #ffdde0;
+  --color-red-200: #ffbec4;
+  --color-red-300: #fb939c;
+  --color-red-400: #f66570;
+  --color-red-500: #f04452;
+  --color-red-600: #d92d3b;
+  --color-red-700: #b21f2c;
+  --color-red-800: #921a25;
+  --color-red-900: #77161f;
+
+  /* Color Token — Text */
+  --color-text-strong: var(--color-gray-900);
+  --color-text-primary: var(--color-gray-800);
+  --color-text-secondary: var(--color-gray-700);
+  --color-text-tertiary: var(--color-gray-600);
+  --color-text-quaternary: var(--color-gray-500);
+  --color-text-on-fill: var(--color-gray-0);
+  --color-text-brand: var(--color-indigo-600);
+  --color-text-danger: var(--color-red-700);
+  --color-text-success: var(--color-mint-700);
+  --color-text-warning: var(--color-amber-700);
+
+  /* Color Token — Fill */
+  --color-fill-default: var(--color-gray-0);
+  --color-fill-neutral: var(--color-gray-900);
+  --color-fill-neutral-weak: var(--color-gray-100);
+  --color-fill-brand: var(--color-indigo-500);
+  --color-fill-brand-strong: var(--color-indigo-600);
+  --color-fill-brand-weak: var(--color-indigo-50);
+  --color-fill-mint: var(--color-mint-500);
+  --color-fill-mint-weak: var(--color-mint-50);
+  --color-fill-sky: var(--color-sky-500);
+  --color-fill-sky-weak: var(--color-sky-50);
+  --color-fill-warning: var(--color-amber-500);
+  --color-fill-warning-weak: var(--color-amber-50);
+  --color-fill-danger: var(--color-red-600);
+  --color-fill-danger-weak: var(--color-red-50);
+
+  /* Color Token — Background */
+  --color-background-default: var(--color-gray-0);
+  --color-background-floated: var(--color-gray-0);
+  --color-background-lower: var(--color-gray-50);
+  --color-background-dim: rgb(32 33 36 / 0.4);
+
+  /* Color Token — Border */
+  --color-border-weak: var(--color-gray-100);
+  --color-border-default: var(--color-gray-200);
+  --color-border-strong: var(--color-gray-500);
+  --color-border-brand: var(--color-indigo-500);
+  --color-border-danger: var(--color-red-500);
+  --color-border-success: var(--color-mint-600);
+
+  /* Color Token — Icon */
+  --color-icon-default: var(--color-gray-800);
+  --color-icon-primary: var(--color-gray-600);
+  --color-icon-secondary: var(--color-gray-400);
+  --color-icon-tertiary: var(--color-gray-300);
+  --color-icon-on-fill: var(--color-gray-0);
+  --color-icon-brand: var(--color-indigo-500);
+  --color-icon-danger: var(--color-red-600);
+  --color-icon-success: var(--color-mint-600);
+  --color-icon-warning: var(--color-amber-600);
+
+  /* Typography — Pretendard, letter-spacing -2% */
+  --text-display-large: 2.25rem;
+  --text-display-large--line-height: 1.35;
+  --text-display-large--letter-spacing: -0.02em;
+  --text-display-large--font-weight: 700;
+  --text-display-medium: 2rem;
+  --text-display-medium--line-height: 1.35;
+  --text-display-medium--letter-spacing: -0.02em;
+  --text-display-medium--font-weight: 700;
+  --text-display-small: 1.75rem;
+  --text-display-small--line-height: 1.35;
+  --text-display-small--letter-spacing: -0.02em;
+  --text-display-small--font-weight: 700;
+  --text-title-large: 1.5rem;
+  --text-title-large--line-height: 1.35;
+  --text-title-large--letter-spacing: -0.02em;
+  --text-title-large--font-weight: 900;
+  --text-title-medium: 1.375rem;
+  --text-title-medium--line-height: 1.35;
+  --text-title-medium--letter-spacing: -0.02em;
+  --text-title-medium--font-weight: 700;
+  --text-title-small: 1.25rem;
+  --text-title-small--line-height: 1.35;
+  --text-title-small--letter-spacing: -0.02em;
+  --text-title-small--font-weight: 700;
+  --text-title-small-weak: 1.25rem;
+  --text-title-small-weak--line-height: 1.35;
+  --text-title-small-weak--letter-spacing: -0.02em;
+  --text-title-small-weak--font-weight: 600;
+  --text-title-small-xweak: 1.25rem;
+  --text-title-small-xweak--line-height: 1.35;
+  --text-title-small-xweak--letter-spacing: -0.02em;
+  --text-title-small-xweak--font-weight: 500;
+  --text-title-xsmall: 1rem;
+  --text-title-xsmall--line-height: 1.35;
+  --text-title-xsmall--letter-spacing: -0.02em;
+  --text-title-xsmall--font-weight: 700;
+  --text-title-xsmall-weak: 1rem;
+  --text-title-xsmall-weak--line-height: 1.35;
+  --text-title-xsmall-weak--letter-spacing: -0.02em;
+  --text-title-xsmall-weak--font-weight: 600;
+  --text-title-xsmall-xweak: 1rem;
+  --text-title-xsmall-xweak--line-height: 1.35;
+  --text-title-xsmall-xweak--letter-spacing: -0.02em;
+  --text-title-xsmall-xweak--font-weight: 500;
+  --text-body-large: 1.125rem;
+  --text-body-large--line-height: 1.5;
+  --text-body-large--letter-spacing: -0.02em;
+  --text-body-large--font-weight: 400;
+  --text-body-medium: 1rem;
+  --text-body-medium--line-height: 1.5;
+  --text-body-medium--letter-spacing: -0.02em;
+  --text-body-medium--font-weight: 400;
+  --text-body-medium-strong: 1rem;
+  --text-body-medium-strong--line-height: 1.5;
+  --text-body-medium-strong--letter-spacing: -0.02em;
+  --text-body-medium-strong--font-weight: 500;
+  --text-body-xsmall: 0.875rem;
+  --text-body-xsmall--line-height: 1.5;
+  --text-body-xsmall--letter-spacing: -0.02em;
+  --text-body-xsmall--font-weight: 400;
+  --text-subtext-large: 1rem;
+  --text-subtext-large--line-height: 1.35;
+  --text-subtext-large--letter-spacing: -0.02em;
+  --text-subtext-large--font-weight: 400;
+  --text-subtext-medium: 0.875rem;
+  --text-subtext-medium--line-height: 1.35;
+  --text-subtext-medium--letter-spacing: -0.02em;
+  --text-subtext-medium--font-weight: 400;
+  --text-subtext-medium-strong: 0.875rem;
+  --text-subtext-medium-strong--line-height: 1.35;
+  --text-subtext-medium-strong--letter-spacing: -0.02em;
+  --text-subtext-medium-strong--font-weight: 500;
+  --text-subtext-small: 0.75rem;
+  --text-subtext-small--line-height: 1.35;
+  --text-subtext-small--letter-spacing: -0.02em;
+  --text-subtext-small--font-weight: 400;
+  --text-label-large: 1.25rem;
+  --text-label-large--line-height: 1.252;
+  --text-label-large--letter-spacing: -0.02em;
+  --text-label-large--font-weight: 600;
+  --text-label-medium: 1.125rem;
+  --text-label-medium--line-height: 1.252;
+  --text-label-medium--letter-spacing: -0.02em;
+  --text-label-medium--font-weight: 600;
+  --text-label-medium-strong: 1.125rem;
+  --text-label-medium-strong--line-height: 1.252;
+  --text-label-medium-strong--letter-spacing: -0.02em;
+  --text-label-medium-strong--font-weight: 700;
+  --text-label-medium-weak: 1.125rem;
+  --text-label-medium-weak--line-height: 1.252;
+  --text-label-medium-weak--letter-spacing: -0.02em;
+  --text-label-medium-weak--font-weight: 500;
+  --text-label-small: 1rem;
+  --text-label-small--line-height: 1.252;
+  --text-label-small--letter-spacing: -0.02em;
+  --text-label-small--font-weight: 600;
+  --text-label-small-strong: 1rem;
+  --text-label-small-strong--line-height: 1.252;
+  --text-label-small-strong--letter-spacing: -0.02em;
+  --text-label-small-strong--font-weight: 700;
+  --text-label-small-weak: 1rem;
+  --text-label-small-weak--line-height: 1.252;
+  --text-label-small-weak--letter-spacing: -0.02em;
+  --text-label-small-weak--font-weight: 500;
+  --text-label-xsmall: 0.875rem;
+  --text-label-xsmall--line-height: 1.252;
+  --text-label-xsmall--letter-spacing: -0.02em;
+  --text-label-xsmall--font-weight: 600;
+  --text-label-xsmall-weak: 0.875rem;
+  --text-label-xsmall-weak--line-height: 1.252;
+  --text-label-xsmall-weak--letter-spacing: -0.02em;
+  --text-label-xsmall-weak--font-weight: 500;
+
+  /* Spacing — Padding */
+  --spacing-padding-xxsmall: 4px;
+  --spacing-padding-xsmall: 8px;
+  --spacing-padding-small: 12px;
+  --spacing-padding-medium: 16px;
+  --spacing-padding-large: 20px;
+  --spacing-padding-xlarge: 24px;
+  --spacing-padding-xxlarge: 32px;
+
+  /* Spacing — Gap */
+  --spacing-gap-xxsmall: 2px;
+  --spacing-gap-xsmall: 4px;
+  --spacing-gap-small: 8px;
+  --spacing-gap-medium: 12px;
+  --spacing-gap-large: 16px;
+  --spacing-gap-xlarge: 24px;
+
+  /* Spacing — Spacing */
+  --spacing-spacing-xsmall: 8px;
+  --spacing-spacing-small: 16px;
+  --spacing-spacing-medium: 24px;
+  --spacing-spacing-large: 32px;
+  --spacing-spacing-xlarge: 40px;
+  --spacing-spacing-xxlarge: 48px;
+  --spacing-spacing-xxxlarge: 64px;
+
+  /* Spacing — Margin */
+  --spacing-margin-screen-compact: 16px;
+  --spacing-margin-screen: 20px;
+  --spacing-margin-screen-wide: 24px;
+  --spacing-margin-section: 32px;
+
+  /* Radius (none·full은 Tailwind 기본 rounded-none·rounded-full) */
+  --radius-xsmall: 4px;
+  --radius-small: 6px;
+  --radius-medium: 8px;
+  --radius-large: 12px;
+  --radius-xlarge: 16px;
+  --radius-xxlarge: 20px;
+  --radius-xxxlarge: 24px;
+
+  /* Shadow */
+  --shadow-weak: 0 1px 3px 0 rgb(32 33 36 / 0.05);
+  --shadow-default: 0 4px 12px 0 rgb(32 33 36 / 0.08);
+  --shadow-strong: 0 12px 32px 0 rgb(32 33 36 / 0.12);
+}
+
+/* Brand/Gradient — 로고·앱 아이콘·히어로 전용 */
+@utility bg-brand-gradient {
+  background-image: linear-gradient(
+    135deg,
+    var(--color-mint-300),
+    var(--color-sky-300),
+    var(--color-indigo-400),
+    var(--color-indigo-600)
+  );
+}
+
+@layer base {
+  body {
+    background-color: var(--color-background-default);
+    color: var(--color-text-primary);
+    letter-spacing: -0.02em;
+  }
+}
