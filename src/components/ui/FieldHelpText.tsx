@@ -2,8 +2,9 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "./Icon";
 import type { IconName } from "./iconPaths";
+import { Spinner } from "./Spinner";
 
-export type FieldHelpTextTone = "default" | "error" | "success";
+export type FieldHelpTextTone = "default" | "error" | "success" | "loading";
 
 type FieldHelpTextProps = {
   tone?: FieldHelpTextTone;
@@ -15,7 +16,7 @@ type FieldHelpTextProps = {
 
 const toneClasses: Record<
   FieldHelpTextTone,
-  { icon: IconName; iconColor: string; text: string }
+  { icon: IconName | null; iconColor: string; text: string }
 > = {
   default: {
     icon: "info",
@@ -31,6 +32,11 @@ const toneClasses: Record<
     icon: "check-circle",
     iconColor: "text-icon-success",
     text: "text-text-success",
+  },
+  loading: {
+    icon: null,
+    iconColor: "",
+    text: "text-text-tertiary",
   },
 };
 
@@ -51,9 +57,12 @@ export function FieldHelpText({
         className,
       )}
     >
-      {showIcon && (
-        <Icon name={styles.icon} size={16} className={styles.iconColor} />
-      )}
+      {showIcon &&
+        (styles.icon ? (
+          <Icon name={styles.icon} size={16} className={styles.iconColor} />
+        ) : (
+          <Spinner className="size-4" />
+        ))}
       <span className="min-w-0">{children}</span>
     </p>
   );
