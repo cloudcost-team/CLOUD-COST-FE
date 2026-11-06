@@ -1,9 +1,22 @@
-import { EmptyState } from "@/components/ui/EmptyState";
+import { DashboardScreen } from "@/components/dashboard/DashboardScreen";
+import {
+  costsSummarySample,
+  dailyCostsSample,
+  dashboardKrwSample,
+  dashboardUsdSample,
+  instancesSample,
+  monthlyCostsSample,
+} from "@/components/dashboard/dashboardSample";
 
 export default function DashboardPage() {
   return (
-    <div className="flex min-h-96 items-center justify-center">
-      <EmptyState title="대시보드를 준비하고 있어요" />
-    </div>
+    <DashboardScreen
+      krw={dashboardKrwSample}
+      usd={dashboardUsdSample}
+      daily={dailyCostsSample.days}
+      monthly={monthlyCostsSample}
+      costs={costsSummarySample}
+      instances={instancesSample}
+    />
   );
 }
