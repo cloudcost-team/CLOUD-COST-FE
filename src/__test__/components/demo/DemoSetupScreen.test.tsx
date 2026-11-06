@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { DemoSetupScreen } from "@/components/layout/DemoSetupScreen";
+import { DemoSetupScreen } from "@/components/demo/DemoSetupScreen";
 
 const push = vi.fn();
 const replace = vi.fn();

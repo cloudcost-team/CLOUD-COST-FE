@@ -16,7 +16,7 @@ import { ApiError } from "@/api/client";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ErrorReason } from "@/components/ui/ErrorReason";
-import { useAppShell } from "./AppShell";
+import { useDemoShell } from "./DemoShell";
 
 function readSetup(): DemoSetupRequest | null {
   const raw = sessionStorage.getItem("cloudcost.demoSetup");
@@ -149,7 +149,7 @@ function formatMoney(value: number | null, currency: DemoCurrency) {
 
 export function DemoDashboardScreen() {
   const router = useRouter();
-  const { currency } = useAppShell();
+  const { currency } = useDemoShell();
   const setupResult = useQuery({
     queryKey: ["demo", "stored-setup"],
     queryFn: readSetup,

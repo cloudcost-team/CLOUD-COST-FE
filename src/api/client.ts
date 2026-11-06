@@ -1,3 +1,5 @@
+import { getLoginSession } from "@/lib/authSession";
+
 type ApiErrorBody = {
   error?: {
     code?: string;
@@ -30,10 +32,12 @@ export async function apiRequest<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
+  const accessToken = getLoginSession()?.accessToken;
   const response = await fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
       ...init?.headers,
     },
   });
@@ -47,5 +51,6 @@ export async function apiRequest<T>(
     );
   }
 
+  if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }

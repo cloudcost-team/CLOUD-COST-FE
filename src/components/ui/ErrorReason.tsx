@@ -2,6 +2,7 @@ import { cn } from "@/lib/cn";
 import { Button } from "./Button";
 
 type ErrorReasonProps = {
+  title?: string;
   message: string;
   guide?: string;
   action?: { label: string; onClick: () => void; loading?: boolean };
@@ -9,6 +10,7 @@ type ErrorReasonProps = {
 };
 
 export function ErrorReason({
+  title = "오류 원인",
   message,
   guide,
   action,
@@ -21,7 +23,7 @@ export function ErrorReason({
         className,
       )}
     >
-      <p className="text-label-xsmall text-text-danger">오류 원인</p>
+      <p className="text-label-xsmall text-text-danger">{title}</p>
       <p className="text-subtext-large break-words text-text-strong">
         {message}
       </p>

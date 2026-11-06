@@ -1,4 +1,4 @@
-import { DemoLoginScreen } from "@/components/layout/DemoLoginScreen";
+import { DemoLoginScreen } from "@/components/demo/DemoLoginScreen";
 
 export default function DemoLoginPage() {
   return <DemoLoginScreen />;

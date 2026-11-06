@@ -22,6 +22,7 @@ export type DropdownMenuItem =
       badge?: ReactNode;
       selected?: boolean;
       tone?: "default" | "danger";
+      disabled?: boolean;
       onSelect: () => void;
     }
   | { type: "separator"; key: string };
@@ -39,18 +40,21 @@ type DropdownMenuProps = {
   onOpenChange: (open: boolean) => void;
   trigger: (props: DropdownMenuTriggerProps) => ReactNode;
   items: DropdownMenuItem[];
+  header?: ReactNode;
   "aria-label": string;
   align?: "start" | "end";
   className?: string;
 };
 
-const itemSelector = '[role="menuitem"], [role="menuitemradio"]';
+const itemSelector =
+  '[role="menuitem"]:not(:disabled), [role="menuitemradio"]:not(:disabled)';
 
 export function DropdownMenu({
   open,
   onOpenChange,
   trigger,
   items,
+  header,
   "aria-label": ariaLabel,
   align = "start",
   className,
@@ -124,6 +128,11 @@ export function DropdownMenu({
             className,
           )}
         >
+          {header && (
+            <div className="-mx-padding-xsmall -mt-padding-xsmall mb-gap-xxsmall border-b border-border-weak p-padding-medium">
+              {header}
+            </div>
+          )}
           {items.map((item) => {
             if (item.type === "separator") {
               return (
@@ -141,15 +150,16 @@ export function DropdownMenu({
                 role={singleSelect ? "menuitemradio" : "menuitem"}
                 aria-checked={singleSelect ? Boolean(item.selected) : undefined}
                 tabIndex={-1}
+                disabled={item.disabled}
                 onClick={() => {
                   item.onSelect();
                   close(true);
                 }}
                 className={cn(
-                  "flex w-full min-w-70 cursor-pointer items-center gap-gap-small rounded-medium px-padding-small py-padding-xsmall text-left outline-none",
+                  "flex w-full min-w-70 cursor-pointer items-center gap-gap-small rounded-medium px-padding-small py-padding-xsmall text-left outline-none disabled:cursor-not-allowed",
                   item.selected
                     ? "bg-fill-brand-weak"
-                    : "hover:bg-background-lower focus-visible:bg-background-lower",
+                    : "hover:bg-background-lower focus-visible:bg-background-lower disabled:hover:bg-transparent",
                 )}
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-gap-xxsmall">
@@ -158,9 +168,11 @@ export function DropdownMenu({
                       "text-label-xsmall-weak",
                       item.selected
                         ? "text-text-brand"
-                        : item.tone === "danger"
-                          ? "text-text-danger"
-                          : "text-text-strong",
+                        : item.disabled
+                          ? "text-text-quaternary"
+                          : item.tone === "danger"
+                            ? "text-text-danger"
+                            : "text-text-strong",
                     )}
                   >
                     {item.label}

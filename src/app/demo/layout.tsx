@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { AppShell } from "@/components/layout/AppShell";
+import { DemoShell } from "@/components/demo/DemoShell";
 
 export default function DemoLayout({ children }: { children: ReactNode }) {
-  return <AppShell type="demo">{children}</AppShell>;
+  return <DemoShell>{children}</DemoShell>;
 }
