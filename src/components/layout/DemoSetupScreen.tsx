@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
   getDemoCatalog,
@@ -88,6 +88,7 @@ export function DemoSetupScreen() {
   const [from, setFrom] = useState(dates.from);
   const [to, setTo] = useState(dates.to);
   const [servers, setServers] = useState(initialServers);
+  const queryClient = useQueryClient();
   const catalog = useQuery({
     queryKey: ["demo", "catalog"],
     queryFn: getDemoCatalog,
@@ -120,6 +121,7 @@ export function DemoSetupScreen() {
       })),
     };
     sessionStorage.setItem("cloudcost.demoSetup", JSON.stringify(request));
+    queryClient.setQueryData(["demo", "stored-setup"], request);
     router.push("/demo/dashboard");
   }
 

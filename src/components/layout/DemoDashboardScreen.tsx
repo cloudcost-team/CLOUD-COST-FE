@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import {
   getDemoCosts,
@@ -84,7 +85,7 @@ function createFallbackCosts(
       };
     });
     days.push({
-      date: date.toISOString().slice(0, 10),
+      date: format(date, "yyyy-MM-dd"),
       usageHours: instances.reduce((sum, row) => sum + row.usageHours, 0),
       estimatedCost: round(
         instances.reduce((sum, row) => sum + (row.estimatedCost ?? 0), 0),

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import type { DemoSetupRequest } from "@/api/demo";
 import { Badge } from "@/components/ui/Badge";
@@ -51,6 +52,7 @@ function createDefaultDemoSetup(): DemoSetupRequest {
 
 export function DemoLoginScreen() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string>();
@@ -68,10 +70,9 @@ export function DemoLoginScreen() {
       "cloudcost.demoAccount",
       JSON.stringify({ mode: "demo", username: DEMO_USERNAME }),
     );
-    sessionStorage.setItem(
-      "cloudcost.demoSetup",
-      JSON.stringify(createDefaultDemoSetup()),
-    );
+    const setup = createDefaultDemoSetup();
+    sessionStorage.setItem("cloudcost.demoSetup", JSON.stringify(setup));
+    queryClient.setQueryData(["demo", "stored-setup"], setup);
     router.push("/demo/dashboard");
   }
 

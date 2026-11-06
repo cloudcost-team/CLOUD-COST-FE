@@ -4,6 +4,7 @@ type GoogleCredentialResponse = {
 
 type GooglePromptNotification = {
   isSkippedMoment: () => boolean;
+  isNotDisplayed: () => boolean;
 };
 
 type GoogleIdentity = {
@@ -107,7 +108,7 @@ export async function requestGoogleCredential(clientId: string) {
     settleCredential = (credential) => finish(() => resolve(credential));
 
     identity.prompt((notification) => {
-      if (notification.isSkippedMoment()) {
+      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
         finish(() =>
           reject(
             new GoogleIdentityError(
