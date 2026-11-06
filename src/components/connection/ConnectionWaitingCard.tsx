@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/Badge";
+import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/cn";
 
 type ConnectionWaitingCardProps = {
@@ -13,13 +14,7 @@ export function ConnectionWaitingCard({
   className,
 }: ConnectionWaitingCardProps) {
   return (
-    <div
-      role="status"
-      className={cn(
-        "flex items-center gap-gap-large rounded-xlarge border border-border-default bg-background-floated p-padding-xlarge",
-        className,
-      )}
-    >
+    <Card role="status" className={cn("flex-row items-center", className)}>
       <span
         aria-hidden
         className="relative flex size-6 shrink-0 items-center justify-center"
@@ -36,6 +31,6 @@ export function ConnectionWaitingCard({
           스택 이름 {stackName} · 이 화면을 닫아도 연결은 계속 진행돼요
         </p>
       </div>
-    </div>
+    </Card>
   );
 }

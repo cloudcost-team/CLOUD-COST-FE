@@ -14,7 +14,7 @@ export function NoConnectionState() {
         label: "데이터 연결로 가기",
         onClick: () => router.push("/settings/connections"),
       }}
-      className="rounded-xlarge bg-background-floated"
+      variant="card"
     />
   );
 }

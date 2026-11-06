@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/ui/Logo";
+import { Panel } from "@/components/ui/Panel";
 import { TextLink } from "@/components/ui/TextLink";
 import { formatKstDate } from "@/lib/kstDate";
 
@@ -94,14 +95,14 @@ export function DemoLoginScreen() {
         </div>
 
         <Card className="w-full gap-gap-large p-padding-xlarge">
-          <div className="rounded-large bg-fill-brand-weak p-padding-medium">
+          <Panel variant="brand" size="medium">
             <p className="text-subtext-small text-text-brand">
               체험용 계정 (누구나 사용 가능)
             </p>
             <p className="mt-gap-xxsmall text-subtext-medium-strong text-text-primary">
               아이디 cloudcost · 비밀번호 1234
             </p>
-          </div>
+          </Panel>
 
           <form className="flex flex-col gap-gap-large" onSubmit={handleSubmit}>
             <Input

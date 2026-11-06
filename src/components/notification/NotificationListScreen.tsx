@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Notification, NotificationType } from "@/api/alerts";
 import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
+import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { IconButton } from "@/components/ui/IconButton";
@@ -50,7 +51,7 @@ function NotificationGroups({
         <h2 className="text-subtext-medium-strong text-text-tertiary">
           {group.label}
         </h2>
-        <div className="overflow-hidden rounded-xlarge border border-border-default bg-background-floated">
+        <Card className="gap-0 overflow-hidden p-0">
           {items.map((notification) => (
             <NotificationItem
               key={notification.id}
@@ -58,7 +59,7 @@ function NotificationGroups({
               onSelect={onSelect}
             />
           ))}
-        </div>
+        </Card>
       </section>
     );
   });
@@ -96,7 +97,7 @@ function NotificationListBody({ filter }: { filter: Filter }) {
           icon="bell"
           title="아직 받은 알림이 없어요"
           description="예산이나 비용 급증 알림을 켜 두면 여기에 모여요."
-          className="rounded-xlarge bg-background-lower"
+          variant="subtle"
         />
       ) : (
         <NotificationGroups notifications={notifications} onSelect={select} />

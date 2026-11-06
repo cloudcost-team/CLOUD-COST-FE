@@ -3,6 +3,7 @@
 import type { AlertConditions, AlertSettings } from "@/api/alerts";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
+import { NoticeList } from "@/components/ui/NoticeList";
 import { Switch } from "@/components/ui/Switch";
 import { useUpdateAlertConditions } from "@/hooks/useAlerts";
 
@@ -79,13 +80,10 @@ export function AlertConditionsCard({ settings }: { settings: AlertSettings }) {
       {update.isError && (
         <Banner title="저장하지 못했어요" description={update.error.message} />
       )}
-      {settings.notes.length > 0 && (
-        <ul className="flex flex-col gap-gap-xxsmall rounded-large bg-background-lower p-padding-medium text-subtext-small text-text-tertiary">
-          {settings.notes.map((note) => (
-            <li key={note}>· {note}</li>
-          ))}
-        </ul>
-      )}
+      <NoticeList
+        lines={settings.notes}
+        className="gap-gap-xxsmall text-subtext-small"
+      />
     </Card>
   );
 }

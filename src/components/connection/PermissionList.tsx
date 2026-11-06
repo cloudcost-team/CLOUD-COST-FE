@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/Badge";
+import { Panel } from "@/components/ui/Panel";
 import { cn } from "@/lib/cn";
 
 const PERMISSIONS = [
@@ -11,12 +12,7 @@ const PERMISSIONS = [
 
 export function PermissionList({ className }: { className?: string }) {
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-gap-medium rounded-large bg-background-lower p-padding-large",
-        className,
-      )}
-    >
+    <Panel className={cn("flex flex-col gap-gap-medium", className)}>
       <div className="flex items-center gap-gap-small">
         <p className="text-label-xsmall text-text-strong">
           이 권한 {PERMISSIONS.length}개만 사용해요
@@ -37,6 +33,6 @@ export function PermissionList({ className }: { className?: string }) {
       <p className="text-subtext-small text-text-quaternary">
         Access Key는 받지 않아요. 고객 AWS 리소스를 만들거나 바꾸지 않아요.
       </p>
-    </div>
+    </Panel>
   );
 }

@@ -5,7 +5,9 @@ import type { AwsAccount } from "@/api/awsAccounts";
 import type { ReportDetailResponse } from "@/api/reports";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
+import { Card } from "@/components/ui/Card";
 import { IconButton } from "@/components/ui/IconButton";
+import { Panel } from "@/components/ui/Panel";
 import {
   Select,
   SelectContent,
@@ -99,16 +101,18 @@ function ReportStats({ report }: { report: ReportDetailResponse }) {
 function ReportSpikes({ report }: { report: ReportDetailResponse }) {
   if (report.spikes.days.length === 0)
     return (
-      <p className="rounded-large bg-background-lower p-padding-large text-subtext-medium text-text-tertiary">
+      <Panel as="p" className="text-subtext-medium text-text-tertiary">
         이 달에는 급증한 날이 없어요.
-      </p>
+      </Panel>
     );
   return (
     <ul className="flex flex-col gap-gap-small">
       {report.spikes.days.map((day) => (
-        <li
+        <Panel
+          as="li"
           key={day.date}
-          className="flex flex-col gap-gap-xxsmall rounded-large bg-fill-danger-weak p-padding-large"
+          variant="danger"
+          className="flex flex-col gap-gap-xxsmall"
         >
           <p className="text-label-small text-text-strong">
             {formatMonthDay(day.date)} · 평소의 {day.ratio}배
@@ -116,7 +120,7 @@ function ReportSpikes({ report }: { report: ReportDetailResponse }) {
           <p className="text-subtext-medium text-text-secondary">
             {day.message}
           </p>
-        </li>
+        </Panel>
       ))}
     </ul>
   );
@@ -134,7 +138,7 @@ function ReportBody({
   const monthLabel = `${getMonthNumber(report.month)}월`;
 
   return (
-    <article className="flex flex-col gap-spacing-medium rounded-xlarge border border-border-default bg-background-floated p-padding-xxlarge">
+    <Card className="gap-spacing-medium p-padding-xxlarge">
       <div className="flex flex-wrap items-center justify-between gap-gap-small">
         <div className="flex items-center gap-gap-small">
           <h2 className="text-title-medium text-text-strong">
@@ -177,7 +181,7 @@ function ReportBody({
           <li key={note}>{note}</li>
         ))}
       </ul>
-    </article>
+    </Card>
   );
 }
 

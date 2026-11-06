@@ -1,4 +1,5 @@
 import type { Budget, BudgetCurrency } from "@/api/budget";
+import { Panel } from "@/components/ui/Panel";
 import { ProgressBar, type ProgressBarTone } from "@/components/ui/ProgressBar";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/formatMoney";
@@ -23,11 +24,9 @@ export function BudgetUsage({
   className,
 }: BudgetUsageProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-gap-small rounded-large bg-background-lower p-padding-medium",
-        className,
-      )}
+    <Panel
+      size="medium"
+      className={cn("flex flex-col gap-gap-small", className)}
     >
       <div className="flex flex-wrap items-start justify-between gap-gap-small text-subtext-medium">
         <p className="text-text-secondary">
@@ -50,6 +49,6 @@ export function BudgetUsage({
           aria-label={`예산의 ${usageRate}%`}
         />
       )}
-    </div>
+    </Panel>
   );
 }
