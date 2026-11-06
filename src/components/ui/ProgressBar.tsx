@@ -1,6 +1,6 @@
 import { cn } from "@/lib/cn";
 
-export type ProgressBarTone = "brand" | "warning" | "danger";
+export type ProgressBarTone = "brand" | "neutral" | "warning" | "danger";
 
 type ProgressBarProps = {
   value: number;
@@ -13,6 +13,8 @@ type ProgressBarProps = {
 const toneClasses: Record<ProgressBarTone, string> = {
   brand:
     "[&::-webkit-progress-value]:bg-fill-brand [&::-moz-progress-bar]:bg-fill-brand",
+  neutral:
+    "[&::-webkit-progress-value]:bg-fill-neutral-medium [&::-moz-progress-bar]:bg-fill-neutral-medium",
   warning:
     "[&::-webkit-progress-value]:bg-fill-warning [&::-moz-progress-bar]:bg-fill-warning",
   danger:
