@@ -90,7 +90,9 @@ export async function requestGoogleCredential(clientId: string) {
       () =>
         finish(() =>
           reject(
-            new GoogleIdentityError("Google 로그인 응답 시간이 초과되었습니다."),
+            new GoogleIdentityError(
+              "Google 로그인 응답 시간이 초과되었습니다.",
+            ),
           ),
         ),
       60_000,

@@ -9,6 +9,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/ui/Logo";
 import { TextLink } from "@/components/ui/TextLink";
+import { formatKstDate } from "@/lib/kstDate";
 
 const DEMO_USERNAME = "cloudcost";
 const DEMO_PASSWORD = "1234";
@@ -19,8 +20,8 @@ function createDefaultDemoSetup(): DemoSetupRequest {
   from.setDate(from.getDate() - 90);
 
   return {
-    from: from.toISOString().slice(0, 10),
-    to: to.toISOString().slice(0, 10),
+    from: formatKstDate(from),
+    to: formatKstDate(to),
     servers: [
       {
         name: "web-server",

@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/Card";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Icon } from "@/components/ui/Icon";
 import { NumberInput } from "@/components/ui/NumberInput";
+import { formatKstDate } from "@/lib/kstDate";
 import {
   Select,
   SelectContent,
@@ -78,8 +79,7 @@ function defaultDates() {
   const to = new Date();
   const from = new Date(to);
   from.setDate(from.getDate() - 90);
-  const date = (value: Date) => value.toISOString().slice(0, 10);
-  return { from: date(from), to: date(to) };
+  return { from: formatKstDate(from), to: formatKstDate(to) };
 }
 
 export function DemoSetupScreen() {
@@ -310,7 +310,7 @@ export function DemoSetupScreen() {
                 aria-label="조회 종료일"
                 value={to}
                 min={from}
-                max={new Date().toISOString().slice(0, 10)}
+                max={dates.to}
                 onChange={setTo}
               />
             </label>
