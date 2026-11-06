@@ -13,7 +13,7 @@ export function ConnectionSelector() {
   const [open, setOpen] = useState(false);
   const { connections, selected, select } = useSelectedConnection();
 
-  if (!selected || connections.length < 2) return null;
+  if (!selected) return null;
 
   const label = (alias: string | null, regionLabel: string) =>
     `${alias ?? "이름 없는 연결"} · ${regionLabel}`;

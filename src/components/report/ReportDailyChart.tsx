@@ -9,6 +9,7 @@ import {
   XAxis,
 } from "recharts";
 import type { Currency } from "@/api/costs";
+import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useDailyCosts } from "@/hooks/useReports";
 import { formatMoney } from "@/lib/formatMoney";
@@ -37,7 +38,7 @@ export function ReportDailyChart({
   );
 
   return (
-    <div className="flex flex-col gap-gap-medium rounded-large border border-border-default p-padding-large">
+    <Panel variant="outline" className="flex flex-col gap-gap-medium">
       <div className="flex flex-wrap items-start justify-between gap-gap-small">
         <p className="text-label-xsmall text-text-strong">
           {monthLabel} 일별 추정 비용
@@ -98,6 +99,6 @@ export function ReportDailyChart({
           </ResponsiveContainer>
         </div>
       )}
-    </div>
+    </Panel>
   );
 }

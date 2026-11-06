@@ -73,7 +73,7 @@ export function Popover({
           aria-labelledby={titleId}
           tabIndex={-1}
           className={cn(
-            "absolute top-full z-50 mt-2 flex w-90 flex-col gap-gap-medium rounded-large border border-border-weak bg-background-floated p-padding-large shadow-default outline-none",
+            "absolute top-full z-50 mt-2 flex w-90 max-w-[calc(100vw-2rem)] flex-col gap-gap-medium rounded-large border border-border-weak bg-background-floated p-padding-large shadow-default outline-none",
             align === "start" ? "left-0" : "right-0",
             className,
           )}

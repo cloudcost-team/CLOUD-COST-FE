@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/Select";
+import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Slider } from "@/components/ui/Slider";
 import { TextButton } from "@/components/ui/TextButton";
@@ -159,9 +160,13 @@ function BudgetBody({
   if (isPending) return <Skeleton shape="block" className="h-30 w-full" />;
   if (isError)
     return (
-      <p className="rounded-large bg-background-lower p-padding-medium text-subtext-medium text-text-secondary">
+      <Panel
+        as="p"
+        size="medium"
+        className="text-subtext-medium text-text-secondary"
+      >
         {error.message}
-      </p>
+      </Panel>
     );
   return editing ? (
     <BudgetEditor

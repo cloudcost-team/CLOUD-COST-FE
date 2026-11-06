@@ -5,6 +5,7 @@ import type { ReportMonthSummary } from "@/api/reports";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { NoticeList } from "@/components/ui/NoticeList";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TextLink } from "@/components/ui/TextLink";
 import { useReports } from "@/hooks/useReports";
@@ -117,11 +118,11 @@ function ReportListBody({ connection }: { connection: AwsAccount }) {
         rows={data.months}
         getRowKey={(row) => row.month}
       />
-      <ul className="flex flex-wrap gap-x-gap-large gap-y-gap-xxsmall text-subtext-small text-text-quaternary">
-        {notes.map((note) => (
-          <li key={note}>· {note}</li>
-        ))}
-      </ul>
+      <NoticeList
+        variant="plain"
+        lines={notes}
+        className="flex-row flex-wrap gap-x-gap-large gap-y-gap-xxsmall"
+      />
     </>
   );
 }

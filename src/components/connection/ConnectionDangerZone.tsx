@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
+import { Panel } from "@/components/ui/Panel";
 import { useDeleteAwsAccount } from "@/hooks/useAwsAccounts";
 import { getCloudFormationStacksUrl, openInNewTab } from "@/lib/awsConsole";
 
@@ -77,9 +78,13 @@ export function ConnectionDangerZone({
         className="w-100"
       >
         <div className="flex flex-col gap-gap-large px-padding-xlarge pt-padding-small pb-padding-xlarge">
-          <p className="rounded-large bg-background-lower p-padding-medium text-subtext-medium text-text-secondary">
+          <Panel
+            as="p"
+            size="medium"
+            className="text-subtext-medium text-text-secondary"
+          >
             {result?.message}
-          </p>
+          </Panel>
           <div className="flex items-center justify-between gap-gap-small">
             {result?.awsCleanupNeeded ? (
               <Button

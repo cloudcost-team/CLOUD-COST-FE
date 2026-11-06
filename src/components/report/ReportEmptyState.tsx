@@ -25,7 +25,7 @@ export function ReportEmptyState({
         label: "대시보드로 가기",
         onClick: () => router.push("/dashboard"),
       }}
-      className="rounded-xlarge border border-border-default bg-background-floated"
+      variant="card"
     />
   );
 }

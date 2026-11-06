@@ -1,19 +1,28 @@
-import { useId, type ReactNode } from "react";
+import { useId, type AriaRole, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 type CardProps = {
   title?: string;
   meta?: ReactNode;
   action?: ReactNode;
+  role?: AriaRole;
   className?: string;
   children: ReactNode;
 };
 
-export function Card({ title, meta, action, className, children }: CardProps) {
+export function Card({
+  title,
+  meta,
+  action,
+  role,
+  className,
+  children,
+}: CardProps) {
   const titleId = useId();
   const hasHeader = Boolean(title || meta || action);
   return (
     <section
+      role={role}
       aria-labelledby={title ? titleId : undefined}
       className={cn(
         "flex flex-col gap-gap-large rounded-xlarge border border-border-default bg-background-floated p-padding-xlarge",

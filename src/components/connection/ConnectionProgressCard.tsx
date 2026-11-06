@@ -1,6 +1,7 @@
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Panel } from "@/components/ui/Panel";
 import { Spinner } from "@/components/ui/Spinner";
 import { ConnectionStepper } from "./ConnectionStepper";
 
@@ -39,7 +40,7 @@ export function ConnectionProgressCard({
           </p>
         </div>
       </div>
-      <ol className="flex flex-col gap-gap-medium rounded-large border border-border-default p-padding-large">
+      <Panel as="ol" variant="outline" className="flex flex-col gap-gap-medium">
         {PROGRESS_STEPS.map((step) => (
           <li key={step.label} className="flex items-center gap-gap-medium">
             <Badge tone={step.tone}>{step.badge}</Badge>
@@ -56,9 +57,9 @@ export function ConnectionProgressCard({
             </span>
           </li>
         ))}
-      </ol>
+      </Panel>
       {isLate && (
-        <div className="flex flex-col gap-gap-small rounded-large bg-background-lower p-padding-large">
+        <Panel className="flex flex-col gap-gap-small">
           <div className="flex flex-wrap items-center gap-gap-small">
             <Badge tone="warning">2분 경과</Badge>
             <p className="text-label-xsmall text-text-strong">
@@ -69,7 +70,7 @@ export function ConnectionProgressCard({
             AWS CloudFormation 콘솔에서 스택 {stackName}의 [이벤트] 탭을 확인해
             주세요. 스택 생성이 실패했다면 이유가 거기에 나와요.
           </p>
-        </div>
+        </Panel>
       )}
       <div className="flex flex-wrap gap-gap-small">
         {canReopenConsole && (
