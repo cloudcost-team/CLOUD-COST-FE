@@ -319,6 +319,183 @@
   );
 }
 
+.auth-page-background {
+  background:
+    radial-gradient(
+      circle at 55% 58%,
+      color-mix(in srgb, var(--color-indigo-300) 34%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(
+      90deg,
+      var(--color-indigo-100),
+      var(--color-sky-100) 45%,
+      var(--color-mint-100)
+    );
+}
+
+.auth-illustration {
+  background:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 47px,
+      color-mix(in srgb, var(--color-sky-500) 15%, transparent) 47px 48px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent 0 47px,
+      color-mix(in srgb, var(--color-sky-500) 15%, transparent) 47px 48px
+    ),
+    linear-gradient(
+      90deg,
+      var(--color-sky-50),
+      var(--color-mint-50) 55%,
+      var(--color-indigo-50)
+    );
+  animation: auth-illustration-in 3.2s linear infinite;
+}
+
+.auth-dashboard-window {
+  animation: auth-window-in 3.2s linear infinite;
+}
+
+.auth-kpi-card:nth-child(1) {
+  animation: auth-kpi-in 3.2s 0ms linear infinite;
+}
+
+.auth-kpi-card:nth-child(2) {
+  animation: auth-kpi-in 3.2s 150ms linear infinite;
+}
+
+.auth-kpi-card:nth-child(3) {
+  animation: auth-kpi-in 3.2s 300ms linear infinite;
+}
+
+.auth-chart-bar {
+  transform-origin: bottom;
+  animation: auth-bar-in 3.2s linear infinite;
+}
+
+.auth-chart-bar:nth-child(2) {
+  animation-delay: 55ms;
+}
+
+.auth-chart-bar:nth-child(3) {
+  animation-delay: 110ms;
+}
+
+.auth-chart-bar:nth-child(4) {
+  animation-delay: 165ms;
+}
+
+.auth-chart-bar:nth-child(5) {
+  animation-delay: 220ms;
+}
+
+.auth-chart-bar:nth-child(6) {
+  animation-delay: 275ms;
+}
+
+.auth-chart-bar:nth-child(7) {
+  animation-delay: 330ms;
+}
+
+.auth-chart-bar:nth-child(8) {
+  animation-delay: 385ms;
+}
+
+.auth-insight {
+  animation: auth-insight-in 3.2s ease-in-out infinite;
+}
+
+.auth-insight-second {
+  animation-delay: 220ms;
+}
+
+.auth-insight-third {
+  animation-delay: 440ms;
+}
+
+@keyframes auth-illustration-in {
+  0%,
+  1.5% {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  20%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes auth-window-in {
+  0%,
+  7% {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  28%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-kpi-in {
+  0%,
+  19% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  35%,
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-bar-in {
+  0%,
+  32% {
+    transform: scaleY(0.1);
+  }
+  53%,
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes auth-insight-in {
+  0%,
+  28% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  46% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  76% {
+    opacity: 1;
+    transform: translateY(-7px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-illustration,
+  .auth-dashboard-window,
+  .auth-kpi-card,
+  .auth-chart-bar,
+  .auth-insight {
+    animation: none;
+  }
+}
+
 @layer base {
   body {
     background-color: var(--color-background-default);
