@@ -2,14 +2,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import type { DemoSetupRequest } from "@/api/demo";
-import { DemoDashboardScreen } from "@/components/layout/DemoDashboardScreen";
+import { DemoDashboardScreen } from "@/components/demo/DemoDashboardScreen";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
-vi.mock("@/components/layout/AppShell", () => ({
-  useAppShell: () => ({ currency: "KRW" }),
+vi.mock("@/components/demo/DemoShell", () => ({
+  useDemoShell: () => ({ currency: "KRW" }),
 }));
 
 vi.mock("@/api/demo", () => ({

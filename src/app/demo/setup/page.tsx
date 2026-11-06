@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { DemoSetupScreen } from "@/components/layout/DemoSetupScreen";
+import { DemoSetupScreen } from "@/components/demo/DemoSetupScreen";
 import { LoadingState } from "@/components/ui/LoadingState";
 
 async function RequestTimeDemoSetup() {
