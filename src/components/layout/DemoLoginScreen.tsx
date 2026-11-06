@@ -2,38 +2,76 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ApiError } from "@/api/client";
+import type { DemoSetupRequest } from "@/api/demo";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Logo } from "@/components/ui/Logo";
 import { TextLink } from "@/components/ui/TextLink";
-import { useDemoLogin } from "@/hooks/useDemoLogin";
+
+const DEMO_USERNAME = "cloudcost";
+const DEMO_PASSWORD = "1234";
+
+function createDefaultDemoSetup(): DemoSetupRequest {
+  const to = new Date();
+  const from = new Date(to);
+  from.setDate(from.getDate() - 90);
+
+  return {
+    from: from.toISOString().slice(0, 10),
+    to: to.toISOString().slice(0, 10),
+    servers: [
+      {
+        name: "web-server",
+        instanceType: "t3.medium",
+        os: "LINUX",
+        count: 2,
+        schedule: "ALWAYS",
+      },
+      {
+        name: "batch-worker",
+        instanceType: "c5.large",
+        os: "LINUX",
+        count: 1,
+        schedule: "WEEKDAY_OFFICE",
+      },
+      {
+        name: "win-dev",
+        instanceType: "t3.large",
+        os: "WINDOWS",
+        count: 1,
+        schedule: "DAILY_HOURS",
+        hoursPerDay: 8,
+      },
+    ],
+  };
+}
 
 export function DemoLoginScreen() {
   const router = useRouter();
-  const demoLogin = useDemoLogin();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string>();
 
-  const error =
-    demoLogin.error instanceof ApiError
-      ? demoLogin.error.message
-      : demoLogin.isError
-        ? "체험 로그인 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요."
-        : undefined;
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    try {
-      const account = await demoLogin.mutateAsync({ username, password });
-      sessionStorage.setItem("cloudcost.demoAccount", JSON.stringify(account));
-      router.push("/demo/setup");
-    } catch {
-      // 오류 문구는 mutation 상태를 통해 입력 필드에 표시한다.
+    if (username.trim() !== DEMO_USERNAME || password !== DEMO_PASSWORD) {
+      setError("아이디 또는 비밀번호가 맞지 않습니다.");
+      return;
     }
+
+    // 공개된 체험 계정은 실제 인증 정보가 아니므로 브라우저 세션에 체험 여부만 저장한다.
+    sessionStorage.setItem(
+      "cloudcost.demoAccount",
+      JSON.stringify({ mode: "demo", username: DEMO_USERNAME }),
+    );
+    sessionStorage.setItem(
+      "cloudcost.demoSetup",
+      JSON.stringify(createDefaultDemoSetup()),
+    );
+    router.push("/demo/dashboard");
   }
 
   return (
@@ -73,7 +111,7 @@ export function DemoLoginScreen() {
               onChange={(event) => setUsername(event.currentTarget.value)}
               required
               maxLength={64}
-              disabled={demoLogin.isPending}
+              onInput={() => setError(undefined)}
             />
             <Input
               label="비밀번호"
@@ -85,14 +123,10 @@ export function DemoLoginScreen() {
               onChange={(event) => setPassword(event.currentTarget.value)}
               required
               maxLength={64}
-              disabled={demoLogin.isPending}
+              onInput={() => setError(undefined)}
               error={error}
             />
-            <Button
-              type="submit"
-              loading={demoLogin.isPending}
-              className="w-full"
-            >
+            <Button type="submit" className="w-full">
               체험 시작
             </Button>
           </form>
