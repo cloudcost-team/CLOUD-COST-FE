@@ -5,6 +5,13 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   reactCompiler: true,
+  async rewrites() {
+    const target = process.env.API_PROXY_TARGET?.replace(/\/$/, "");
+    if (!target) return [];
+    return [
+      { source: "/api/v1/:path*", destination: `${target}/api/v1/:path*` },
+    ];
+  },
   turbopack: {
     rules: {
       "*.css": {

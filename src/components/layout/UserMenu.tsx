@@ -1,41 +1,31 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { Icon } from "@/components/ui/Icon";
 import { InteractionOverlay } from "@/components/ui/InteractionOverlay";
-import { clearLoginSession, getLoginSession } from "@/lib/authSession";
+import { useLogout, useMe } from "@/hooks/useAuth";
+import { clearAccessToken } from "@/lib/authSession";
 
 const PROVIDER_LABELS: Record<string, string> = {
   google: "Google 계정으로 로그인됨",
 };
 
-function subscribe() {
-  return () => {};
-}
-
-function useSessionUserField(field: "name" | "email" | "provider") {
-  return useSyncExternalStore(
-    subscribe,
-    () => getLoginSession()?.user[field] ?? null,
-    () => null,
-  );
-}
-
 export function UserMenu() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const name = useSessionUserField("name");
-  const email = useSessionUserField("email");
-  const provider = useSessionUserField("provider");
+  const me = useMe();
+  const logoutRequest = useLogout();
 
-  if (!name) return null;
+  if (!me.data) return null;
+  const { name, email, provider } = me.data;
 
-  function logout() {
-    clearLoginSession();
+  async function logout() {
+    await logoutRequest.mutateAsync().catch(() => undefined);
+    clearAccessToken();
     queryClient.clear();
     router.replace("/login");
   }

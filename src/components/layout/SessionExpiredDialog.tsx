@@ -1,15 +1,11 @@
 "use client";
 
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import {
-  clearLoginSession,
-  getLoginSession,
-  saveReturnPath,
-} from "@/lib/authSession";
+import { clearAccessToken, saveReturnPath } from "@/lib/authSession";
 import { useSessionExpiredStore } from "@/stores/sessionExpiredStore";
 
 const SCREEN_NAMES: [prefix: string, name: string][] = [
@@ -35,20 +31,12 @@ function SessionExpiredModal() {
   const pathname = usePathname();
   const queryClient = useQueryClient();
   const expired = useSessionExpiredStore((state) => state.expired);
-  const markExpired = useSessionExpiredStore((state) => state.markExpired);
   const reset = useSessionExpiredStore((state) => state.reset);
   const screenName = getScreenName(pathname);
 
-  useEffect(() => {
-    const expiresAt = getLoginSession()?.expiresAt;
-    if (!expiresAt) return;
-    const timer = setTimeout(markExpired, Date.parse(expiresAt) - Date.now());
-    return () => clearTimeout(timer);
-  }, [markExpired]);
-
   function loginAgain() {
     saveReturnPath(pathname);
-    clearLoginSession();
+    clearAccessToken();
     queryClient.clear();
     reset();
     router.replace("/login");
@@ -59,7 +47,7 @@ function SessionExpiredModal() {
       open={expired}
       onClose={() => {}}
       title="로그인이 만료됐어요"
-      description={`보안을 위해 1시간마다 다시 로그인해요. 다시 로그인하면 보던 화면${screenName ? `(${screenName})` : ""}으로 돌아와요.`}
+      description={`로그인한 지 오래되어 다시 로그인이 필요해요. 다시 로그인하면 보던 화면${screenName ? `(${screenName})` : ""}으로 돌아와요.`}
       className="w-95"
     >
       <div className="px-padding-xlarge pt-padding-small pb-padding-xlarge">
