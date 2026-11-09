@@ -24,7 +24,7 @@ export function AppHeader({
       )}
     >
       <Link href={logoHref} aria-label="CloudCost 처음 화면으로 이동">
-        <Logo />
+        <Logo brandIcon="face" />
       </Link>
       {start}
       <div className="ml-auto flex items-center gap-gap-medium">{end}</div>
