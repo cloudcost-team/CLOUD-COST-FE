@@ -536,20 +536,19 @@ function DashboardContent({ connection }: { connection: AwsAccount }) {
   const [range, setRange] = useState<DateRange | null>(null);
   const queries = useDashboardQueries(connection.accountId, range);
   const [summary, daily, monthly, instances] = queries;
-  const failed = queries.find((query) => query.isError);
+  const failed = queries.find((query) => query.isError && !query.data);
+  const staleFailed = queries.find((query) => query.isError && query.data);
+  const retryFailed = () =>
+    queries
+      .filter((query) => query.isError)
+      .forEach((query) => query.refetch());
 
   if (failed)
     return (
       <Banner
         title="대시보드를 불러오지 못했어요"
         description={failed.error?.message}
-        action={{
-          label: "다시 시도",
-          onClick: () =>
-            queries
-              .filter((query) => query.isError)
-              .forEach((query) => query.refetch()),
-        }}
+        action={{ label: "다시 시도", onClick: retryFailed }}
       />
     );
   if (!summary.data || !daily.data || !monthly.data || !instances.data)
@@ -558,15 +557,25 @@ function DashboardContent({ connection }: { connection: AwsAccount }) {
     return <DashboardStateContent state="first-collection" />;
 
   return (
-    <DashboardView
-      connection={connection}
-      dashboard={summary.data}
-      daily={daily.data}
-      monthly={monthly.data}
-      instances={instances.data}
-      range={range}
-      onRangeChange={setRange}
-    />
+    <>
+      {staleFailed && (
+        <Banner
+          tone="warning"
+          title="최신 데이터를 불러오지 못해 이전 데이터를 보여 주고 있어요"
+          description={staleFailed.error?.message}
+          action={{ label: "다시 시도", onClick: retryFailed }}
+        />
+      )}
+      <DashboardView
+        connection={connection}
+        dashboard={summary.data}
+        daily={daily.data}
+        monthly={monthly.data}
+        instances={instances.data}
+        range={range}
+        onRangeChange={setRange}
+      />
+    </>
   );
 }
 

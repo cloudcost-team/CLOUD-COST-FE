@@ -175,7 +175,11 @@ function WasteSummary({ data }: { data: WasteResponse }) {
       />
       <StatCard
         label="이번 달 예상 비용 대비"
-        value={`${data.savingsRateOfForecast ?? "—"}%`}
+        value={
+          data.savingsRateOfForecast === null
+            ? "—"
+            : `${data.savingsRateOfForecast}%`
+        }
         caption={
           data.forecastMonthEndCost === null
             ? "월말 예상 비용이 없어요"
