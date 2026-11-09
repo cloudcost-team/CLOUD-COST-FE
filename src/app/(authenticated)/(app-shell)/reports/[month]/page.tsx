@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ReportDetailScreen } from "@/components/report/ReportDetailScreen";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -8,6 +9,8 @@ async function ReportDetail({ params }: ReportPageProps) {
   const { month } = await params;
   return <ReportDetailScreen month={month} />;
 }
+
+export const metadata: Metadata = { title: "월간 리포트" };
 
 export default function ReportPage(props: ReportPageProps) {
   return (
