@@ -1,4 +1,4 @@
-import type { DashboardResponse } from "@/api/dashboard";
+import type { DashboardResponse } from "./DashboardScreen";
 import { StatCard } from "@/components/ui/StatCard";
 import { formatMoney, formatSignedMoney } from "@/lib/formatMoney";
 import { getMonthNumber } from "@/lib/kstDate";

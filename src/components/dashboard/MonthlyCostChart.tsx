@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { MonthlyCost } from "@/api/dashboard";
+import type { MonthlyCost } from "./DashboardScreen";
 
 type MonthlyCostChartProps = {
   months: MonthlyCost[];

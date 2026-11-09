@@ -1,7 +1,7 @@
 "use client";
 
 import type { Currency } from "@/api/costs";
-import type { WasteInstanceSpec, WasteItem } from "@/api/waste";
+import type { WasteInstanceSpec, WasteItem } from "./WasteScreen";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Callout } from "@/components/ui/Callout";

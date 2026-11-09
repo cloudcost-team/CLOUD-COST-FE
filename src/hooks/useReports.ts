@@ -30,7 +30,7 @@ export function useDailyCosts(
   currency: Currency,
 ) {
   return useQuery({
-    queryKey: costKeys.daily(accountId, from, to, currency),
-    queryFn: () => getDailyCosts(accountId, from, to, currency),
+    queryKey: costKeys.daily(accountId, currency, { from, to }),
+    queryFn: () => getDailyCosts(accountId, currency, { from, to }),
   });
 }

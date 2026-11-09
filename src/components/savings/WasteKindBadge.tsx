@@ -1,4 +1,4 @@
-import type { WasteItem } from "@/api/waste";
+import type { WasteItem } from "./WasteScreen";
 import { Badge } from "@/components/ui/Badge";
 
 type WasteKindBadgeProps = Pick<WasteItem, "kind" | "kindLabel">;

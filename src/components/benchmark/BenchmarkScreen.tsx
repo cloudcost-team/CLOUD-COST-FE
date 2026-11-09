@@ -1,14 +1,15 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import type {
-  BenchmarkMonthlySpend,
-  BenchmarkOversizedRatio,
-  BenchmarkResponse,
-  BenchmarkSpendPosition,
-} from "@/api/benchmark";
+import type { AwsAccount } from "@/api/awsAccounts";
+import { benchmarkKeys, getBenchmark } from "@/api/benchmark";
 import type { Currency } from "@/api/costs";
+import type { ExchangeRate } from "@/api/reports";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { NoConnectionState } from "@/components/report/NoConnectionState";
+import { useSimulation } from "@/components/savings/SimulatorScreen";
+import { Banner } from "@/components/ui/Banner";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -17,23 +18,121 @@ import { Panel } from "@/components/ui/Panel";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatMoney } from "@/lib/formatMoney";
+import { useSelectedConnection } from "@/hooks/useSelectedConnection";
 import { formatKoreanMonthDay } from "@/lib/kstDate";
+import { useCurrencyStore } from "@/stores/currencyStore";
+import { useSimulationSelectionStore } from "@/stores/simulationSelectionStore";
 import { BenchmarkMetricCard } from "./BenchmarkMetricCard";
 import { formatPercent } from "./benchmarkFormat";
-import { DistributionChart, type DistributionBars } from "./DistributionChart";
 import { OversizedRatioDetailPanel } from "./OversizedRatioDetailPanel";
-import { RangeBar, type SpendScale } from "./RangeBar";
 import { UnavailableMetricCard } from "./UnavailableMetricCard";
 
-type BenchmarkView = "current" | "after";
-
-type BenchmarkScreenProps = {
-  data: BenchmarkResponse | undefined;
-  isPending: boolean;
-  distribution: DistributionBars;
-  spendScale: SpendScale;
-  selectedMonthlySavings: number | null;
+export type BenchmarkServer = {
+  instanceId: string;
+  name: string | null;
+  instanceType: string | null;
+  cpuP95: number;
+  cpuHours: number;
+  oversized: boolean;
+  verdict: string;
 };
+
+export type BenchmarkRatio = {
+  judgedCount: number;
+  oversizedCount: number;
+  ratio: number | null;
+};
+
+export type BenchmarkOversizedReference = {
+  source: string;
+  description: string;
+  sizeBand: string | null;
+  sizeBandLabel: string | null;
+  dataAvailable: boolean;
+  sampleSize: number;
+  averageRatio: number | null;
+  medianRatio: number | null;
+  percentileAvailable: boolean;
+};
+
+export type BenchmarkSizeBand = {
+  key: string;
+  label: string;
+  minServers: number;
+  maxServers: number;
+  dataAvailable: boolean;
+  matchesOurs: boolean;
+};
+
+export type BenchmarkOversizedRatio = {
+  status: "OK" | "NOT_COMPARABLE" | "INSUFFICIENT_HISTORY";
+  ours: BenchmarkRatio | null;
+  moreEfficientTeamsPercent: number | null;
+  matchedSizeBand: string | null;
+  reference: BenchmarkOversizedReference;
+  sizeBands: BenchmarkSizeBand[];
+  servers: BenchmarkServer[];
+  afterSimulation: BenchmarkRatio | null;
+};
+
+export type BenchmarkWasteRatio = {
+  status: "UNAVAILABLE";
+  reason: string;
+  referenceSource: string;
+  referenceDescription: string;
+  referenceAverage: number;
+};
+
+export type BenchmarkSpendPosition = "BELOW" | "WITHIN" | "ABOVE";
+
+export type BenchmarkSpendRange = {
+  source: string;
+  description: string;
+  min: number;
+  max: number;
+  minUsd: number;
+  maxUsd: number;
+};
+
+export type BenchmarkMonthlySpend = {
+  status: "OK" | "NO_FORECAST";
+  monthlyCost: number | null;
+  position: BenchmarkSpendPosition | null;
+  range: BenchmarkSpendRange;
+  afterSimulation: {
+    monthlyCost: number;
+    position: BenchmarkSpendPosition;
+  } | null;
+};
+
+export type BenchmarkFreshness = {
+  instancesRefreshedAt: string | null;
+  instancesFromCache: boolean;
+  usageRefreshedAt: string | null;
+  usageFromCache: boolean;
+  nextUsageRefreshAt: string | null;
+  warnings: string[];
+};
+
+export type BenchmarkResponse = {
+  dataSource: "aws" | "demo";
+  costBasis: "estimated_on_demand";
+  currency: Currency;
+  exchangeRate: ExchangeRate | null;
+  accountId: string | null;
+  status: "OK" | "INSUFFICIENT_HISTORY";
+  availableAt: string | null;
+  window: { from: string; to: string };
+  appliedRecommendationIds: string[];
+  oversizedRatio: BenchmarkOversizedRatio;
+  wasteRatio: BenchmarkWasteRatio;
+  monthlySpend: BenchmarkMonthlySpend;
+  freshness: BenchmarkFreshness;
+  notes: string[];
+  asOf: string;
+};
+
+type BenchmarkView = "current" | "after";
 
 const viewOptions: { value: BenchmarkView; label: string }[] = [
   { value: "current", label: "현재" },
@@ -55,12 +154,10 @@ function StateCard({ children }: { children: ReactNode }) {
 function OversizedRatioSection({
   oversizedRatio,
   availableAt,
-  distribution,
   showAfter,
 }: {
   oversizedRatio: BenchmarkOversizedRatio;
   availableAt: string | null;
-  distribution: DistributionBars;
   showAfter: boolean;
 }) {
   const [detailOpen, setDetailOpen] = useState(false);
@@ -114,7 +211,6 @@ function OversizedRatioSection({
             : `소규모 팀 ${sampleSize}곳 중 우리보다 효율적인 팀 ${moreEfficientTeamsPercent}%`
         }
         source={`비교 기준: ${reference.source} · ${reference.sizeBandLabel} 구독 ${sampleSize}곳 (평균 ${formatPercent(reference.averageRatio)}, 중앙값 ${formatPercent(reference.medianRatio)})`}
-        chart={<DistributionChart bars={distribution} showAfter={showAfter} />}
         onOpenDetail={() => setDetailOpen(true)}
       />
       <OversizedRatioDetailPanel
@@ -129,12 +225,10 @@ function OversizedRatioSection({
 function MonthlySpendSection({
   monthlySpend,
   currency,
-  spendScale,
   showAfter,
 }: {
   monthlySpend: BenchmarkMonthlySpend;
   currency: Currency;
-  spendScale: SpendScale;
   showAfter: boolean;
 }) {
   const { range } = monthlySpend;
@@ -168,13 +262,6 @@ function MonthlySpendSection({
       }
       comparison={positionSentence[after?.position ?? monthlySpend.position]}
       source={source}
-      chart={
-        <RangeBar
-          scale={spendScale}
-          rangeLabel={`일반 범위 ${rangeLabel}`}
-          showAfter={Boolean(after)}
-        />
-      }
     />
   );
 }
@@ -231,13 +318,9 @@ function BenchmarkToolbar({
 function BenchmarkBody({
   data,
   view,
-  distribution,
-  spendScale,
 }: {
   data: BenchmarkResponse;
   view: BenchmarkView;
-  distribution: DistributionBars;
-  spendScale: SpendScale;
 }) {
   const showAfter = view === "after";
   const { wasteRatio } = data;
@@ -264,7 +347,6 @@ function BenchmarkBody({
       <OversizedRatioSection
         oversizedRatio={data.oversizedRatio}
         availableAt={data.availableAt}
-        distribution={distribution}
         showAfter={showAfter}
       />
       <UnavailableMetricCard
@@ -276,7 +358,6 @@ function BenchmarkBody({
       <MonthlySpendSection
         monthlySpend={data.monthlySpend}
         currency={data.currency}
-        spendScale={spendScale}
         showAfter={showAfter}
       />
       <NoticeList variant="plain" lines={notes} />
@@ -284,25 +365,75 @@ function BenchmarkBody({
   );
 }
 
-export function BenchmarkScreen({
-  data,
-  isPending,
-  distribution,
-  spendScale,
-  selectedMonthlySavings,
-}: BenchmarkScreenProps) {
+function BenchmarkContent({ connection }: { connection: AwsAccount }) {
+  const { accountId } = connection;
+  const currency = useCurrencyStore((state) => state.currency);
+  const selection = useSimulationSelectionStore((state) =>
+    state.selection?.accountId === accountId ? state.selection : null,
+  );
+  const recommendationIds = selection?.recommendationIds ?? [];
   const [view, setView] = useState<BenchmarkView>("current");
+  const { data, isPending, isError, error, refetch } = useQuery({
+    queryKey: benchmarkKeys.detail(accountId, currency, recommendationIds),
+    queryFn: () =>
+      getBenchmark<BenchmarkResponse>(accountId, currency, recommendationIds),
+  });
+  const simulation = useSimulation(
+    accountId,
+    recommendationIds,
+    selection?.trafficGrowthPercent ?? 0,
+    recommendationIds.length > 0,
+  );
 
-  if (isPending || !data)
+  if (isPending) return <BenchmarkLoading />;
+  if (isError)
     return (
-      <div className="flex flex-col gap-spacing-medium">
-        <PageHeader title="팀 벤치마킹" />
-        <div className="flex flex-col gap-gap-medium">
-          <Skeleton shape="block" className="h-35 w-full" />
-          <Skeleton shape="block" className="h-35 w-full" />
-        </div>
-      </div>
+      <Banner
+        title="팀 벤치마킹을 불러오지 못했어요"
+        description={error.message}
+        action={{ label: "다시 시도", onClick: () => refetch() }}
+      />
     );
+
+  return (
+    <>
+      <BenchmarkToolbar
+        view={view}
+        onViewChange={setView}
+        appliedCount={data.appliedRecommendationIds.length}
+        selectedMonthlySavings={simulation.data?.selectedMonthlySavings ?? null}
+        currency={data.currency}
+      />
+      <BenchmarkBody data={data} view={view} />
+    </>
+  );
+}
+
+function BenchmarkLoading() {
+  return (
+    <div className="flex flex-col gap-gap-medium">
+      <Skeleton shape="block" className="h-35 w-full" />
+      <Skeleton shape="block" className="h-35 w-full" />
+    </div>
+  );
+}
+
+export function BenchmarkScreen() {
+  const { selected, isPending, error, refetch } = useSelectedConnection();
+
+  let body;
+  if (isPending) body = <BenchmarkLoading />;
+  else if (error)
+    body = (
+      <Banner
+        title="연결 목록을 불러오지 못했어요"
+        description={error.message}
+        action={{ label: "다시 시도", onClick: () => refetch() }}
+      />
+    );
+  else if (!selected) body = <NoConnectionState />;
+  else
+    body = <BenchmarkContent key={selected.accountId} connection={selected} />;
 
   return (
     <div className="flex flex-col gap-spacing-medium">
@@ -310,19 +441,7 @@ export function BenchmarkScreen({
         title="팀 벤치마킹"
         description="비슷한 규모 팀과 비교해 우리 팀의 비용 효율을 봐요."
       />
-      <BenchmarkToolbar
-        view={view}
-        onViewChange={setView}
-        appliedCount={data.appliedRecommendationIds.length}
-        selectedMonthlySavings={selectedMonthlySavings}
-        currency={data.currency}
-      />
-      <BenchmarkBody
-        data={data}
-        view={view}
-        distribution={distribution}
-        spendScale={spendScale}
-      />
+      {body}
     </div>
   );
 }

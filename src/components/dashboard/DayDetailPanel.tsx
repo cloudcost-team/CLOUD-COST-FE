@@ -1,7 +1,7 @@
 "use client";
 
 import type { Currency } from "@/api/costs";
-import type { DailyCostWithInstances } from "@/api/dashboard";
+import type { DailyCostWithInstances } from "./DashboardScreen";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { SidePanel } from "@/components/ui/SidePanel";

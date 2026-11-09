@@ -1,5 +1,5 @@
 import type { Currency } from "@/api/costs";
-import type { InstanceCost } from "@/api/dashboard";
+import type { InstanceCost } from "./DashboardScreen";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { formatMoney } from "@/lib/formatMoney";
 import { InstanceStatus } from "./InstanceStatus";

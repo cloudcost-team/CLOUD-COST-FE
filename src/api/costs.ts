@@ -24,19 +24,30 @@ export type DailyCostsResponse = {
   notes: string[];
 };
 
+type DateRange = { from: string; to: string };
+
 export const costKeys = {
-  daily: (accountId: string, from: string, to: string, currency: Currency) =>
-    ["costs", "daily", accountId, from, to, currency] as const,
+  all: ["costs"] as const,
+  daily: (accountId: string, currency: Currency, range: DateRange | null) =>
+    [...costKeys.all, "daily", accountId, currency, range] as const,
+  monthly: (accountId: string, currency: Currency, range: DateRange) =>
+    [...costKeys.all, "monthly", accountId, currency, range] as const,
 };
 
-export function getDailyCosts(
+export function getDailyCosts<T = DailyCostsResponse>(
   accountId: string,
-  from: string,
-  to: string,
   currency: Currency,
+  range: DateRange | null,
 ) {
-  const params = new URLSearchParams({ from, to, currency });
-  return apiRequest<DailyCostsResponse>(
-    `/aws/accounts/${accountId}/costs/daily?${params}`,
-  );
+  const params = new URLSearchParams({ currency, ...range });
+  return apiRequest<T>(`/aws/accounts/${accountId}/costs/daily?${params}`);
+}
+
+export function getMonthlyCosts<T>(
+  accountId: string,
+  currency: Currency,
+  range: DateRange,
+) {
+  const params = new URLSearchParams({ currency, ...range });
+  return apiRequest<T>(`/aws/accounts/${accountId}/costs/monthly?${params}`);
 }

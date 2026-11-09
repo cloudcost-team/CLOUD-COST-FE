@@ -1,4 +1,4 @@
-import type { CostFreshness } from "@/api/dashboard";
+import type { CostFreshness } from "./DashboardScreen";
 import { Icon } from "@/components/ui/Icon";
 import { formatKstDateTime } from "@/lib/kstDate";
 

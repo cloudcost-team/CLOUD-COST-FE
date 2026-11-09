@@ -1,22 +1,8 @@
+import type { Metadata } from "next";
 import { DashboardScreen } from "@/components/dashboard/DashboardScreen";
-import {
-  costsSummarySample,
-  dailyCostsSample,
-  dashboardKrwSample,
-  dashboardUsdSample,
-  instancesSample,
-  monthlyCostsSample,
-} from "@/components/dashboard/dashboardSample";
+
+export const metadata: Metadata = { title: "대시보드" };
 
 export default function DashboardPage() {
-  return (
-    <DashboardScreen
-      krw={dashboardKrwSample}
-      usd={dashboardUsdSample}
-      daily={dailyCostsSample.days}
-      monthly={monthlyCostsSample}
-      costs={costsSummarySample}
-      instances={instancesSample}
-    />
-  );
+  return <DashboardScreen />;
 }

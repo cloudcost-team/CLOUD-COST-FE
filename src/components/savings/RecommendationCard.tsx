@@ -1,7 +1,7 @@
 "use client";
 
 import type { Currency } from "@/api/costs";
-import type { WasteItem } from "@/api/waste";
+import type { WasteItem } from "./WasteScreen";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { formatMoney } from "@/lib/formatMoney";

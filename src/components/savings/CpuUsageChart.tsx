@@ -8,7 +8,7 @@ import {
   Tooltip,
   YAxis,
 } from "recharts";
-import type { WasteCpuChart, WasteMetrics } from "@/api/waste";
+import type { WasteCpuChart, WasteMetrics } from "./WasteScreen";
 import { Panel } from "@/components/ui/Panel";
 
 type CpuUsageChartProps = {
