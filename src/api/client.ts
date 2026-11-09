@@ -87,10 +87,16 @@ export async function apiRequest<T>(
   const needsLogin = !PUBLIC_PATH_PREFIXES.some((prefix) =>
     path.startsWith(prefix),
   );
-  if (needsLogin && !getAccessToken()) await refreshAccessToken();
+  const refreshedBeforeSend = needsLogin && !getAccessToken();
+  if (refreshedBeforeSend) await refreshAccessToken();
 
   let response = await send(path, init);
-  if (response.status === 401 && needsLogin && (await refreshAccessToken())) {
+  if (
+    response.status === 401 &&
+    needsLogin &&
+    !refreshedBeforeSend &&
+    (await refreshAccessToken())
+  ) {
     response = await send(path, init);
   }
 
