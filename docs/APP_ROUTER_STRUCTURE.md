@@ -1,6 +1,6 @@
 # App Router 구조
 
-CloudCost Insight 프론트엔드의 목표 라우팅 구조다. 화면은 기능 단위가 아니라 **사용자에게 보이는 화면 단위**로 나누고, Route Group은 URL에 포함하지 않는다.
+CloudCost 프론트엔드의 목표 라우팅 구조다. 화면은 기능 단위가 아니라 **사용자에게 보이는 화면 단위**로 나누고, Route Group은 URL에 포함하지 않는다.
 
 ```text
 src/app/
