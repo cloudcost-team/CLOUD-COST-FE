@@ -8,7 +8,7 @@ type BenchmarkMetricCardProps = {
   value: string;
   comparison: string | null;
   source: string;
-  chart: ReactNode;
+  chart?: ReactNode;
   onOpenDetail?: () => void;
 };
 
@@ -32,7 +32,7 @@ export function BenchmarkMetricCard({
         )}
         <p className="text-subtext-small text-text-quaternary">{source}</p>
       </div>
-      <div className="min-w-0 flex-1">{chart}</div>
+      {chart && <div className="min-w-0 flex-1">{chart}</div>}
       {onOpenDetail && (
         <button
           type="button"

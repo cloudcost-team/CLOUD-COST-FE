@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ConnectionDetailScreen } from "@/components/connection/ConnectionDetailScreen";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -8,6 +9,8 @@ async function ConnectionDetail({ params }: ConnectionDetailPageProps) {
   const { accountId } = await params;
   return <ConnectionDetailScreen accountId={accountId} />;
 }
+
+export const metadata: Metadata = { title: "연결 상세" };
 
 export default function ConnectionDetailPage(props: ConnectionDetailPageProps) {
   return (

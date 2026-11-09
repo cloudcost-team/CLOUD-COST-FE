@@ -63,7 +63,7 @@ jobs:
                   {name: "📦 PR 크기", value: $size, inline: true},
                   {name: "📊 변경 사항", value: "`\(env.CHANGED_FILES)`개 파일  |  +\(env.ADDITIONS)  -\(env.DELETIONS)", inline: true}
                 ],
-                footer: {text: "CloudCost Insight FE ☁️ 리뷰 한 번이 큰 힘이 됩니다"},
+                footer: {text: "CloudCost FE ☁️ 리뷰 한 번이 큰 힘이 됩니다"},
                 timestamp: env.CREATED_AT
               }]
             }' | curl -sf -H "Content-Type: application/json" -d @- "$DISCORD_WEBHOOK_URL"
@@ -113,7 +113,7 @@ jobs:
                   {name: "🌿 브랜치", value: "`\(env.HEAD_BRANCH)` → `\(env.BASE_BRANCH)`", inline: true},
                   {name: "📊 최종 변경 사항", value: "`\(env.CHANGED_FILES)`개 파일  |  +\(env.ADDITIONS)  -\(env.DELETIONS)", inline: false}
                 ],
-                footer: {text: "CloudCost Insight FE ☁️ 수고하셨습니다!"},
+                footer: {text: "CloudCost FE ☁️ 수고하셨습니다!"},
                 timestamp: env.MERGED_AT
               }]
             }' | curl -sf -H "Content-Type: application/json" -d @- "$DISCORD_WEBHOOK_URL"
@@ -143,7 +143,7 @@ jobs:
                   {name: "👤 작성자", value: env.ISSUE_AUTHOR, inline: true},
                   {name: "🏷️ 라벨", value: (if env.ISSUE_LABELS == "" then "-" else env.ISSUE_LABELS end), inline: true}
                 ],
-                footer: {text: "CloudCost Insight FE ☁️"},
+                footer: {text: "CloudCost FE ☁️"},
                 timestamp: env.CREATED_AT
               }]
             }' | curl -sf -H "Content-Type: application/json" -d @- "$DISCORD_WEBHOOK_URL"

@@ -1,6 +1,8 @@
+import type { Metadata } from "next";
 import { WasteScreen } from "@/components/savings/WasteScreen";
-import { wasteSample } from "@/components/savings/wasteSample";
+
+export const metadata: Metadata = { title: "낭비 리소스" };
 
 export default function WastePage() {
-  return <WasteScreen data={wasteSample} />;
+  return <WasteScreen />;
 }

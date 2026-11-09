@@ -1,6 +1,6 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
 import { SimulatorScreen } from "@/components/savings/SimulatorScreen";
-import { simulationSample } from "@/components/savings/simulatorSample";
 import { LoadingState } from "@/components/ui/LoadingState";
 
 type SimulatorSearchParams = Promise<{ recommendationId?: string }>;
@@ -11,13 +11,10 @@ async function RequestTimeSimulator({
   searchParams: SimulatorSearchParams;
 }) {
   const { recommendationId } = await searchParams;
-  return (
-    <SimulatorScreen
-      data={simulationSample}
-      initialRecommendationId={recommendationId}
-    />
-  );
+  return <SimulatorScreen initialRecommendationId={recommendationId} />;
 }
+
+export const metadata: Metadata = { title: "비용 시뮬레이터" };
 
 export default function SimulatorPage({
   searchParams,

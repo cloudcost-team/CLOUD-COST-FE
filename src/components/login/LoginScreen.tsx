@@ -7,7 +7,7 @@ import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { useAuthConfig, useGoogleLogin } from "@/hooks/useAuth";
-import { saveLoginSession, takeReturnPath } from "@/lib/authSession";
+import { setAccessToken, takeReturnPath } from "@/lib/authSession";
 import {
   GoogleIdentityError,
   requestGoogleCredential,
@@ -39,7 +39,7 @@ export function LoginScreen() {
         configResult.data.googleClientId,
       );
       const session = await googleLogin.mutateAsync({ idToken });
-      saveLoginSession(session);
+      setAccessToken(session.accessToken);
       router.push(takeReturnPath() ?? "/dashboard");
     } catch (error) {
       setLoginError(

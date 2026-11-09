@@ -1,10 +1,10 @@
-import type { SimulationResponse } from "@/api/simulations";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { Panel } from "@/components/ui/Panel";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { formatMoney } from "@/lib/formatMoney";
+import type { SimulationResponse } from "./SimulatorScreen";
 
 type SimulationResultCardProps = { data: SimulationResponse };
 
@@ -123,9 +123,14 @@ export function SimulationResultCard({ data }: SimulationResultCardProps) {
           <p className="text-subtext-medium text-text-tertiary">
             월 예산을 정하면 예산 안에 드는지도 보여 드려요
           </p>
-          <Button variant="assistive" size="small" className="mt-gap-small">
+          <ButtonLink
+            variant="assistive"
+            size="small"
+            href="/settings/alerts"
+            className="mt-gap-small"
+          >
             예산 설정하기
-          </Button>
+          </ButtonLink>
         </Panel>
       )}
     </Card>

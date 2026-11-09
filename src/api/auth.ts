@@ -36,3 +36,11 @@ export function loginWithGoogle(input: GoogleLoginRequest) {
     body: JSON.stringify(input),
   });
 }
+
+export function logout() {
+  return apiRequest<void>("/auth/logout", { method: "POST" });
+}
+
+export function getMe() {
+  return apiRequest<AuthUser>("/me");
+}

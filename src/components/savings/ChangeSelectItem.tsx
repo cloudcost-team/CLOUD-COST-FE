@@ -1,10 +1,10 @@
 import type { Currency } from "@/api/costs";
-import type { SimulationSelectedItem } from "@/api/simulations";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { formatMoney } from "@/lib/formatMoney";
+import type { WasteItem } from "./WasteScreen";
 
 type ChangeSelectItemProps = {
-  item: SimulationSelectedItem;
+  item: WasteItem;
   currency: Currency;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
@@ -32,7 +32,7 @@ export function ChangeSelectItem({
         </span>
       </span>
       <span className="text-label-small text-text-brand">
-        월 {formatMoney(item.monthlySavings, currency)} 절감
+        월 {formatMoney(item.estimatedMonthlySavings, currency)} 절감
       </span>
     </label>
   );

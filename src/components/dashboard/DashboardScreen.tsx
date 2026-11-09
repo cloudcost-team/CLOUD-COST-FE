@@ -1,14 +1,21 @@
 "use client";
 
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { format, parseISO } from "date-fns";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import type {
-  DailyCostWithInstances,
-  DashboardResponse,
-  InstancesResponse,
-  MonthlyCostsResponse,
-  CostsSummaryResponse,
-} from "@/api/dashboard";
+import type { AwsAccount } from "@/api/awsAccounts";
+import {
+  costKeys,
+  getDailyCosts,
+  getMonthlyCosts,
+  type Currency,
+  type DailyCost,
+} from "@/api/costs";
+import { dashboardKeys, getDashboard, getInstances } from "@/api/dashboard";
+import type { ExchangeRate } from "@/api/reports";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { NoConnectionState } from "@/components/report/NoConnectionState";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
@@ -17,9 +24,11 @@ import { Card } from "@/components/ui/Card";
 import { NoticeList } from "@/components/ui/NoticeList";
 import { Popover } from "@/components/ui/Popover";
 import { Tabs } from "@/components/ui/Tabs";
+import { useSelectedConnection } from "@/hooks/useSelectedConnection";
+import { formatKstDate, shiftYearMonth } from "@/lib/kstDate";
 import { useCurrencyStore } from "@/stores/currencyStore";
 import { DailyCostChart } from "./DailyCostChart";
-import { DashboardStateContent, type DashboardState } from "./DashboardStates";
+import { DashboardStateContent } from "./DashboardStates";
 import { DashboardStats } from "./DashboardStats";
 import { DayDetailPanel } from "./DayDetailPanel";
 import { FreshnessLine } from "./FreshnessLine";
@@ -27,58 +36,333 @@ import { MonthlyCostChart } from "./MonthlyCostChart";
 import { ServerCostTable } from "./ServerCostTable";
 import { formatDateRange } from "./dashboardFormat";
 
-type DashboardScreenProps = {
-  krw: DashboardResponse;
-  usd: DashboardResponse;
-  daily: DailyCostWithInstances[];
-  monthly: MonthlyCostsResponse;
-  costs: CostsSummaryResponse;
-  instances: InstancesResponse;
-  state?: DashboardState;
+export type CostFreshness = {
+  instancesRefreshedAt: string | null;
+  instancesFromCache: boolean;
+  usageRefreshedAt: string | null;
+  usageFromCache: boolean;
+  nextUsageRefreshAt: string | null;
+  warnings: string[];
 };
+
+type CostEnvelope = {
+  dataSource: "aws";
+  costBasis: "estimated_on_demand";
+  currency: Currency;
+  exchangeRate: ExchangeRate | null;
+  freshness: CostFreshness;
+  notes: string[];
+};
+
+export type InstanceCost = {
+  instanceId: string;
+  name: string | null;
+  instanceType: string;
+  state: string;
+  usageHours: number;
+  estimatedHourlyCost: number | null;
+  estimatedCost: number | null;
+  note: string | null;
+};
+
+export type DailyCostWithInstances = DailyCost & {
+  instances: InstanceCost[];
+};
+
+export type DailyCostsWithInstancesResponse = CostEnvelope & {
+  from: string;
+  to: string;
+  availableFrom: string | null;
+  days: DailyCostWithInstances[];
+};
+
+export type MonthlyCost = {
+  month: string;
+  usageHours: number;
+  estimatedCost: number | null;
+  estimatedCostChange: number | null;
+  instances: InstanceCost[];
+};
+
+export type MonthlyCostsResponse = CostEnvelope & {
+  availableFrom: string | null;
+  months: MonthlyCost[];
+};
+
+export type Ec2Instance = {
+  instanceId: string;
+  name: string | null;
+  instanceType: string;
+  region: string;
+  availabilityZone: string;
+  state: string;
+  launchTime: string;
+  platformDetails: string;
+  tenancy: string;
+  spot: boolean;
+  present: boolean;
+  currentRun: { since: string; hours: number; note: string } | null;
+  estimatedHourlyCost: number | null;
+  note: string | null;
+};
+
+export type InstancesResponse = CostEnvelope & {
+  instances: Ec2Instance[];
+};
+
+export type DashboardBudget = {
+  amount: number | null;
+  enteredAmount: number;
+  enteredCurrency: Currency;
+  usageRate: number | null;
+  thresholdReached: number | null;
+};
+
+export type DashboardLatestSpike = {
+  date: string;
+  cost: number;
+  ratio: number;
+  baseline: number;
+  baselineDays: number;
+  causeInstanceId: string | null;
+  causeName: string | null;
+  message: string;
+};
+
+export type DashboardResponse = CostEnvelope & {
+  timezone: string;
+  today: string;
+  month: string;
+  availableFrom: string | null;
+  monthToDate: {
+    from: string;
+    to: string;
+    usageHours: number;
+    estimatedCost: number | null;
+  };
+  instanceCounts: { running: number; stopped: number };
+  forecast: {
+    monthEndCost: number;
+    costThroughYesterday: number;
+    dailyAverage: number;
+    basisFrom: string;
+    basisTo: string;
+    basisDays: number;
+    remainingDays: number;
+  } | null;
+  budget: DashboardBudget | null;
+  previousMonthSamePeriod: {
+    currentFrom: string;
+    currentTo: string;
+    currentCost: number;
+    previousFrom: string;
+    previousTo: string;
+    previousCost: number;
+    change: number;
+    changeRate: number | null;
+  } | null;
+  latestSpike: DashboardLatestSpike | null;
+  asOf: string;
+};
+
+type DateRange = { from: string; to: string };
 type ServerTab = "cost" | "instances";
 
-export function DashboardScreen({
-  krw,
-  usd,
-  daily,
-  monthly,
-  costs,
-  instances,
-  state = "ready",
-}: DashboardScreenProps) {
-  const currency = useCurrencyStore((store) => store.currency);
-  const dashboard = currency === "USD" ? usd : krw;
-  const [rangeOpen, setRangeOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState<DailyCostWithInstances | null>(
-    null,
+function getRecentMonthsRange(): DateRange {
+  const month = formatKstDate(new Date()).slice(0, 7);
+  return { from: shiftYearMonth(month, -11), to: month };
+}
+
+function useDashboardQueries(accountId: string, range: DateRange | null) {
+  const currency = useCurrencyStore((state) => state.currency);
+  const monthlyRange = getRecentMonthsRange();
+  return [
+    useQuery({
+      queryKey: dashboardKeys.summary(accountId, currency),
+      queryFn: () => getDashboard<DashboardResponse>(accountId, currency),
+    }),
+    useQuery({
+      queryKey: costKeys.daily(accountId, currency, range),
+      queryFn: () =>
+        getDailyCosts<DailyCostsWithInstancesResponse>(
+          accountId,
+          currency,
+          range,
+        ),
+      placeholderData: keepPreviousData,
+    }),
+    useQuery({
+      queryKey: costKeys.monthly(accountId, currency, monthlyRange),
+      queryFn: () =>
+        getMonthlyCosts<MonthlyCostsResponse>(
+          accountId,
+          currency,
+          monthlyRange,
+        ),
+    }),
+    useQuery({
+      queryKey: dashboardKeys.instances(accountId, currency),
+      queryFn: () => getInstances<InstancesResponse>(accountId, currency),
+    }),
+  ] as const;
+}
+
+function DateRangePicker({
+  from,
+  to,
+  onApply,
+}: {
+  from: string;
+  to: string;
+  onApply: (range: DateRange) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [draftFrom, setDraftFrom] = useState<Date | undefined>();
+  const [draftTo, setDraftTo] = useState<Date | undefined>();
+  const valid = draftFrom && draftTo && draftFrom <= draftTo;
+
+  function changeOpen(next: boolean) {
+    if (next) {
+      setDraftFrom(parseISO(from));
+      setDraftTo(parseISO(to));
+    }
+    setOpen(next);
+  }
+
+  function apply() {
+    if (!draftFrom || !draftTo) return;
+    onApply({
+      from: format(draftFrom, "yyyy-MM-dd"),
+      to: format(draftTo, "yyyy-MM-dd"),
+    });
+    setOpen(false);
+  }
+
+  return (
+    <Popover
+      open={open}
+      onOpenChange={changeOpen}
+      title="기간 선택"
+      align="end"
+      className="w-180"
+      trigger={(props) => (
+        <Button {...props} variant="assistive" size="medium" icon="calendar">
+          {formatDateRange(from, to)}
+        </Button>
+      )}
+      actions={
+        <>
+          <Button
+            variant="assistive"
+            size="small"
+            onClick={() => setOpen(false)}
+          >
+            취소
+          </Button>
+          <Button size="small" disabled={!valid} onClick={apply}>
+            적용
+          </Button>
+        </>
+      }
+      helper="기록 시작일 이후, 최대 455일까지 볼 수 있어요."
+    >
+      <div className="grid gap-gap-medium sm:grid-cols-2">
+        <Calendar
+          mode="single"
+          selected={draftFrom}
+          onSelect={setDraftFrom}
+          defaultMonth={draftFrom}
+          disabled={{ after: new Date() }}
+          aria-label="시작일"
+        />
+        <Calendar
+          mode="single"
+          selected={draftTo}
+          onSelect={setDraftTo}
+          defaultMonth={draftTo}
+          disabled={{ after: new Date() }}
+          aria-label="종료일"
+        />
+      </div>
+    </Popover>
   );
-  const [selectedMonth, setSelectedMonth] = useState("2026-10");
+}
+
+function MonthlyCostCard({
+  months,
+  selectedMonth,
+  onSelectMonth,
+}: {
+  months: MonthlyCost[];
+  selectedMonth: string;
+  onSelectMonth: (month: string) => void;
+}) {
+  const index = months.findIndex((item) => item.month === selectedMonth);
+  return (
+    <Card
+      title="월별 추정 비용 · 최근 12개월"
+      action={
+        <div className="flex items-center gap-gap-small">
+          <Button
+            variant="assistive"
+            size="small"
+            icon="chevron-left"
+            disabled={index <= 0}
+            onClick={() => onSelectMonth(months[index - 1].month)}
+          >
+            이전
+          </Button>
+          <span className="text-label-xsmall text-text-strong">
+            {selectedMonth.replace("-", "년 ")}월
+          </span>
+          <Button
+            variant="assistive"
+            size="small"
+            disabled={index >= months.length - 1}
+            onClick={() => onSelectMonth(months[index + 1].month)}
+          >
+            다음
+          </Button>
+        </div>
+      }
+    >
+      <MonthlyCostChart
+        months={months}
+        selectedMonth={selectedMonth}
+        onSelectMonth={onSelectMonth}
+      />
+      <p className="text-subtext-medium text-text-tertiary">
+        {Number(selectedMonth.slice(5))}월 추정 비용을 선택하면 아래 서버별
+        비용도 같은 달 기준으로 바뀌어요.
+      </p>
+    </Card>
+  );
+}
+
+function ServerSection({
+  month,
+  monthRows,
+  instances,
+  currency,
+}: {
+  month: string;
+  monthRows: InstanceCost[];
+  instances: Ec2Instance[];
+  currency: Currency;
+}) {
   const [serverTab, setServerTab] = useState<ServerTab>("cost");
-  if (state !== "ready") return <DashboardStateContent state={state} />;
-  const selectedIndex = selectedDay
-    ? daily.findIndex((day) => day.date === selectedDay.date)
-    : -1;
-  const selectedMonthData =
-    monthly.months.find((month) => month.month === selectedMonth) ??
-    monthly.months.at(-1);
-  const serverRows = selectedMonthData?.instances.length
-    ? selectedMonthData.instances
-    : costs.instances;
   const tabs = [
     {
       value: "cost",
       label: "서버별 비용",
-      content: (
-        <ServerCostTable rows={serverRows} currency={dashboard.currency} />
-      ),
+      content: <ServerCostTable rows={monthRows} currency={currency} />,
     },
     {
       value: "instances",
       label: "서버 목록",
       content: (
         <ServerCostTable
-          rows={instances.instances.map((item) => ({
+          rows={instances.map((item) => ({
             instanceId: item.instanceId,
             name: item.name,
             instanceType: item.instanceType,
@@ -88,84 +372,114 @@ export function DashboardScreen({
             estimatedCost: null,
             note: item.note,
           }))}
-          currency={dashboard.currency}
+          currency={currency}
         />
       ),
     },
   ] satisfies { value: ServerTab; label: string; content: React.ReactNode }[];
   return (
-    <div className="flex flex-col gap-spacing-medium">
-      <PageHeader
-        title="대시보드"
-        description="EC2 사용 시간과 추정 비용을 한눈에 봐요."
-        actions={
-          <>
-            <Badge tone="info">실제 AWS</Badge>
-            <Popover
-              open={rangeOpen}
-              onOpenChange={setRangeOpen}
-              title="기간 선택"
-              align="end"
-              className="w-180"
-              trigger={(props) => (
-                <Button
-                  {...props}
-                  variant="assistive"
-                  size="medium"
-                  icon="calendar"
-                >
-                  {formatDateRange(
-                    daily[0].date,
-                    daily.at(-1)?.date ?? daily[0].date,
-                  )}
-                </Button>
-              )}
-              actions={
-                <>
-                  <Button
-                    variant="assistive"
-                    size="small"
-                    onClick={() => setRangeOpen(false)}
-                  >
-                    취소
-                  </Button>
-                  <Button size="small" onClick={() => setRangeOpen(false)}>
-                    적용
-                  </Button>
-                </>
-              }
-              helper="기록 시작일 이후, 최대 455일까지 볼 수 있어요."
-            >
-              <div className="grid gap-gap-medium sm:grid-cols-2">
-                <Calendar mode="single" selected={new Date("2026-10-06")} />
-                <Calendar mode="single" selected={new Date("2026-11-04")} />
-              </div>
-            </Popover>
-          </>
-        }
+    <section className="flex flex-col gap-gap-medium">
+      <h2 className="text-title-small text-text-strong">
+        서버별 비용 · {month.replaceAll("-", ".")}
+      </h2>
+      <Tabs
+        items={tabs}
+        value={serverTab}
+        onChange={setServerTab}
+        aria-label="서버 정보"
       />
-      <FreshnessLine freshness={dashboard.freshness} />
-      {dashboard.latestSpike && (
+    </section>
+  );
+}
+
+function ConnectionErrorBanner({ connection }: { connection: AwsAccount }) {
+  const router = useRouter();
+  return (
+    <Banner
+      title="AWS 연결을 확인해 주세요"
+      description={
+        connection.lastError?.message ??
+        "저장된 기록은 볼 수 있지만 새 데이터는 가져오지 못하고 있어요."
+      }
+      action={{
+        label: "연결 상세 보기",
+        onClick: () =>
+          router.push(`/settings/connections/${connection.accountId}`),
+      }}
+    />
+  );
+}
+
+function DashboardView({
+  connection,
+  dashboard,
+  daily,
+  monthly,
+  instances,
+  range,
+  onRangeChange,
+}: {
+  connection: AwsAccount;
+  dashboard: DashboardResponse;
+  daily: DailyCostsWithInstancesResponse;
+  monthly: MonthlyCostsResponse;
+  instances: InstancesResponse;
+  range: DateRange | null;
+  onRangeChange: (range: DateRange) => void;
+}) {
+  const [selectedDay, setSelectedDay] = useState<DailyCostWithInstances | null>(
+    null,
+  );
+  const [pickedMonth, setPickedMonth] = useState<string | null>(null);
+  const days = daily.days;
+  const selectedIndex = selectedDay
+    ? days.findIndex((day) => day.date === selectedDay.date)
+    : -1;
+  const selectedMonthData =
+    monthly.months.find((month) => month.month === pickedMonth) ??
+    monthly.months.at(-1);
+  const latestSpike = dashboard.latestSpike;
+
+  return (
+    <>
+      <div className="flex flex-wrap items-center justify-between gap-gap-medium">
+        <FreshnessLine freshness={dashboard.freshness} />
+        <DateRangePicker
+          from={daily.from}
+          to={daily.to}
+          onApply={onRangeChange}
+        />
+      </div>
+      {connection.status === "ERROR" && (
+        <ConnectionErrorBanner connection={connection} />
+      )}
+      {dashboard.freshness.warnings.length > 0 && (
         <Banner
-          title={dashboard.latestSpike.message}
+          tone="warning"
+          title="일부 데이터를 새로 가져오지 못했어요"
+          description={dashboard.freshness.warnings.join(" ")}
+        />
+      )}
+      {latestSpike && (
+        <Banner
+          title={latestSpike.message}
           description={
-            dashboard.latestSpike.causeName
-              ? `${dashboard.latestSpike.causeName} 사용 시간이 늘었어요. 일별 그래프의 빨간 막대를 확인해 주세요.`
+            latestSpike.causeName
+              ? `${latestSpike.causeName} 사용 시간이 늘었어요. 일별 그래프의 빨간 막대를 확인해 주세요.`
               : undefined
           }
           action={{
             label: "그날 보기",
             onClick: () =>
               setSelectedDay(
-                daily.find((day) => day.date === dashboard.latestSpike?.date) ??
-                  null,
+                days.find((day) => day.date === latestSpike.date) ?? null,
               ),
           }}
         />
       )}
       <DashboardStats dashboard={dashboard} />
       <Card
-        title="일별 추정 비용 · 최근 30일"
+        title={`일별 추정 비용 · ${range ? formatDateRange(range.from, range.to) : "최근 30일"}`}
         action={
           <>
             <div className="flex gap-gap-medium text-subtext-small text-text-tertiary">
@@ -175,8 +489,8 @@ export function DashboardScreen({
             <Button
               variant="assistive"
               size="small"
-              disabled={daily.length === 0}
-              onClick={() => setSelectedDay(daily.at(-1) ?? null)}
+              disabled={days.length === 0}
+              onClick={() => setSelectedDay(days.at(-1) ?? null)}
             >
               날짜별 상세 보기
             </Button>
@@ -184,79 +498,112 @@ export function DashboardScreen({
         }
       >
         <DailyCostChart
-          days={daily}
-          currency={dashboard.currency}
+          days={days}
+          currency={daily.currency}
           onSelectDay={setSelectedDay}
         />
       </Card>
-      <Card
-        title="월별 추정 비용 · 최근 12개월"
-        action={
-          <div className="flex items-center gap-gap-small">
-            <Button
-              variant="assistive"
-              size="small"
-              icon="chevron-left"
-              onClick={() => {
-                const index = monthly.months.findIndex(
-                  (item) => item.month === selectedMonth,
-                );
-                if (index > 0)
-                  setSelectedMonth(monthly.months[index - 1].month);
-              }}
-            >
-              이전
-            </Button>
-            <span className="text-label-xsmall text-text-strong">
-              {selectedMonth.replace("-", "년 ")}월
-            </span>
-            <Button
-              variant="assistive"
-              size="small"
-              onClick={() => {
-                const index = monthly.months.findIndex(
-                  (item) => item.month === selectedMonth,
-                );
-                if (index < monthly.months.length - 1)
-                  setSelectedMonth(monthly.months[index + 1].month);
-              }}
-            >
-              다음
-            </Button>
-          </div>
-        }
-      >
-        <MonthlyCostChart
-          months={monthly.months}
-          selectedMonth={selectedMonth}
-          onSelectMonth={setSelectedMonth}
-        />
-        <p className="text-subtext-medium text-text-tertiary">
-          {selectedMonthData?.month.slice(5)}월 추정 비용을 선택하면 아래 서버별
-          비용도 같은 달 기준으로 바뀌어요.
-        </p>
-      </Card>
-      <section className="flex flex-col gap-gap-medium">
-        <h2 className="text-title-small text-text-strong">
-          서버별 비용 · {selectedMonth.replaceAll("-", ".")}
-        </h2>
-        <Tabs
-          items={tabs}
-          value={serverTab}
-          onChange={setServerTab}
-          aria-label="서버 정보"
-        />
-      </section>
+      {selectedMonthData && (
+        <>
+          <MonthlyCostCard
+            months={monthly.months}
+            selectedMonth={selectedMonthData.month}
+            onSelectMonth={setPickedMonth}
+          />
+          <ServerSection
+            month={selectedMonthData.month}
+            monthRows={selectedMonthData.instances}
+            instances={instances.instances}
+            currency={monthly.currency}
+          />
+        </>
+      )}
       <NoticeList lines={dashboard.notes} />
       <DayDetailPanel
         day={selectedDay}
-        currency={dashboard.currency}
+        currency={daily.currency}
         onClose={() => setSelectedDay(null)}
         onMove={(offset) => {
-          const next = daily[selectedIndex + offset];
+          const next = days[selectedIndex + offset];
           if (next) setSelectedDay(next);
         }}
       />
+    </>
+  );
+}
+
+function DashboardContent({ connection }: { connection: AwsAccount }) {
+  const [range, setRange] = useState<DateRange | null>(null);
+  const queries = useDashboardQueries(connection.accountId, range);
+  const [summary, daily, monthly, instances] = queries;
+  const failed = queries.find((query) => query.isError && !query.data);
+  const staleFailed = queries.find((query) => query.isError && query.data);
+  const retryFailed = () =>
+    queries
+      .filter((query) => query.isError)
+      .forEach((query) => query.refetch());
+
+  if (failed)
+    return (
+      <Banner
+        title="대시보드를 불러오지 못했어요"
+        description={failed.error?.message}
+        action={{ label: "다시 시도", onClick: retryFailed }}
+      />
+    );
+  if (!summary.data || !daily.data || !monthly.data || !instances.data)
+    return <DashboardStateContent state="loading" />;
+  if (summary.data.availableFrom === null)
+    return <DashboardStateContent state="first-collection" />;
+
+  return (
+    <>
+      {staleFailed && (
+        <Banner
+          tone="warning"
+          title="최신 데이터를 불러오지 못해 이전 데이터를 보여 주고 있어요"
+          description={staleFailed.error?.message}
+          action={{ label: "다시 시도", onClick: retryFailed }}
+        />
+      )}
+      <DashboardView
+        connection={connection}
+        dashboard={summary.data}
+        daily={daily.data}
+        monthly={monthly.data}
+        instances={instances.data}
+        range={range}
+        onRangeChange={setRange}
+      />
+    </>
+  );
+}
+
+export function DashboardScreen() {
+  const { selected, isPending, error, refetch } = useSelectedConnection();
+
+  let body;
+  if (isPending) body = <DashboardStateContent state="loading" />;
+  else if (error)
+    body = (
+      <Banner
+        title="연결 목록을 불러오지 못했어요"
+        description={error.message}
+        action={{ label: "다시 시도", onClick: () => refetch() }}
+      />
+    );
+  else if (!selected) body = <NoConnectionState />;
+  else
+    body = <DashboardContent key={selected.accountId} connection={selected} />;
+
+  return (
+    <div className="flex flex-col gap-spacing-medium">
+      <PageHeader
+        title="대시보드"
+        description="EC2 사용 시간과 추정 비용을 한눈에 봐요."
+        actions={<Badge tone="info">실제 AWS</Badge>}
+      />
+      {body}
     </div>
   );
 }

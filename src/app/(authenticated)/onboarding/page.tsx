@@ -1,6 +1,9 @@
+import type { Metadata } from "next";
 import { AppShell } from "@/components/layout/AppShell";
 import { OnboardingScreen } from "@/components/connection/OnboardingScreen";
 import { UserMenu } from "@/components/layout/UserMenu";
+
+export const metadata: Metadata = { title: "AWS 연결 시작" };
 
 export default function OnboardingPage() {
   return (

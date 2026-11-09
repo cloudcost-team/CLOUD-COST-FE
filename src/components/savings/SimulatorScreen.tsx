@@ -1,31 +1,180 @@
 "use client";
 
-import { useState } from "react";
-import type { SimulationResponse } from "@/api/simulations";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import type { AwsAccount } from "@/api/awsAccounts";
+import type { Currency } from "@/api/costs";
+import type { ExchangeRate } from "@/api/reports";
+import { simulate, simulationKeys } from "@/api/simulations";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { NoConnectionState } from "@/components/report/NoConnectionState";
+import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { NoticeList } from "@/components/ui/NoticeList";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { Slider } from "@/components/ui/Slider";
+import { useSelectedConnection } from "@/hooks/useSelectedConnection";
+import { useCurrencyStore } from "@/stores/currencyStore";
+import { useSimulationSelectionStore } from "@/stores/simulationSelectionStore";
 import { ChangeSelectItem } from "./ChangeSelectItem";
 import { SimulationResultCard } from "./SimulationResultCard";
+import {
+  useWaste,
+  type Freshness,
+  type WasteItem,
+  type WasteKind,
+} from "./WasteScreen";
+
+export type SimulationSelectedItem = {
+  recommendationId: string;
+  instanceId: string;
+  name: string | null;
+  kind: WasteKind;
+  kindLabel: string;
+  action: string;
+  monthlySavings: number;
+};
+
+export type SimulationCost = {
+  monthlyCost: number | null;
+  budgetRate: number | null;
+};
+
+export type SimulationBudget = {
+  amount: number;
+  enteredAmount: number;
+  enteredCurrency: Currency;
+};
+
+export type SimulationResponse = {
+  dataSource: "aws" | "demo";
+  costBasis: "estimated_on_demand";
+  currency: Currency;
+  exchangeRate?: ExchangeRate | null;
+  status: "OK" | "NO_FORECAST";
+  trafficGrowthPercent: number;
+  selectedCount: number;
+  selected: SimulationSelectedItem[];
+  selectedMonthlySavings: number | null;
+  forecastMonthEndCost: number | null;
+  before: SimulationCost | null;
+  after: SimulationCost | null;
+  monthlySavings: number | null;
+  yearlySavings: number | null;
+  budget: SimulationBudget | null;
+  withinBudget: boolean | null;
+  freshness: Freshness;
+  notes: string[];
+  asOf: string;
+};
 
 type SimulatorScreenProps = {
-  data: SimulationResponse;
   initialRecommendationId?: string;
 };
 
-export function SimulatorScreen({
-  data,
+const GROWTH_DEBOUNCE_MS = 300;
+
+export function useSimulation(
+  accountId: string,
+  recommendationIds: string[],
+  trafficGrowthPercent: number,
+  enabled = true,
+) {
+  const currency = useCurrencyStore((state) => state.currency);
+  const input = { recommendationIds, trafficGrowthPercent };
+  return useQuery({
+    queryKey: simulationKeys.result(accountId, currency, input),
+    queryFn: () => simulate<SimulationResponse>(accountId, currency, input),
+    placeholderData: keepPreviousData,
+    enabled,
+  });
+}
+
+function getInitialIds(
+  items: WasteItem[],
+  initialRecommendationId: string | undefined,
+  savedIds: string[] | undefined,
+) {
+  const ids = items.map((item) => item.recommendationId);
+  if (initialRecommendationId && ids.includes(initialRecommendationId))
+    return [initialRecommendationId];
+  if (savedIds) return savedIds.filter((id) => ids.includes(id));
+  return ids;
+}
+
+function useDebouncedValue(value: number) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), GROWTH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [value]);
+  return debounced;
+}
+
+function SimulationResult({
+  accountId,
+  recommendationIds,
+  trafficGrowthPercent,
+}: {
+  accountId: string;
+  recommendationIds: string[];
+  trafficGrowthPercent: number;
+}) {
+  const { data, isPending, isError, error, refetch } = useSimulation(
+    accountId,
+    recommendationIds,
+    trafficGrowthPercent,
+  );
+  if (isPending) return <Skeleton shape="block" className="h-96 w-full" />;
+  if (isError)
+    return (
+      <Banner
+        title="시뮬레이션 결과를 불러오지 못했어요"
+        description={error.message}
+        action={{ label: "다시 시도", onClick: () => refetch() }}
+      />
+    );
+  return (
+    <div className="flex flex-col gap-gap-medium">
+      <SimulationResultCard data={data} />
+      <NoticeList
+        variant="plain"
+        lines={[...data.freshness.warnings, ...data.notes]}
+      />
+    </div>
+  );
+}
+
+function SimulatorBody({
+  accountId,
+  items,
+  currency,
   initialRecommendationId,
-}: SimulatorScreenProps) {
-  const initialIds =
-    initialRecommendationId &&
-    data.selected.some(
-      (item) => item.recommendationId === initialRecommendationId,
-    )
-      ? [initialRecommendationId]
-      : data.selected.map((item) => item.recommendationId);
-  const [selectedIds, setSelectedIds] = useState(initialIds);
-  const [growth, setGrowth] = useState(data.trafficGrowthPercent);
+}: {
+  accountId: string;
+  items: WasteItem[];
+  currency: Currency;
+  initialRecommendationId?: string;
+}) {
+  const saved = useSimulationSelectionStore((state) =>
+    state.selection?.accountId === accountId ? state.selection : null,
+  );
+  const save = useSimulationSelectionStore((state) => state.save);
+  const [selectedIds, setSelectedIds] = useState(() =>
+    getInitialIds(items, initialRecommendationId, saved?.recommendationIds),
+  );
+  const [growth, setGrowth] = useState(saved?.trafficGrowthPercent ?? 0);
+  const debouncedGrowth = useDebouncedValue(growth);
+
+  useEffect(() => {
+    save({
+      accountId,
+      recommendationIds: selectedIds,
+      trafficGrowthPercent: debouncedGrowth,
+    });
+  }, [accountId, selectedIds, debouncedGrowth, save]);
+
   function changeItem(id: string, checked: boolean) {
     setSelectedIds((current) =>
       checked
@@ -33,69 +182,136 @@ export function SimulatorScreen({
         : current.filter((selected) => selected !== id),
     );
   }
+
+  return (
+    <div className="grid items-start gap-gap-xlarge xl:grid-cols-[minmax(0,1fr)_23.75rem]">
+      <div className="flex flex-col gap-gap-xlarge">
+        <Card
+          title="적용할 변경"
+          action={
+            <span className="text-subtext-medium text-text-tertiary">
+              {selectedIds.length} / {items.length}
+            </span>
+          }
+        >
+          <div>
+            {items.map((item) => (
+              <ChangeSelectItem
+                key={item.recommendationId}
+                item={item}
+                currency={currency}
+                checked={selectedIds.includes(item.recommendationId)}
+                onCheckedChange={(checked) =>
+                  changeItem(item.recommendationId, checked)
+                }
+              />
+            ))}
+          </div>
+        </Card>
+        <Card
+          title="예상 사용량 증가"
+          action={
+            <span className="text-title-small text-text-brand">{growth}%</span>
+          }
+        >
+          <Slider
+            value={growth}
+            min={0}
+            max={100}
+            step={1}
+            onValueChange={setGrowth}
+            minLabel="0%"
+            markerLabel="+50%"
+            maxLabel="+100%"
+            aria-label="예상 사용량 증가"
+          />
+          <p className="text-subtext-medium text-text-tertiary">
+            서버·DB·트래픽 사용량이 지금보다 이만큼 늘어난다고 보고, 늘어난 만큼
+            비용을 다시 계산해요.
+          </p>
+        </Card>
+      </div>
+      <SimulationResult
+        accountId={accountId}
+        recommendationIds={selectedIds}
+        trafficGrowthPercent={debouncedGrowth}
+      />
+    </div>
+  );
+}
+
+function SimulatorContent({
+  connection,
+  initialRecommendationId,
+}: {
+  connection: AwsAccount;
+  initialRecommendationId?: string;
+}) {
+  const { data, isPending, isError, error, refetch } = useWaste(
+    connection.accountId,
+  );
+
+  if (isPending) return <Skeleton shape="block" className="h-96 w-full" />;
+  if (isError)
+    return (
+      <Banner
+        title="적용할 변경 목록을 불러오지 못했어요"
+        description={error.message}
+        action={{ label: "다시 시도", onClick: () => refetch() }}
+      />
+    );
+  if (data.items.length === 0)
+    return (
+      <EmptyState
+        variant="card"
+        icon="check-circle"
+        title="적용할 변경이 없어요"
+        description="낭비 리소스에서 추천이 생기면 여기서 효과를 미리 볼 수 있어요."
+        action={{ label: "낭비 리소스로 가기", href: "/savings/waste" }}
+      />
+    );
+  return (
+    <SimulatorBody
+      accountId={connection.accountId}
+      items={data.items}
+      currency={data.currency}
+      initialRecommendationId={initialRecommendationId}
+    />
+  );
+}
+
+export function SimulatorScreen({
+  initialRecommendationId,
+}: SimulatorScreenProps) {
+  const { selected, isPending, error, refetch } = useSelectedConnection();
+
+  let body;
+  if (isPending) body = <Skeleton shape="block" className="h-96 w-full" />;
+  else if (error)
+    body = (
+      <Banner
+        title="연결 목록을 불러오지 못했어요"
+        description={error.message}
+        action={{ label: "다시 시도", onClick: () => refetch() }}
+      />
+    );
+  else if (!selected) body = <NoConnectionState />;
+  else
+    body = (
+      <SimulatorContent
+        key={selected.accountId}
+        connection={selected}
+        initialRecommendationId={initialRecommendationId}
+      />
+    );
+
   return (
     <div className="flex flex-col gap-spacing-medium">
       <PageHeader
         title="비용 시뮬레이터"
         description="추천을 골라 적용하면 비용이 얼마나 바뀌는지 미리 봐요. 실제 변경은 AWS 콘솔에서 해 주세요."
       />
-      <div className="grid items-start gap-gap-xlarge xl:grid-cols-[minmax(0,1fr)_23.75rem]">
-        <div className="flex flex-col gap-gap-xlarge">
-          <Card
-            title="적용할 변경"
-            action={
-              <span className="text-subtext-medium text-text-tertiary">
-                {selectedIds.length} / {data.selected.length}
-              </span>
-            }
-          >
-            <div>
-              {data.selected.map((item) => (
-                <ChangeSelectItem
-                  key={item.recommendationId}
-                  item={item}
-                  currency={data.currency}
-                  checked={selectedIds.includes(item.recommendationId)}
-                  onCheckedChange={(checked) =>
-                    changeItem(item.recommendationId, checked)
-                  }
-                />
-              ))}
-            </div>
-          </Card>
-          <Card
-            title="예상 사용량 증가"
-            action={
-              <span className="text-title-small text-text-brand">
-                {growth}%
-              </span>
-            }
-          >
-            <Slider
-              value={growth}
-              min={0}
-              max={100}
-              step={1}
-              onValueChange={setGrowth}
-              minLabel="0%"
-              markerLabel="+50%"
-              maxLabel="+100%"
-              aria-label="예상 사용량 증가"
-            />
-            <p className="text-subtext-medium text-text-tertiary">
-              서버·DB·트래픽 사용량이 지금보다 이만큼 늘어난다고 보고, 늘어난
-              만큼 비용을 다시 계산해요.
-            </p>
-          </Card>
-        </div>
-        <SimulationResultCard
-          data={{
-            ...data,
-            selectedCount: selectedIds.length,
-            trafficGrowthPercent: growth,
-          }}
-        />
-      </div>
+      {body}
     </div>
   );
 }

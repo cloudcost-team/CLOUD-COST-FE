@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import type { Currency } from "@/api/costs";
-import type { DailyCostWithInstances } from "@/api/dashboard";
+import type { DailyCostWithInstances } from "./DashboardScreen";
 import { formatMoney } from "@/lib/formatMoney";
 import { ChartTooltip } from "./ChartTooltip";
 import { formatShortDate } from "./dashboardFormat";

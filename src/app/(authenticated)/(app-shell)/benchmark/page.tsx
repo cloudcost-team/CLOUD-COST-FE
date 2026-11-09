@@ -1,19 +1,8 @@
+import type { Metadata } from "next";
 import { BenchmarkScreen } from "@/components/benchmark/BenchmarkScreen";
-import {
-  benchmarkDistributionSample,
-  benchmarkSample,
-  benchmarkSpendScaleSample,
-  selectedMonthlySavingsSample,
-} from "@/components/benchmark/benchmarkSample";
+
+export const metadata: Metadata = { title: "팀 벤치마킹" };
 
 export default function BenchmarkPage() {
-  return (
-    <BenchmarkScreen
-      data={benchmarkSample}
-      isPending={false}
-      distribution={benchmarkDistributionSample}
-      spendScale={benchmarkSpendScaleSample}
-      selectedMonthlySavings={selectedMonthlySavingsSample}
-    />
-  );
+  return <BenchmarkScreen />;
 }

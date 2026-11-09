@@ -1,12 +1,15 @@
 "use client";
 
-import type { BenchmarkOversizedRatio, BenchmarkServer } from "@/api/benchmark";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Panel } from "@/components/ui/Panel";
 import { SidePanel } from "@/components/ui/SidePanel";
 import { StatCard } from "@/components/ui/StatCard";
+import type {
+  BenchmarkOversizedRatio,
+  BenchmarkServer,
+} from "./BenchmarkScreen";
 import { formatPercent } from "./benchmarkFormat";
 
 type OversizedRatioDetailPanelProps = {

@@ -1,10 +1,20 @@
-import { getLoginSession } from "@/lib/authSession";
+import {
+  clearAccessToken,
+  getAccessToken,
+  setAccessToken,
+} from "@/lib/authSession";
 
 type ApiErrorBody = {
   error?: {
     code?: string;
     message?: string;
   };
+};
+
+type RefreshResponse = {
+  accessToken: string;
+  tokenType: "Bearer";
+  expiresAt: string;
 };
 
 function getApiBaseUrl() {
@@ -28,19 +38,67 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest<T>(
-  path: string,
-  init?: RequestInit,
-): Promise<T> {
-  const accessToken = getLoginSession()?.accessToken;
-  const response = await fetch(`${getApiBaseUrl()}${path}`, {
+const PUBLIC_PATH_PREFIXES = ["/auth/", "/demo/"];
+
+let refreshing: Promise<boolean> | null = null;
+
+async function requestRefresh() {
+  try {
+    const response = await fetch(`${getApiBaseUrl()}/auth/refresh`, {
+      method: "POST",
+      credentials: "include",
+    });
+    if (!response.ok) {
+      clearAccessToken();
+      return false;
+    }
+    const body = (await response.json()) as RefreshResponse;
+    setAccessToken(body.accessToken);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function refreshAccessToken() {
+  refreshing ??= requestRefresh().finally(() => {
+    refreshing = null;
+  });
+  return refreshing;
+}
+
+function send(path: string, init?: RequestInit) {
+  const accessToken = getAccessToken();
+  return fetch(`${getApiBaseUrl()}${path}`, {
     ...init,
+    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       ...(accessToken && { Authorization: `Bearer ${accessToken}` }),
       ...init?.headers,
     },
   });
+}
+
+export async function apiRequest<T>(
+  path: string,
+  init?: RequestInit,
+): Promise<T> {
+  const needsLogin = !PUBLIC_PATH_PREFIXES.some((prefix) =>
+    path.startsWith(prefix),
+  );
+  const refreshedBeforeSend = needsLogin && !getAccessToken();
+  if (refreshedBeforeSend) await refreshAccessToken();
+
+  let response = await send(path, init);
+  if (
+    response.status === 401 &&
+    needsLogin &&
+    !refreshedBeforeSend &&
+    (await refreshAccessToken())
+  ) {
+    response = await send(path, init);
+  }
 
   if (!response.ok) {
     const body = (await response.json().catch(() => ({}))) as ApiErrorBody;
