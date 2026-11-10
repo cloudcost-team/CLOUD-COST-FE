@@ -2,9 +2,15 @@ type GoogleCredentialResponse = {
   credential: string;
 };
 
-type GooglePromptNotification = {
-  isSkippedMoment: () => boolean;
-  isNotDisplayed: () => boolean;
+type GoogleButtonOptions = {
+  type: "standard";
+  theme: "outline";
+  size: "large";
+  text: "continue_with";
+  shape: "rectangular";
+  logo_alignment: "center";
+  locale: string;
+  width: number;
 };
 
 type GoogleIdentity = {
@@ -12,7 +18,7 @@ type GoogleIdentity = {
     client_id: string;
     callback: (response: GoogleCredentialResponse) => void;
   }) => void;
-  prompt: (listener?: (notification: GooglePromptNotification) => void) => void;
+  renderButton: (parent: HTMLElement, options: GoogleButtonOptions) => void;
 };
 
 declare global {
@@ -36,7 +42,7 @@ const SCRIPT_SELECTOR = 'script[data-cloudcost-google-identity="true"]';
 
 let scriptPromise: Promise<void> | undefined;
 let initializedClientId: string | undefined;
-let settleCredential: ((credential: string) => void) | undefined;
+let handleCredential: ((credential: string) => void) | undefined;
 
 function loadGoogleIdentity() {
   if (window.google?.accounts.id) return Promise.resolve();
@@ -70,7 +76,14 @@ function loadGoogleIdentity() {
   return scriptPromise;
 }
 
-export async function requestGoogleCredential(clientId: string) {
+const GOOGLE_BUTTON_MIN_WIDTH = 200;
+const GOOGLE_BUTTON_MAX_WIDTH = 400;
+
+export async function renderGoogleButton(
+  parent: HTMLElement,
+  clientId: string,
+  onCredential: (credential: string) => void,
+) {
   await loadGoogleIdentity();
 
   const identity = window.google?.accounts.id;
@@ -78,45 +91,46 @@ export async function requestGoogleCredential(clientId: string) {
     throw new GoogleIdentityError("Google 로그인을 시작하지 못했습니다.");
   }
 
+  handleCredential = onCredential;
   if (initializedClientId !== clientId) {
     identity.initialize({
       client_id: clientId,
-      callback: (response) => settleCredential?.(response.credential),
+      callback: (response) => handleCredential?.(response.credential),
     });
     initializedClientId = clientId;
   }
 
-  return new Promise<string>((resolve, reject) => {
-    const timeout = window.setTimeout(
-      () =>
-        finish(() =>
-          reject(
-            new GoogleIdentityError(
-              "Google 로그인 응답 시간이 초과되었습니다.",
-            ),
-          ),
-        ),
-      60_000,
-    );
-
-    function finish(settle: () => void) {
-      window.clearTimeout(timeout);
-      settleCredential = undefined;
-      settle();
-    }
-
-    settleCredential = (credential) => finish(() => resolve(credential));
-
-    identity.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        finish(() =>
-          reject(
-            new GoogleIdentityError(
-              "Google 로그인 창이 닫혔거나 표시되지 않았어요. 다시 시도해 주세요.",
-            ),
-          ),
-        );
-      }
-    });
+  identity.renderButton(parent, {
+    type: "standard",
+    theme: "outline",
+    size: "large",
+    text: "continue_with",
+    shape: "rectangular",
+    logo_alignment: "center",
+    locale: "ko",
+    width: Math.min(
+      Math.max(parent.clientWidth, GOOGLE_BUTTON_MIN_WIDTH),
+      GOOGLE_BUTTON_MAX_WIDTH,
+    ),
   });
+}
+
+export type GoogleProfile = {
+  email: string;
+  picture: string;
+};
+
+export function readGoogleProfile(idToken: string): GoogleProfile | null {
+  try {
+    const payload = idToken.split(".")[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+    const claims: unknown = JSON.parse(new TextDecoder().decode(bytes));
+    if (typeof claims !== "object" || claims === null) return null;
+    const { email, picture } = claims as Record<string, unknown>;
+    if (typeof email !== "string" || typeof picture !== "string") return null;
+    return { email, picture };
+  } catch {
+    return null;
+  }
 }

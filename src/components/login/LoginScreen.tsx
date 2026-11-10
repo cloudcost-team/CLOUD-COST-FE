@@ -8,10 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { useAuthConfig, useGoogleLogin } from "@/hooks/useAuth";
 import { setAccessToken, takeReturnPath } from "@/lib/authSession";
-import {
-  GoogleIdentityError,
-  requestGoogleCredential,
-} from "@/lib/googleIdentity";
+import { readGoogleProfile } from "@/lib/googleIdentity";
+import { useProfilePictureStore } from "@/stores/profilePictureStore";
+import { GoogleLoginButton } from "./GoogleLoginButton";
 import { LoginIllustration } from "./LoginIllustration";
 
 export function LoginScreen() {
@@ -21,29 +20,29 @@ export function LoginScreen() {
   const [loginError, setLoginError] = useState<string>();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  async function handleGoogleLogin() {
+  const googleClientId = authConfig.data?.googleClientId;
+  const configError = authConfig.isError
+    ? authConfig.error instanceof ApiError
+      ? authConfig.error.message
+      : "Google 로그인 설정을 불러오지 못했습니다."
+    : authConfig.isSuccess && !googleClientId
+      ? "Google 로그인을 사용할 수 없습니다."
+      : undefined;
+  const errorMessage = loginError ?? configError;
+
+  async function handleGoogleLogin(idToken: string) {
     if (isLoggingIn) return;
     setLoginError(undefined);
     setIsLoggingIn(true);
 
     try {
-      const configResult = await authConfig.refetch();
-      if (configResult.error) throw configResult.error;
-
-      if (!configResult.data?.googleClientId) {
-        setLoginError("Google 로그인을 사용할 수 없습니다.");
-        return;
-      }
-
-      const idToken = await requestGoogleCredential(
-        configResult.data.googleClientId,
-      );
       const session = await googleLogin.mutateAsync({ idToken });
       setAccessToken(session.accessToken);
+      useProfilePictureStore.getState().save(readGoogleProfile(idToken));
       router.push(takeReturnPath() ?? "/dashboard");
     } catch (error) {
       setLoginError(
-        error instanceof ApiError || error instanceof GoogleIdentityError
+        error instanceof ApiError
           ? error.message
           : "로그인 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
       );
@@ -72,13 +71,22 @@ export function LoginScreen() {
             도와드려요.
           </p>
           <div className="mt-spacing-small flex max-w-[500px] flex-col gap-gap-medium sm:flex-row">
-            <Button
-              className="flex-1"
-              loading={isLoggingIn}
-              onClick={handleGoogleLogin}
-            >
-              Google로 계속하기
-            </Button>
+            {googleClientId && !isLoggingIn ? (
+              <GoogleLoginButton
+                className="flex-1"
+                clientId={googleClientId}
+                onCredential={handleGoogleLogin}
+                onError={setLoginError}
+              />
+            ) : (
+              <Button
+                className="flex-1"
+                loading={isLoggingIn || authConfig.isPending}
+                disabled
+              >
+                Google로 계속하기
+              </Button>
+            )}
             <Button
               variant="secondary"
               className="flex-1"
@@ -87,10 +95,10 @@ export function LoginScreen() {
               무료로 둘러보기
             </Button>
           </div>
-          {loginError && (
+          {errorMessage && (
             <Banner
               className="mt-spacing-small max-w-[500px]"
-              title={loginError}
+              title={errorMessage}
               description="로그인을 사용할 수 없으면 체험 모드로 먼저 둘러볼 수 있어요."
             />
           )}

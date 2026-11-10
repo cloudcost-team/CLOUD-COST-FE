@@ -1,22 +1,25 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-
-type Notification = {
-  isNotDisplayed: () => boolean;
-  isSkippedMoment: () => boolean;
-};
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 type Callback = (response: { credential: string }) => void;
 
-function installGoogle(notification?: Notification) {
+function installGoogle() {
   let callback: Callback | undefined;
   const initialize = vi.fn((options: { callback: Callback }) => {
     callback = options.callback;
   });
-  const prompt = vi.fn((listener?: (n: Notification) => void) => {
-    if (notification) listener?.(notification);
-  });
-  window.google = { accounts: { id: { initialize, prompt } } };
-  return { respond: (credential: string) => callback?.({ credential }) };
+  const renderButton = vi.fn();
+  window.google = { accounts: { id: { initialize, renderButton } } };
+  return {
+    initialize,
+    renderButton,
+    respond: (credential: string) => callback?.({ credential }),
+  };
+}
+
+function createContainer(width: number) {
+  const container = document.createElement("div");
+  Object.defineProperty(container, "clientWidth", { value: width });
+  return container;
 }
 
 async function loadModule() {
@@ -24,65 +27,56 @@ async function loadModule() {
   return import("@/lib/googleIdentity");
 }
 
-describe("Google 인증 정보 요청", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
+describe("Google 공식 로그인 버튼", () => {
   afterEach(() => {
-    vi.useRealTimers();
     delete window.google;
   });
 
-  it("로그인 창이 표시되지 않으면 기다리지 않고 안내 문구로 실패한다", async () => {
-    installGoogle({ isNotDisplayed: () => true, isSkippedMoment: () => false });
-    const { requestGoogleCredential, GoogleIdentityError } = await loadModule();
+  it("넘겨받은 영역에 한국어 Google 버튼을 그린다", async () => {
+    const google = installGoogle();
+    const { renderGoogleButton } = await loadModule();
+    const container = createContainer(300);
 
-    const result = requestGoogleCredential("client-id");
+    await renderGoogleButton(container, "client-id", vi.fn());
 
-    await expect(result).rejects.toThrow(
-      "Google 로그인 창이 닫혔거나 표시되지 않았어요. 다시 시도해 주세요.",
-    );
-    await expect(result).rejects.toBeInstanceOf(GoogleIdentityError);
-  });
-
-  it("로그인 창이 건너뛰어지면 바로 실패한다", async () => {
-    installGoogle({ isNotDisplayed: () => false, isSkippedMoment: () => true });
-    const { requestGoogleCredential } = await loadModule();
-
-    await expect(requestGoogleCredential("client-id")).rejects.toThrow(
-      "Google 로그인 창이 닫혔거나 표시되지 않았어요. 다시 시도해 주세요.",
+    expect(google.renderButton).toHaveBeenCalledWith(
+      container,
+      expect.objectContaining({ locale: "ko", width: 300 }),
     );
   });
 
-  it("Google이 인증 정보를 돌려주면 그 값으로 성공한다", async () => {
-    const google = installGoogle({
-      isNotDisplayed: () => false,
-      isSkippedMoment: () => false,
-    });
-    const { requestGoogleCredential } = await loadModule();
+  it("버튼 너비는 Google이 허용하는 200~400px 안으로 맞춘다", async () => {
+    const google = installGoogle();
+    const { renderGoogleButton } = await loadModule();
 
-    const result = requestGoogleCredential("client-id");
-    await vi.advanceTimersByTimeAsync(0);
+    await renderGoogleButton(createContainer(120), "client-id", vi.fn());
+    await renderGoogleButton(createContainer(640), "client-id", vi.fn());
+
+    expect(google.renderButton.mock.calls[0][1].width).toBe(200);
+    expect(google.renderButton.mock.calls[1][1].width).toBe(400);
+  });
+
+  it("Google이 돌려준 인증 정보를 마지막으로 그린 버튼의 콜백에 넘긴다", async () => {
+    const google = installGoogle();
+    const { renderGoogleButton } = await loadModule();
+    const first = vi.fn();
+    const second = vi.fn();
+
+    await renderGoogleButton(createContainer(300), "client-id", first);
+    await renderGoogleButton(createContainer(300), "client-id", second);
     google.respond("google-credential");
 
-    await expect(result).resolves.toBe("google-credential");
+    expect(first).not.toHaveBeenCalled();
+    expect(second).toHaveBeenCalledWith("google-credential");
   });
 
-  it("응답이 없으면 60초 뒤 시간 초과로 실패한다", async () => {
-    installGoogle({
-      isNotDisplayed: () => false,
-      isSkippedMoment: () => false,
-    });
-    const { requestGoogleCredential } = await loadModule();
+  it("같은 클라이언트 ID로 다시 그려도 초기화는 한 번만 한다", async () => {
+    const google = installGoogle();
+    const { renderGoogleButton } = await loadModule();
 
-    const result = requestGoogleCredential("client-id");
-    const assertion = expect(result).rejects.toThrow(
-      "Google 로그인 응답 시간이 초과되었습니다.",
-    );
-    await vi.advanceTimersByTimeAsync(59_999);
-    await vi.advanceTimersByTimeAsync(1);
+    await renderGoogleButton(createContainer(300), "client-id", vi.fn());
+    await renderGoogleButton(createContainer(300), "client-id", vi.fn());
 
-    await assertion;
+    expect(google.initialize).toHaveBeenCalledTimes(1);
   });
 });

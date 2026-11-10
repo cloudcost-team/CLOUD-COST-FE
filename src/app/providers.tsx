@@ -10,6 +10,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect, useState } from "react";
 import { ApiError } from "@/api/client";
 import { useCurrencyStore } from "@/stores/currencyStore";
+import { useProfilePictureStore } from "@/stores/profilePictureStore";
 import { useSelectedConnectionStore } from "@/stores/selectedConnectionStore";
 import { useSessionExpiredStore } from "@/stores/sessionExpiredStore";
 
@@ -42,6 +43,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     useCurrencyStore.persist.rehydrate();
     useSelectedConnectionStore.persist.rehydrate();
+    useProfilePictureStore.persist.rehydrate();
   }, []);
 
   return (
