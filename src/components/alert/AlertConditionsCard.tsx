@@ -31,6 +31,10 @@ const CONDITIONS: {
   },
 ];
 
+const NOTES = [
+  "서비스에 접속하지 않은 동안에는 새 알림이 생기지 않아요.",
+];
+
 function pickConditions(settings: AlertSettings): AlertConditions {
   const { budget80, budget100, budget120, spike, weeklySummary } = settings;
   return { budget80, budget100, budget120, spike, weeklySummary };
@@ -81,7 +85,7 @@ export function AlertConditionsCard({ settings }: { settings: AlertSettings }) {
         <Banner title="저장하지 못했어요" description={update.error.message} />
       )}
       <NoticeList
-        lines={settings.notes}
+        lines={NOTES}
         className="gap-gap-xxsmall text-subtext-small"
       />
     </Card>
