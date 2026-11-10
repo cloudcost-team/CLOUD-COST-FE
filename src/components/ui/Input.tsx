@@ -74,24 +74,25 @@ export function Input({
     >
       <div
         className={cn(
-          "group flex flex-col gap-gap-xxsmall rounded-xxxlarge border-2 px-padding-large py-padding-small transition-colors",
+          "group flex flex-col gap-gap-xxsmall rounded-xxxlarge border-2 px-padding-large py-padding-medium transition-colors",
           hasError
             ? "border-border-danger bg-fill-danger-weak"
             : "border-transparent bg-fill-neutral-weak focus-within:border-border-brand focus-within:bg-background-default",
         )}
       >
-        <label
-          htmlFor={inputId}
-          className={cn(
-            "flex items-start gap-gap-xxsmall pt-1 text-subtext-medium-strong",
-            hasError ? "text-text-danger" : "text-text-secondary",
-          )}
-        >
-          {label}
+        <div className="flex items-start gap-gap-xxsmall pt-1 text-subtext-medium-strong">
+          <label
+            htmlFor={inputId}
+            className={hasError ? "text-text-danger" : "text-text-secondary"}
+          >
+            {label}
+          </label>
           {required && (
-            <span aria-hidden className="size-1 rounded-full bg-fill-danger" />
+            <span aria-hidden className="text-text-danger">
+              *
+            </span>
           )}
-        </label>
+        </div>
         <div className="flex h-8 items-center gap-gap-xsmall">
           {prefix && (
             <span className="shrink-0 text-label-small text-text-strong">

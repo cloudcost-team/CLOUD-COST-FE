@@ -5,7 +5,7 @@ export type DataTableColumn<T> = {
   key: string;
   header: ReactNode;
   className?: string;
-  align?: "left" | "right";
+  align?: "left" | "center" | "right";
   render: (row: T) => ReactNode;
 };
 
@@ -16,6 +16,12 @@ type DataTableProps<T> = {
   isRowDimmed?: (row: T) => boolean;
   caption?: string;
   className?: string;
+};
+
+const alignClasses = {
+  left: "text-left",
+  center: "text-center",
+  right: "text-right",
 };
 
 const cellPadding = "px-gap-small first:pl-padding-large last:pr-padding-large";
@@ -45,7 +51,7 @@ export function DataTable<T>({
                 scope="col"
                 className={cn(
                   "h-11 text-subtext-medium font-normal whitespace-nowrap text-text-tertiary",
-                  column.align === "right" ? "text-right" : "text-left",
+                  alignClasses[column.align ?? "left"],
                   cellPadding,
                   column.className,
                 )}
@@ -69,7 +75,7 @@ export function DataTable<T>({
                   key={column.key}
                   className={cn(
                     "h-15 text-subtext-large text-text-strong",
-                    column.align === "right" ? "text-right" : "text-left",
+                    alignClasses[column.align ?? "left"],
                     cellPadding,
                     column.className,
                   )}

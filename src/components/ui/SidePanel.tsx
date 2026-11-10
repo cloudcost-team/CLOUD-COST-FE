@@ -33,6 +33,9 @@ export function SidePanel({
       aria-labelledby={titleId}
       className={cn(
         "fixed inset-y-0 right-0 left-auto m-0 h-full max-h-none w-120 max-w-full border-none bg-background-floated p-0 text-text-primary shadow-strong backdrop:bg-background-dim",
+        "translate-x-full transition-[translate,display,overlay] transition-discrete duration-300 ease-out open:translate-x-0 starting:open:translate-x-full",
+        "backdrop:opacity-0 backdrop:transition-[opacity,display,overlay] backdrop:transition-discrete backdrop:duration-300 open:backdrop:opacity-100 starting:open:backdrop:opacity-0",
+        "motion-reduce:transition-none motion-reduce:backdrop:transition-none",
         className,
       )}
     >

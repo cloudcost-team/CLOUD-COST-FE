@@ -1,32 +1,22 @@
 import { cn } from "@/lib/cn";
-import { Spinner } from "./Spinner";
+import { LoadingDots } from "./LoadingDots";
 
 type LoadingStateProps = {
   title: string;
-  description?: string;
   className?: string;
 };
 
-export function LoadingState({
-  title,
-  description,
-  className,
-}: LoadingStateProps) {
+export function LoadingState({ title, className }: LoadingStateProps) {
   return (
     <div
       role="status"
       className={cn(
-        "flex flex-col items-center gap-gap-medium px-spacing-medium py-spacing-large text-center",
+        "fixed inset-0 z-40 flex items-center justify-center bg-background-default/70 backdrop-blur-sm",
         className,
       )}
     >
-      <Spinner size="large" />
-      <div className="flex flex-col items-center gap-gap-xsmall">
-        <p className="text-title-xsmall text-text-strong">{title}</p>
-        {description && (
-          <p className="text-body-xsmall text-text-tertiary">{description}</p>
-        )}
-      </div>
+      <LoadingDots size="xlarge" dotClassName="bg-fill-brand" />
+      <span className="sr-only">{title}</span>
     </div>
   );
 }
