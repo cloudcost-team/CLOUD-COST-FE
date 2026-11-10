@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/Badge";
+import { Icon } from "@/components/ui/Icon";
 import { Panel } from "@/components/ui/Panel";
 import { cn } from "@/lib/cn";
 
@@ -25,14 +26,18 @@ export function PermissionList({ className }: { className?: string }) {
             key={permission.action}
             className="flex flex-wrap items-center gap-x-gap-large gap-y-gap-xsmall text-subtext-medium"
           >
-            <dt className="w-60 text-text-primary">{permission.action}</dt>
+            <dt className="flex w-60 items-center gap-gap-small text-text-primary">
+              <Icon
+                name="check"
+                size={16}
+                className="shrink-0 text-icon-brand"
+              />
+              {permission.action}
+            </dt>
             <dd className="text-text-tertiary">{permission.description}</dd>
           </div>
         ))}
       </dl>
-      <p className="text-subtext-small text-text-quaternary">
-        Access Key는 받지 않아요. 고객 AWS 리소스를 만들거나 바꾸지 않아요.
-      </p>
     </Panel>
   );
 }

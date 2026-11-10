@@ -8,6 +8,7 @@ import { getCloudFormationStacksUrl, openInNewTab } from "@/lib/awsConsole";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ConnectionFailedStep } from "./ConnectionFailedStep";
 import { ConnectionFormStep } from "./ConnectionFormStep";
+import { ConnectionGuide } from "./ConnectionGuide";
 import { ConnectionProgressCard } from "./ConnectionProgressCard";
 import { ConnectionSuccessStep } from "./ConnectionSuccessStep";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -41,7 +42,7 @@ function NewConnectionBody() {
 
   const { account, roleSetup } = setup;
   if (account.status === "ACTIVE")
-    return <ConnectionSuccessStep account={account} />;
+    return <ConnectionSuccessStep account={account} variant="settings" />;
 
   const quickCreateUrl = roleSetup.quickCreateUrl;
   const roleArnForm = (flow.roleArnFormOpen || failure) && (
@@ -109,8 +110,9 @@ export function NewConnectionScreen() {
         title="새 연결"
         description="다른 AWS 계정이나 리전을 추가로 연결해요."
       />
-      <div className="w-full max-w-180">
+      <div className="grid max-w-300 gap-gap-xlarge lg:grid-cols-[minmax(0,1fr)_22.5rem]">
         <NewConnectionBody />
+        <ConnectionGuide />
       </div>
     </div>
   );

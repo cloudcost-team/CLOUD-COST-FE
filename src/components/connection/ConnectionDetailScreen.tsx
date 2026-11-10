@@ -15,6 +15,7 @@ import {
   useAwsAccount,
   useRegisterAwsAccountRole,
 } from "@/hooks/useAwsAccounts";
+import { cn } from "@/lib/cn";
 import { formatKstDateTime } from "@/lib/kstDate";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ConnectionDangerZone } from "./ConnectionDangerZone";
@@ -61,20 +62,13 @@ function ConnectionStatusNotice({ account }: { account: AwsAccount }) {
         description={`AWS에서 스택 ${account.stackName}이 만들어지기를 기다리고 있어요.`}
       />
     );
-  if (account.status === "DISCONNECTED")
-    return (
-      <Banner
-        tone="warning"
-        title="연결이 끊겼어요"
-        description="AWS에서 스택이 삭제됐어요. 다시 연결하려면 새 연결을 만들어 주세요."
-      />
-    );
   return null;
 }
 
 function ConnectionDetail({ account }: { account: AwsAccount }) {
   const [renameOpen, setRenameOpen] = useState(false);
   const displayName = account.alias ?? "이름 없는 연결";
+  const dimmed = account.status === "DISCONNECTED" && "opacity-40";
 
   return (
     <>
@@ -97,7 +91,7 @@ function ConnectionDetail({ account }: { account: AwsAccount }) {
           </Button>
         }
       />
-      <Card className="grid gap-gap-xlarge md:grid-cols-2">
+      <Card className={cn("grid gap-gap-xlarge md:grid-cols-2", dimmed)}>
         <InfoGrid
           items={[
             { label: "상태", value: getConnectionStatusLabel(account.status) },
@@ -122,7 +116,7 @@ function ConnectionDetail({ account }: { account: AwsAccount }) {
         />
       </Card>
       <ConnectionStatusNotice account={account} />
-      <section className="flex flex-col gap-gap-medium">
+      <section className={cn("flex flex-col gap-gap-medium", dimmed)}>
         <h2 className="text-title-small text-text-strong">
           수집 기록 (최근 20건)
         </h2>

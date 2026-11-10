@@ -24,6 +24,9 @@ export type AwsAccount = {
 export type RoleSetup = {
   quickCreateUrl: string | null;
   requiredActions: string[];
+  stackParameters: Record<string, string>;
+  trustPolicy: Record<string, unknown>;
+  permissionPolicy: Record<string, unknown>;
   steps: string[];
   warnings: string[];
 };
