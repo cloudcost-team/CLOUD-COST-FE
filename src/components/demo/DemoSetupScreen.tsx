@@ -220,7 +220,10 @@ export function DemoSetupScreen() {
                           updateServer(server.id, {
                             schedule,
                             hoursPerDay:
-                              schedule === "DAILY_HOURS" ? 8 : undefined,
+                              schedule === "DAILY_HOURS" ||
+                              schedule === "MONTHLY_SPIKE"
+                                ? 8
+                                : undefined,
                           });
                         }}
                       >

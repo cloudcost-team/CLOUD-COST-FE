@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Icon } from "@/components/ui/Icon";
 import type { IconName } from "@/components/ui/iconPaths";
 import { InteractionOverlay } from "@/components/ui/InteractionOverlay";
+import { useAppMode } from "@/hooks/useAppMode";
 import { cn } from "@/lib/cn";
 
 type SidebarItem = {
@@ -15,14 +16,18 @@ type SidebarItem = {
   ready: boolean;
 };
 
-const SIDEBAR_GROUPS: { title?: string; items: SidebarItem[] }[] = [
+type SidebarGroup = { title?: string; demo: boolean; items: SidebarItem[] };
+
+const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
+    demo: true,
     items: [
       { label: "대시보드", href: "/dashboard", icon: "grid", ready: true },
     ],
   },
   {
     title: "절감",
+    demo: false,
     items: [
       {
         label: "낭비 리소스",
@@ -40,6 +45,7 @@ const SIDEBAR_GROUPS: { title?: string; items: SidebarItem[] }[] = [
   },
   {
     title: "비교",
+    demo: true,
     items: [
       {
         label: "팀 벤치마킹",
@@ -57,6 +63,7 @@ const SIDEBAR_GROUPS: { title?: string; items: SidebarItem[] }[] = [
   },
   {
     title: "설정",
+    demo: false,
     items: [
       {
         label: "데이터 연결",
@@ -113,12 +120,22 @@ function SidebarLink({ item, active }: { item: SidebarItem; active: boolean }) {
 }
 
 function SidebarNav({ pathname }: { pathname: string | null }) {
+  const { demo, basePath } = useAppMode();
+  const groups = SIDEBAR_GROUPS.filter((group) => !demo || group.demo).map(
+    (group) => ({
+      ...group,
+      items: group.items.map((item) => ({
+        ...item,
+        href: `${basePath}${item.href}`,
+      })),
+    }),
+  );
   return (
     <nav
       aria-label="주 메뉴"
       className="flex w-60 shrink-0 flex-col gap-spacing-medium border-r border-border-default bg-background-default px-padding-small py-padding-xlarge"
     >
-      {SIDEBAR_GROUPS.map((group) => (
+      {groups.map((group) => (
         <div
           key={group.title ?? "main"}
           className="flex flex-col gap-gap-xxsmall"

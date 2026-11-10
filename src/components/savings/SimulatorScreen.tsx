@@ -2,19 +2,19 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import type { AwsAccount } from "@/api/awsAccounts";
 import type { Currency } from "@/api/costs";
+import { getSourceId, type DataSource } from "@/api/dataSource";
 import type { ExchangeRate } from "@/api/reports";
 import { simulate, simulationKeys } from "@/api/simulations";
+import { DataSourceGate } from "@/components/layout/DataSourceGate";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { NoConnectionState } from "@/components/report/NoConnectionState";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { NoticeList } from "@/components/ui/NoticeList";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Slider } from "@/components/ui/Slider";
-import { useSelectedConnection } from "@/hooks/useSelectedConnection";
+import { useAppPath } from "@/hooks/useAppMode";
 import { useCurrencyStore } from "@/stores/currencyStore";
 import { useSimulationSelectionStore } from "@/stores/simulationSelectionStore";
 import { ChangeSelectItem } from "./ChangeSelectItem";
@@ -76,7 +76,7 @@ type SimulatorScreenProps = {
 const GROWTH_DEBOUNCE_MS = 300;
 
 export function useSimulation(
-  accountId: string,
+  source: DataSource,
   recommendationIds: string[],
   trafficGrowthPercent: number,
   enabled = true,
@@ -84,8 +84,8 @@ export function useSimulation(
   const currency = useCurrencyStore((state) => state.currency);
   const input = { recommendationIds, trafficGrowthPercent };
   return useQuery({
-    queryKey: simulationKeys.result(accountId, currency, input),
-    queryFn: () => simulate<SimulationResponse>(accountId, currency, input),
+    queryKey: simulationKeys.result(source, currency, input),
+    queryFn: () => simulate<SimulationResponse>(source, currency, input),
     placeholderData: keepPreviousData,
     enabled,
   });
@@ -113,16 +113,16 @@ function useDebouncedValue(value: number) {
 }
 
 function SimulationResult({
-  accountId,
+  source,
   recommendationIds,
   trafficGrowthPercent,
 }: {
-  accountId: string;
+  source: DataSource;
   recommendationIds: string[];
   trafficGrowthPercent: number;
 }) {
   const { data, isPending, isError, error, refetch } = useSimulation(
-    accountId,
+    source,
     recommendationIds,
     trafficGrowthPercent,
   );
@@ -147,16 +147,17 @@ function SimulationResult({
 }
 
 function SimulatorBody({
-  accountId,
+  source,
   items,
   currency,
   initialRecommendationId,
 }: {
-  accountId: string;
+  source: DataSource;
   items: WasteItem[];
   currency: Currency;
   initialRecommendationId?: string;
 }) {
+  const accountId = getSourceId(source);
   const saved = useSimulationSelectionStore((state) =>
     state.selection?.accountId === accountId ? state.selection : null,
   );
@@ -232,7 +233,7 @@ function SimulatorBody({
         </Card>
       </div>
       <SimulationResult
-        accountId={accountId}
+        source={source}
         recommendationIds={selectedIds}
         trafficGrowthPercent={debouncedGrowth}
       />
@@ -241,15 +242,14 @@ function SimulatorBody({
 }
 
 function SimulatorContent({
-  connection,
+  source,
   initialRecommendationId,
 }: {
-  connection: AwsAccount;
+  source: DataSource;
   initialRecommendationId?: string;
 }) {
-  const { data, isPending, isError, error, refetch } = useWaste(
-    connection.accountId,
-  );
+  const appPath = useAppPath();
+  const { data, isPending, isError, error, refetch } = useWaste(source);
 
   if (isPending) return <Skeleton shape="block" className="h-96 w-full" />;
   if (isError)
@@ -267,12 +267,15 @@ function SimulatorContent({
         icon="check-circle"
         title="적용할 변경이 없어요"
         description="낭비 리소스에서 추천이 생기면 여기서 효과를 미리 볼 수 있어요."
-        action={{ label: "낭비 리소스로 가기", href: "/savings/waste" }}
+        action={{
+          label: "낭비 리소스로 가기",
+          href: appPath("/savings/waste"),
+        }}
       />
     );
   return (
     <SimulatorBody
-      accountId={connection.accountId}
+      source={source}
       items={data.items}
       currency={data.currency}
       initialRecommendationId={initialRecommendationId}
@@ -283,35 +286,22 @@ function SimulatorContent({
 export function SimulatorScreen({
   initialRecommendationId,
 }: SimulatorScreenProps) {
-  const { selected, isPending, error, refetch } = useSelectedConnection();
-
-  let body;
-  if (isPending) body = <Skeleton shape="block" className="h-96 w-full" />;
-  else if (error)
-    body = (
-      <Banner
-        title="연결 목록을 불러오지 못했어요"
-        description={error.message}
-        action={{ label: "다시 시도", onClick: () => refetch() }}
-      />
-    );
-  else if (!selected) body = <NoConnectionState />;
-  else
-    body = (
-      <SimulatorContent
-        key={selected.accountId}
-        connection={selected}
-        initialRecommendationId={initialRecommendationId}
-      />
-    );
-
   return (
     <div className="flex flex-col gap-spacing-medium">
       <PageHeader
         title="비용 시뮬레이터"
         description="추천을 골라 적용하면 비용이 얼마나 바뀌는지 미리 봐요. 실제 변경은 AWS 콘솔에서 해 주세요."
       />
-      {body}
+      <DataSourceGate
+        loading={<Skeleton shape="block" className="h-96 w-full" />}
+      >
+        {(source) => (
+          <SimulatorContent
+            source={source}
+            initialRecommendationId={initialRecommendationId}
+          />
+        )}
+      </DataSourceGate>
     </div>
   );
 }

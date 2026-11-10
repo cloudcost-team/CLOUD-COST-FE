@@ -9,6 +9,7 @@ import {
   XAxis,
 } from "recharts";
 import type { Currency } from "@/api/costs";
+import type { DataSource } from "@/api/dataSource";
 import { Panel } from "@/components/ui/Panel";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useDailyCosts } from "@/hooks/useReports";
@@ -16,7 +17,7 @@ import { formatMoney } from "@/lib/formatMoney";
 import { formatMonthDay } from "@/lib/kstDate";
 
 type ReportDailyChartProps = {
-  accountId: string;
+  source: DataSource;
   from: string;
   to: string;
   monthLabel: string;
@@ -24,18 +25,19 @@ type ReportDailyChartProps = {
 };
 
 export function ReportDailyChart({
-  accountId,
+  source,
   from,
   to,
   monthLabel,
   currency,
 }: ReportDailyChartProps) {
   const { data, isPending, isError } = useDailyCosts(
-    accountId,
+    source,
     from,
     to,
     currency,
   );
+  const days = data?.days.filter((day) => day.date >= from && day.date <= to);
 
   return (
     <Panel variant="outline" className="flex flex-col gap-gap-medium">
@@ -53,11 +55,11 @@ export function ReportDailyChart({
           일별 비용을 불러오지 못했어요
         </p>
       )}
-      {data && (
+      {days && (
         <div className="h-36 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={data.days}
+              data={days}
               margin={{ top: 4, right: 0, bottom: 0, left: 0 }}
             >
               <XAxis
@@ -84,7 +86,7 @@ export function ReportDailyChart({
                 radius={[2, 2, 0, 0]}
                 isAnimationActive={false}
               >
-                {data.days.map((day) => (
+                {days.map((day) => (
                   <Cell
                     key={day.date}
                     fill={

@@ -2,12 +2,12 @@
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import type { AwsAccount } from "@/api/awsAccounts";
 import type { Currency } from "@/api/costs";
+import type { DataSource } from "@/api/dataSource";
 import type { ExchangeRate } from "@/api/reports";
 import { getWaste, wasteKeys } from "@/api/waste";
+import { DataSourceGate } from "@/components/layout/DataSourceGate";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { NoConnectionState } from "@/components/report/NoConnectionState";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -17,7 +17,6 @@ import { Panel } from "@/components/ui/Panel";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatCard } from "@/components/ui/StatCard";
-import { useSelectedConnection } from "@/hooks/useSelectedConnection";
 import { formatMoney } from "@/lib/formatMoney";
 import { formatKoreanMonthDay } from "@/lib/kstDate";
 import { useCurrencyStore } from "@/stores/currencyStore";
@@ -37,6 +36,7 @@ export type Freshness = {
   usageFromCache: boolean;
   nextUsageRefreshAt: string | null;
   warnings: string[];
+  warningDetails?: { code: string; message: string }[];
 };
 
 export type WasteSummaryLine = {
@@ -147,14 +147,14 @@ const sortOptions = [
 ] satisfies { value: WasteSort; label: string }[];
 
 export function useWaste(
-  accountId: string,
+  source: DataSource,
   sort: WasteSort = "SAVINGS",
   type: WasteKind | null = null,
 ) {
   const currency = useCurrencyStore((state) => state.currency);
   return useQuery({
-    queryKey: wasteKeys.list(accountId, currency, sort, type),
-    queryFn: () => getWaste<WasteResponse>(accountId, currency, sort, type),
+    queryKey: wasteKeys.list(source, currency, sort, type),
+    queryFn: () => getWaste<WasteResponse>(source, currency, sort, type),
     placeholderData: keepPreviousData,
   });
 }
@@ -214,12 +214,12 @@ function WasteStatusState({ data }: { data: WasteResponse }) {
   );
 }
 
-function WasteBody({ connection }: { connection: AwsAccount }) {
+function WasteBody({ source }: { source: DataSource }) {
   const [filter, setFilter] = useState<WasteFilter>("ALL");
   const [sort, setSort] = useState<WasteSort>("SAVINGS");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data, isPending, isError, error, refetch } = useWaste(
-    connection.accountId,
+    source,
     sort,
     filter === "ALL" ? null : filter,
   );
@@ -306,28 +306,15 @@ function WasteBody({ connection }: { connection: AwsAccount }) {
 }
 
 export function WasteScreen() {
-  const { selected, isPending, error, refetch } = useSelectedConnection();
-
-  let body;
-  if (isPending) body = <WasteLoading />;
-  else if (error)
-    body = (
-      <Banner
-        title="연결 목록을 불러오지 못했어요"
-        description={error.message}
-        action={{ label: "다시 시도", onClick: () => refetch() }}
-      />
-    );
-  else if (!selected) body = <NoConnectionState />;
-  else body = <WasteBody key={selected.accountId} connection={selected} />;
-
   return (
     <div className="flex flex-col gap-spacing-medium">
       <PageHeader
         title="낭비 리소스"
         description="EC2 사용률을 보고 줄일 수 있는 비용을 찾아요. 실제 변경은 AWS 콘솔에서 직접 해 주세요."
       />
-      {body}
+      <DataSourceGate loading={<WasteLoading />}>
+        {(source) => <WasteBody source={source} />}
+      </DataSourceGate>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import type { Currency } from "@/api/costs";
+import { useAppPath } from "@/hooks/useAppMode";
 import type { WasteItem } from "./WasteScreen";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
@@ -41,6 +42,7 @@ export function RecommendationCard({
   currency,
   onOpenDetail,
 }: RecommendationCardProps) {
+  const appPath = useAppPath();
   const name = item.name ?? item.instanceId;
 
   return (
@@ -90,7 +92,7 @@ export function RecommendationCard({
       <ButtonLink
         variant="secondary"
         size="medium"
-        href={getSimulatorHref(item.recommendationId)}
+        href={appPath(getSimulatorHref(item.recommendationId))}
       >
         시뮬레이터에서 효과 보기
       </ButtonLink>

@@ -1,22 +1,31 @@
-import { apiRequest } from "./client";
 import type { Currency } from "./costs";
+import { getSourceKey, requestFromSource, type DataSource } from "./dataSource";
 
 export const dashboardKeys = {
   all: ["dashboard"] as const,
-  summary: (accountId: string, currency: Currency) =>
-    [...dashboardKeys.all, "summary", accountId, currency] as const,
-  instances: (accountId: string, currency: Currency) =>
-    [...dashboardKeys.all, "instances", accountId, currency] as const,
+  summary: (source: DataSource, currency: Currency) =>
+    [...dashboardKeys.all, "summary", getSourceKey(source), currency] as const,
+  instances: (source: DataSource, currency: Currency) =>
+    [
+      ...dashboardKeys.all,
+      "instances",
+      getSourceKey(source),
+      currency,
+    ] as const,
 };
 
-export function getDashboard<T>(accountId: string, currency: Currency) {
-  return apiRequest<T>(
-    `/aws/accounts/${accountId}/dashboard?currency=${currency}`,
+export function getDashboard<T>(source: DataSource, currency: Currency) {
+  return requestFromSource<T>(
+    source,
+    "/dashboard",
+    new URLSearchParams({ currency }),
   );
 }
 
-export function getInstances<T>(accountId: string, currency: Currency) {
-  return apiRequest<T>(
-    `/aws/accounts/${accountId}/instances?currency=${currency}`,
+export function getInstances<T>(source: DataSource, currency: Currency) {
+  return requestFromSource<T>(
+    source,
+    "/instances",
+    new URLSearchParams({ currency }),
   );
 }

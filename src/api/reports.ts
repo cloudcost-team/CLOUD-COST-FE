@@ -1,5 +1,5 @@
 import type { Currency } from "./costs";
-import { apiRequest } from "./client";
+import { getSourceKey, requestFromSource, type DataSource } from "./dataSource";
 
 export type ReportStatus = "EMPTY" | "FIRST_MONTH" | "PREVIEW" | "FINAL";
 
@@ -83,24 +83,34 @@ export type ReportDetailResponse = {
 
 export const reportKeys = {
   all: ["reports"] as const,
-  list: (accountId: string, currency: Currency) =>
-    [...reportKeys.all, "list", accountId, currency] as const,
-  detail: (accountId: string, month: string, currency: Currency) =>
-    [...reportKeys.all, "detail", accountId, month, currency] as const,
+  list: (source: DataSource, currency: Currency) =>
+    [...reportKeys.all, "list", getSourceKey(source), currency] as const,
+  detail: (source: DataSource, month: string, currency: Currency) =>
+    [
+      ...reportKeys.all,
+      "detail",
+      getSourceKey(source),
+      month,
+      currency,
+    ] as const,
 };
 
-export function getReports(accountId: string, currency: Currency) {
-  return apiRequest<ReportListResponse>(
-    `/aws/accounts/${accountId}/reports?currency=${currency}`,
+export function getReports(source: DataSource, currency: Currency) {
+  return requestFromSource<ReportListResponse>(
+    source,
+    "/reports",
+    new URLSearchParams({ currency }),
   );
 }
 
 export function getReport(
-  accountId: string,
+  source: DataSource,
   month: string,
   currency: Currency,
 ) {
-  return apiRequest<ReportDetailResponse>(
-    `/aws/accounts/${accountId}/reports/${month}?currency=${currency}`,
+  return requestFromSource<ReportDetailResponse>(
+    source,
+    `/reports/${month}`,
+    new URLSearchParams({ currency }),
   );
 }

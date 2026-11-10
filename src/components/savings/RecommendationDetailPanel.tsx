@@ -1,6 +1,7 @@
 "use client";
 
 import type { Currency } from "@/api/costs";
+import { useAppPath } from "@/hooks/useAppMode";
 import type { WasteInstanceSpec, WasteItem } from "./WasteScreen";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
@@ -71,6 +72,7 @@ export function RecommendationDetailPanel({
   open,
   onClose,
 }: RecommendationDetailPanelProps) {
+  const appPath = useAppPath();
   if (!item) return null;
   const rows = getSpecRows(
     item.comparison.current,
@@ -117,7 +119,7 @@ export function RecommendationDetailPanel({
           <ButtonLink
             size="large"
             className="flex-1"
-            href={getSimulatorHref(item.recommendationId)}
+            href={appPath(getSimulatorHref(item.recommendationId))}
           >
             시뮬레이터에서 효과 보기
           </ButtonLink>

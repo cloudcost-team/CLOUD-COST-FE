@@ -1,21 +1,31 @@
-import { apiRequest } from "./client";
 import type { Currency } from "./costs";
+import { getSourceKey, requestFromSource, type DataSource } from "./dataSource";
 
 export const benchmarkKeys = {
   all: ["benchmark"] as const,
   detail: (
-    accountId: string,
+    source: DataSource,
     currency: Currency,
     recommendationIds: string[],
-  ) => [...benchmarkKeys.all, accountId, currency, recommendationIds] as const,
+  ) =>
+    [
+      ...benchmarkKeys.all,
+      getSourceKey(source),
+      currency,
+      recommendationIds,
+    ] as const,
 };
 
 export function getBenchmark<T>(
-  accountId: string,
+  source: DataSource,
   currency: Currency,
   recommendationIds: string[],
 ) {
   const params = new URLSearchParams({ currency });
+  if (source.kind === "demo")
+    return requestFromSource<T>(source, "/benchmark", params, {
+      recommendationIds,
+    });
   recommendationIds.forEach((id) => params.append("recommendationIds", id));
-  return apiRequest<T>(`/aws/accounts/${accountId}/benchmark?${params}`);
+  return requestFromSource<T>(source, "/benchmark", params);
 }

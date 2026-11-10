@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useAppPath } from "@/hooks/useAppMode";
 import { EmptyState } from "@/components/ui/EmptyState";
 
 const DESCRIPTIONS = {
@@ -16,6 +17,7 @@ export function ReportEmptyState({
   reason: keyof typeof DESCRIPTIONS;
 }) {
   const router = useRouter();
+  const appPath = useAppPath();
   return (
     <EmptyState
       icon="file-text"
@@ -23,7 +25,7 @@ export function ReportEmptyState({
       description={DESCRIPTIONS[reason]}
       action={{
         label: "대시보드로 가기",
-        onClick: () => router.push("/dashboard"),
+        onClick: () => router.push(appPath("/dashboard")),
       }}
       variant="card"
     />

@@ -1,4 +1,4 @@
-import { apiRequest } from "./client";
+import { getSourceKey, requestFromSource, type DataSource } from "./dataSource";
 
 export type Currency = "KRW" | "USD";
 
@@ -8,6 +8,8 @@ export type DailyCostSpike = {
   baselineDays: number;
   causeInstanceId: string | null;
   causeName: string | null;
+  causeUsageHours: number | null;
+  causeBaselineHours: number | null;
   message: string;
 };
 
@@ -28,26 +30,48 @@ type DateRange = { from: string; to: string };
 
 export const costKeys = {
   all: ["costs"] as const,
-  daily: (accountId: string, currency: Currency, range: DateRange | null) =>
-    [...costKeys.all, "daily", accountId, currency, range] as const,
-  monthly: (accountId: string, currency: Currency, range: DateRange) =>
-    [...costKeys.all, "monthly", accountId, currency, range] as const,
+  daily: (source: DataSource, currency: Currency, range: DateRange | null) =>
+    [...costKeys.all, "daily", getSourceKey(source), currency, range] as const,
+  monthly: (source: DataSource, currency: Currency, range: DateRange) =>
+    [
+      ...costKeys.all,
+      "monthly",
+      getSourceKey(source),
+      currency,
+      range,
+    ] as const,
 };
 
-export function getDailyCosts<T = DailyCostsResponse>(
-  accountId: string,
+function costParams(
+  source: DataSource,
   currency: Currency,
   range: DateRange | null,
 ) {
-  const params = new URLSearchParams({ currency, ...range });
-  return apiRequest<T>(`/aws/accounts/${accountId}/costs/daily?${params}`);
+  return new URLSearchParams(
+    source.kind === "aws" ? { currency, ...range } : { currency },
+  );
+}
+
+export function getDailyCosts<T = DailyCostsResponse>(
+  source: DataSource,
+  currency: Currency,
+  range: DateRange | null,
+) {
+  return requestFromSource<T>(
+    source,
+    "/costs/daily",
+    costParams(source, currency, range),
+  );
 }
 
 export function getMonthlyCosts<T>(
-  accountId: string,
+  source: DataSource,
   currency: Currency,
   range: DateRange,
 ) {
-  const params = new URLSearchParams({ currency, ...range });
-  return apiRequest<T>(`/aws/accounts/${accountId}/costs/monthly?${params}`);
+  return requestFromSource<T>(
+    source,
+    "/costs/monthly",
+    costParams(source, currency, range),
+  );
 }

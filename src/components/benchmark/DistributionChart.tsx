@@ -5,7 +5,7 @@ import { cn } from "@/lib/cn";
 
 export type DistributionBars = {
   values: number[];
-  oursIndex: number;
+  oursIndex: number | null;
   afterIndex: number | null;
 };
 

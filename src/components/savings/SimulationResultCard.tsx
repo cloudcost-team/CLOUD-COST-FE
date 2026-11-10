@@ -123,14 +123,16 @@ export function SimulationResultCard({ data }: SimulationResultCardProps) {
           <p className="text-subtext-medium text-text-tertiary">
             월 예산을 정하면 예산 안에 드는지도 보여 드려요
           </p>
-          <ButtonLink
-            variant="assistive"
-            size="small"
-            href="/settings/alerts"
-            className="mt-gap-small"
-          >
-            예산 설정하기
-          </ButtonLink>
+          {data.dataSource === "aws" && (
+            <ButtonLink
+              variant="assistive"
+              size="small"
+              href="/settings/alerts"
+              className="mt-gap-small"
+            >
+              예산 설정하기
+            </ButtonLink>
+          )}
         </Panel>
       )}
     </Card>
