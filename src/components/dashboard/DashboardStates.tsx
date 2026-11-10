@@ -2,30 +2,93 @@ import type { ReactNode } from "react";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { LoadingState } from "@/components/ui/LoadingState";
+import { Panel } from "@/components/ui/Panel";
+import { TextLink } from "@/components/ui/TextLink";
 import { Skeleton } from "@/components/ui/Skeleton";
 
 export type DashboardState =
   | "ready"
-  | "first-collection"
+  | "no-instances"
   | "loading"
   | "empty"
   | "connection-error"
   | "partial"
   | "throttled";
 
+type DashboardStateContentProps = {
+  state: Exclude<DashboardState, "ready">;
+  region?: string;
+  regionLabel?: string;
+  onRetry?: () => void;
+};
+
+function InstanceLaunchGuide({
+  region,
+  regionLabel,
+}: {
+  region?: string;
+  regionLabel?: string;
+}) {
+  const steps = [
+    `AWS 콘솔 오른쪽 위에서 리전이 ${regionLabel ?? "연결한 리전"}인지 확인하고 EC2 → 인스턴스 시작으로 가요.`,
+    "이름을 입력하고, OS 이미지는 기본값(Amazon Linux)을 그대로 둬요.",
+    "인스턴스 유형은 '프리 티어 사용 가능' 표시가 있는 유형(t3.micro 등)을 골라요.",
+    "키 페어는 '키 페어 없이 계속 진행'을 고르고 인스턴스 시작을 눌러요.",
+  ];
+  return (
+    <Panel
+      variant="subtle"
+      size="medium"
+      className="flex flex-col gap-gap-medium text-left"
+    >
+      <p className="text-title-xsmall text-text-strong">
+        EC2 인스턴스를 가장 간단하게 만드는 방법
+      </p>
+      <ol className="flex flex-col gap-gap-xsmall text-body-xsmall text-text-secondary">
+        {steps.map((step, index) => (
+          <li key={step} className="flex gap-gap-xsmall">
+            <span className="w-5 shrink-0 text-text-brand tabular-nums">
+              {index + 1}.
+            </span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+      {region && (
+        <TextLink
+          href={`https://${region}.console.aws.amazon.com/ec2/home?region=${region}#LaunchInstances:`}
+          target="_blank"
+          rel="noreferrer"
+          icon="external-link"
+          className="self-start"
+        >
+          AWS 콘솔에서 인스턴스 시작 열기
+        </TextLink>
+      )}
+    </Panel>
+  );
+}
+
 export function DashboardStateContent({
   state,
-}: {
-  state: Exclude<DashboardState, "ready">;
-}): ReactNode {
-  if (state === "first-collection")
+  region,
+  regionLabel,
+  onRetry,
+}: DashboardStateContentProps): ReactNode {
+  if (state === "no-instances")
     return (
-      <LoadingState
-        title="첫 비용 기록을 모으고 있어요"
-        description="연결 직후에는 보통 몇 분 걸려요. 이 화면을 닫아도 수집은 계속돼요."
-        className="min-h-96"
-      />
+      <Card>
+        <EmptyState
+          icon="grid"
+          title="이 리전에 EC2 인스턴스가 없어요"
+          description={`연결한 계정의 ${regionLabel ?? "선택한"} 리전에서 인스턴스를 찾지 못했어요. 다른 리전에서 쓰고 있다면 그 리전으로 다시 연결해 주세요.`}
+          action={{
+            label: "데이터 연결로 가기",
+            href: "/settings/connections",
+          }}
+        />
+        <InstanceLaunchGuide region={region} regionLabel={regionLabel} />
+      </Card>
     );
   if (state === "loading")
     return (
@@ -61,7 +124,7 @@ export function DashboardStateContent({
       <Banner
         title="AWS 연결을 확인해 주세요"
         description="저장된 기록은 볼 수 있지만 새 데이터는 가져오지 못하고 있어요."
-        action={{ label: "연결 상세 보기", onClick: () => undefined }}
+        action={onRetry && { label: "다시 시도", onClick: onRetry }}
       />
     );
   if (state === "partial")
