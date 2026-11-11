@@ -1,13 +1,20 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
+import { useEffect } from "react";
 import { Banner } from "@/components/ui/Banner";
 
 export default function DashboardError({
+  error,
   reset,
 }: {
   error: Error;
   reset: () => void;
 }) {
+  useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
+
   return (
     <Banner
       title="대시보드를 불러오지 못했어요"

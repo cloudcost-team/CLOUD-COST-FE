@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getAuthConfig, getMe, loginWithGoogle, logout } from "@/api/auth";
 
@@ -21,10 +22,23 @@ export function useGoogleLogin() {
   return useMutation({ mutationFn: loginWithGoogle });
 }
 
+async function getMeAndIdentify() {
+  const me = await getMe();
+  Sentry.setUser({ id: me.id });
+  return me;
+}
+
 export function useMe({ enabled = true }: { enabled?: boolean } = {}) {
-  return useQuery({ queryKey: authKeys.me(), queryFn: getMe, enabled });
+  return useQuery({
+    queryKey: authKeys.me(),
+    queryFn: getMeAndIdentify,
+    enabled,
+  });
 }
 
 export function useLogout() {
-  return useMutation({ mutationFn: logout });
+  return useMutation({
+    mutationFn: logout,
+    onSettled: () => Sentry.setUser(null),
+  });
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import {
   MutationCache,
   QueryCache,
@@ -22,6 +23,8 @@ function isUnauthorized(error: unknown) {
 
 function handleApiError(error: unknown) {
   if (isUnauthorized(error)) useSessionExpiredStore.getState().markExpired();
+  if (!(error instanceof ApiError) || error.status >= 500)
+    Sentry.captureException(error);
 }
 
 export function Providers({ children }: { children: React.ReactNode }) {
