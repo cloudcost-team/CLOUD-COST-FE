@@ -6,6 +6,7 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Panel } from "@/components/ui/Panel";
 import { SidePanel } from "@/components/ui/SidePanel";
 import { StatCard } from "@/components/ui/StatCard";
+import { useAppMode } from "@/hooks/useAppMode";
 import type {
   BenchmarkOversizedRatio,
   BenchmarkServer,
@@ -22,17 +23,20 @@ const columns: DataTableColumn<BenchmarkServer>[] = [
   {
     key: "name",
     header: "서버",
+    align: "center",
     render: (server) => server.name ?? server.instanceId,
   },
   {
     key: "cpuP95",
     header: "CPU P95",
+    align: "center",
     className: "w-24",
     render: (server) => `${server.cpuP95}%`,
   },
   {
     key: "verdict",
     header: "판정",
+    align: "center",
     className: "w-36",
     render: (server) =>
       server.oversized ? (
@@ -50,6 +54,7 @@ export function OversizedRatioDetailPanel({
   onClose,
   oversizedRatio,
 }: OversizedRatioDetailPanelProps) {
+  const { demo } = useAppMode();
   const { ours, reference, moreEfficientTeamsPercent, servers } =
     oversizedRatio;
   const sampleSize = reference.sampleSize.toLocaleString("ko-KR");
@@ -61,9 +66,11 @@ export function OversizedRatioDetailPanel({
       title="① 컴퓨팅 과다 사양 비율"
       className="w-130"
       footer={
-        <ButtonLink className="flex-1" href="/savings/waste">
-          낭비 리소스에서 보기
-        </ButtonLink>
+        demo ? undefined : (
+          <ButtonLink className="flex-1" href="/savings/waste">
+            낭비 리소스에서 보기
+          </ButtonLink>
+        )
       }
     >
       <div className="flex flex-col gap-gap-xlarge">

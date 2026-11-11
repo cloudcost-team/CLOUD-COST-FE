@@ -1,15 +1,84 @@
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { Icon } from "@/components/ui/Icon";
 import { Panel } from "@/components/ui/Panel";
-import { Spinner } from "@/components/ui/Spinner";
+import { cn } from "@/lib/cn";
 import { ConnectionStepper } from "./ConnectionStepper";
 
-const PROGRESS_STEPS: { label: string; badge: string; tone: BadgeTone }[] = [
-  { label: "연결 정보 저장", badge: "완료", tone: "success" },
-  { label: "스택 생성 신호 기다리는 중", badge: "진행 중", tone: "brand" },
-  { label: "읽기 권한 확인 (AssumeRole)", badge: "대기", tone: "neutral" },
+type ProgressState = "done" | "active" | "waiting";
+
+const PROGRESS_STEPS: { label: string; state: ProgressState }[] = [
+  { label: "연결 정보 저장", state: "done" },
+  { label: "스택 생성 신호 기다리는 중", state: "active" },
+  { label: "읽기 권한 확인 (AssumeRole)", state: "waiting" },
 ];
+
+const stateLabels: Record<ProgressState, string> = {
+  done: "완료",
+  active: "진행 중",
+  waiting: "대기",
+};
+
+const labelClasses: Record<ProgressState, string> = {
+  done: "text-subtext-medium text-text-primary",
+  active: "text-subtext-medium-strong text-text-strong",
+  waiting: "text-subtext-medium text-text-quaternary",
+};
+
+function ProgressMarker({ state }: { state: ProgressState }) {
+  if (state === "done")
+    return (
+      <span className="flex size-6 items-center justify-center rounded-full bg-fill-brand">
+        <Icon name="check" size={16} className="text-icon-on-fill" />
+      </span>
+    );
+  if (state === "active")
+    return (
+      <span className="flex size-6 items-center justify-center rounded-full bg-fill-brand-weak">
+        <span className="size-2.5 animate-signal-pulse rounded-full bg-fill-brand motion-reduce:animate-none" />
+      </span>
+    );
+  return (
+    <span className="block size-6 rounded-full border-2 border-border-default bg-background-default" />
+  );
+}
+
+function ProgressTimeline() {
+  return (
+    <ol className="flex flex-col">
+      {PROGRESS_STEPS.map((step, index) => {
+        const isLast = index === PROGRESS_STEPS.length - 1;
+        return (
+          <li
+            key={step.label}
+            className={cn(
+              "relative flex gap-gap-medium",
+              !isLast && "pb-gap-xlarge",
+            )}
+          >
+            {!isLast && (
+              <span
+                aria-hidden
+                className={cn(
+                  "absolute top-7 bottom-1 left-3 w-0.5 -translate-x-1/2 rounded-full",
+                  step.state === "done" ? "bg-fill-brand" : "bg-border-default",
+                )}
+              />
+            )}
+            <span aria-hidden className="flex shrink-0">
+              <ProgressMarker state={step.state} />
+            </span>
+            <span className={cn("pt-0.5", labelClasses[step.state])}>
+              <span className="sr-only">{stateLabels[step.state]}: </span>
+              {step.label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
 
 type ConnectionProgressCardProps = {
   stackName: string;
@@ -29,35 +98,15 @@ export function ConnectionProgressCard({
   return (
     <Card className="gap-spacing-medium">
       <ConnectionStepper currentStep={2} />
-      <div role="status" className="flex items-center gap-gap-large">
-        <Spinner size="large" />
-        <div className="flex min-w-0 flex-col gap-gap-xsmall">
-          <p className="text-title-small text-text-strong">
-            AWS에서 스택을 만들고 있어요
-          </p>
-          <p className="text-subtext-medium text-text-tertiary">
-            보통 1~2분 걸려요. 이 화면을 닫아도 연결은 계속 진행돼요.
-          </p>
-        </div>
+      <div role="status" className="flex flex-col gap-gap-xsmall">
+        <p className="text-title-small text-text-strong">
+          AWS에서 스택을 만들고 있어요
+        </p>
+        <p className="text-subtext-medium text-text-tertiary">
+          보통 1~2분 걸려요. 이 화면을 닫아도 연결은 계속 진행돼요.
+        </p>
       </div>
-      <Panel as="ol" variant="outline" className="flex flex-col gap-gap-medium">
-        {PROGRESS_STEPS.map((step) => (
-          <li key={step.label} className="flex items-center gap-gap-medium">
-            <Badge tone={step.tone}>{step.badge}</Badge>
-            <span
-              className={
-                step.tone === "brand"
-                  ? "text-subtext-medium-strong text-text-strong"
-                  : step.tone === "neutral"
-                    ? "text-subtext-medium text-text-quaternary"
-                    : "text-subtext-medium text-text-primary"
-              }
-            >
-              {step.label}
-            </span>
-          </li>
-        ))}
-      </Panel>
+      <ProgressTimeline />
       {isLate && (
         <Panel className="flex flex-col gap-gap-small">
           <div className="flex flex-wrap items-center gap-gap-small">

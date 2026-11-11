@@ -29,13 +29,15 @@ export function BudgetUsage({
       className={cn("flex flex-col gap-gap-small", className)}
     >
       <div className="flex flex-wrap items-start justify-between gap-gap-small text-subtext-medium">
-        <p className="text-text-secondary">
-          이번 달 예상{" "}
-          {forecastMonthEndCost === null
-            ? "—"
-            : formatMoney(forecastMonthEndCost, currency)}{" "}
-          <span className="text-text-tertiary">(추정)</span>
-        </p>
+        {forecastMonthEndCost === null ? (
+          <p className="text-text-tertiary">
+            사용 기록이 없어 이번 달 월말 예상 비용을 아직 계산할 수 없어요
+          </p>
+        ) : (
+          <p className="text-text-secondary">
+            이번 달 월말 예상 비용 {formatMoney(forecastMonthEndCost, currency)}
+          </p>
+        )}
         {usageRate !== null && usageRate !== undefined && (
           <p className="text-label-xsmall text-text-strong">
             예산의 {usageRate}%

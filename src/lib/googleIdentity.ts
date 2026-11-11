@@ -1,25 +1,31 @@
-type GoogleCredentialResponse = {
-  credential: string;
+type GoogleCodeResponse = {
+  code?: string;
+  error?: string;
 };
 
-type GooglePromptNotification = {
-  isSkippedMoment: () => boolean;
-  isNotDisplayed: () => boolean;
+type GoogleCodeClientError = {
+  type: "popup_failed_to_open" | "popup_closed" | "unknown";
 };
 
-type GoogleIdentity = {
-  initialize: (options: {
+export type GoogleCodeClient = {
+  requestCode: () => void;
+};
+
+type GoogleOAuth2 = {
+  initCodeClient: (options: {
     client_id: string;
-    callback: (response: GoogleCredentialResponse) => void;
-  }) => void;
-  prompt: (listener?: (notification: GooglePromptNotification) => void) => void;
+    scope: string;
+    ux_mode: "popup";
+    callback: (response: GoogleCodeResponse) => void;
+    error_callback: (error: GoogleCodeClientError) => void;
+  }) => GoogleCodeClient;
 };
 
 declare global {
   interface Window {
     google?: {
       accounts: {
-        id: GoogleIdentity;
+        oauth2: GoogleOAuth2;
       };
     };
   }
@@ -35,11 +41,9 @@ export class GoogleIdentityError extends Error {
 const SCRIPT_SELECTOR = 'script[data-cloudcost-google-identity="true"]';
 
 let scriptPromise: Promise<void> | undefined;
-let initializedClientId: string | undefined;
-let settleCredential: ((credential: string) => void) | undefined;
 
 function loadGoogleIdentity() {
-  if (window.google?.accounts.id) return Promise.resolve();
+  if (window.google?.accounts.oauth2) return Promise.resolve();
   if (scriptPromise) return scriptPromise;
 
   scriptPromise = new Promise((resolve, reject) => {
@@ -70,53 +74,33 @@ function loadGoogleIdentity() {
   return scriptPromise;
 }
 
-export async function requestGoogleCredential(clientId: string) {
+export async function createGoogleCodeClient(
+  clientId: string,
+  onCode: (code: string) => void,
+  onError: (message: string) => void,
+) {
   await loadGoogleIdentity();
 
-  const identity = window.google?.accounts.id;
-  if (!identity) {
+  const oauth2 = window.google?.accounts.oauth2;
+  if (!oauth2) {
     throw new GoogleIdentityError("Google 로그인을 시작하지 못했습니다.");
   }
 
-  if (initializedClientId !== clientId) {
-    identity.initialize({
-      client_id: clientId,
-      callback: (response) => settleCredential?.(response.credential),
-    });
-    initializedClientId = clientId;
-  }
-
-  return new Promise<string>((resolve, reject) => {
-    const timeout = window.setTimeout(
-      () =>
-        finish(() =>
-          reject(
-            new GoogleIdentityError(
-              "Google 로그인 응답 시간이 초과되었습니다.",
-            ),
-          ),
-        ),
-      60_000,
-    );
-
-    function finish(settle: () => void) {
-      window.clearTimeout(timeout);
-      settleCredential = undefined;
-      settle();
-    }
-
-    settleCredential = (credential) => finish(() => resolve(credential));
-
-    identity.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        finish(() =>
-          reject(
-            new GoogleIdentityError(
-              "Google 로그인 창이 닫혔거나 표시되지 않았어요. 다시 시도해 주세요.",
-            ),
-          ),
-        );
-      }
-    });
+  return oauth2.initCodeClient({
+    client_id: clientId,
+    scope: "openid email profile",
+    ux_mode: "popup",
+    callback: (response) => {
+      if (response.code) onCode(response.code);
+      else onError("Google 로그인을 마치지 못했습니다. 다시 시도해 주세요.");
+    },
+    error_callback: (error) => {
+      if (error.type === "popup_closed") return;
+      onError(
+        error.type === "popup_failed_to_open"
+          ? "Google 로그인 창을 열지 못했습니다. 브라우저의 팝업 차단을 해제해 주세요."
+          : "Google 로그인을 시작하지 못했습니다.",
+      );
+    },
   });
 }

@@ -1,7 +1,9 @@
 "use client";
 
 import type { Currency } from "@/api/costs";
-import type { WasteItem } from "./WasteScreen";
+import { useAppPath } from "@/hooks/useAppMode";
+import type { WasteItem } from "@/api/waste";
+import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { formatMoney } from "@/lib/formatMoney";
@@ -41,6 +43,7 @@ export function RecommendationCard({
   currency,
   onOpenDetail,
 }: RecommendationCardProps) {
+  const appPath = useAppPath();
   const name = item.name ?? item.instanceId;
 
   return (
@@ -57,6 +60,9 @@ export function RecommendationCard({
             </button>
           </h2>
           <WasteKindBadge kind={item.kind} kindLabel={item.kindLabel} />
+          {item.memoryCheckNeeded && (
+            <Badge tone="warning">메모리 미측정 · 확인 필요</Badge>
+          )}
         </div>
         <dl className="flex flex-col gap-gap-small">
           <InfoRow
@@ -80,17 +86,17 @@ export function RecommendationCard({
         <p className="text-subtext-small text-text-tertiary">
           월 추정 비용 {formatMoney(item.estimatedMonthlyCost, currency)}
         </p>
-        <p className="text-title-medium text-text-brand">
+        <p className="text-title-medium text-text-success">
           {formatMoney(item.estimatedMonthlySavings, currency)}
         </p>
         <p className="text-subtext-small text-text-quaternary">
-          매달 절감 예상 (추정)
+          매달 절감 예상
         </p>
       </div>
       <ButtonLink
         variant="secondary"
         size="medium"
-        href={getSimulatorHref(item.recommendationId)}
+        href={appPath(getSimulatorHref(item.recommendationId))}
       >
         시뮬레이터에서 효과 보기
       </ButtonLink>

@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { AwsAccount } from "@/api/awsAccounts";
 import { Banner } from "@/components/ui/Banner";
 import { Button } from "@/components/ui/Button";
-import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -31,25 +29,29 @@ const COLUMNS: DataTableColumn<AwsAccount>[] = [
   {
     key: "awsAccountId",
     header: "AWS 계정 ID",
-    className: "w-40",
+    align: "center",
+    className: "w-60",
     render: (account) => account.awsAccountId ?? <Muted>—</Muted>,
   },
   {
     key: "region",
     header: "리전",
-    className: "w-45",
+    align: "center",
+    className: "w-28",
     render: (account) => account.regionLabel,
   },
   {
     key: "status",
     header: "상태",
-    className: "w-30",
+    align: "center",
+    className: "w-32",
     render: (account) => <ConnectionStatusBadge status={account.status} />,
   },
   {
     key: "usageRefreshedAt",
     header: "마지막 수집 (KST)",
-    className: "w-45",
+    align: "center",
+    className: "w-64",
     render: (account) =>
       account.usageRefreshedAt ? (
         formatKstDateTime(account.usageRefreshedAt)
@@ -70,10 +72,9 @@ const COLUMNS: DataTableColumn<AwsAccount>[] = [
   },
 ];
 
-function ConnectionListBody({ includePending }: { includePending: boolean }) {
+function ConnectionListBody() {
   const router = useRouter();
-  const { data, isPending, isError, error, refetch } =
-    useAwsAccounts(includePending);
+  const { data, isPending, isError, error, refetch } = useAwsAccounts(false);
 
   if (isPending) return <Skeleton shape="block" className="h-60 w-full" />;
   if (isError)
@@ -84,7 +85,8 @@ function ConnectionListBody({ includePending }: { includePending: boolean }) {
         action={{ label: "다시 시도", onClick: () => refetch() }}
       />
     );
-  if (data.length === 0)
+  const connections = data.filter((account) => account.status !== "PENDING");
+  if (connections.length === 0)
     return (
       <EmptyState
         icon="link"
@@ -100,7 +102,7 @@ function ConnectionListBody({ includePending }: { includePending: boolean }) {
     <DataTable
       caption="AWS 연결 목록"
       columns={COLUMNS}
-      rows={data}
+      rows={connections}
       getRowKey={(account) => account.accountId}
       isRowDimmed={(account) => account.status === "DISCONNECTED"}
     />
@@ -109,8 +111,6 @@ function ConnectionListBody({ includePending }: { includePending: boolean }) {
 
 export function ConnectionListScreen() {
   const router = useRouter();
-  const [includePending, setIncludePending] = useState(false);
-
   return (
     <div className="flex flex-col gap-spacing-medium">
       <Breadcrumb items={[{ label: "설정" }, { label: "데이터 연결" }]} />
@@ -127,12 +127,7 @@ export function ConnectionListScreen() {
           </Button>
         }
       />
-      <Checkbox
-        label="1시간 넘게 대기 중인 연결도 보기"
-        checked={includePending}
-        onChange={(event) => setIncludePending(event.currentTarget.checked)}
-      />
-      <ConnectionListBody includePending={includePending} />
+      <ConnectionListBody />
     </div>
   );
 }

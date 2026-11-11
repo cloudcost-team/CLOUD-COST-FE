@@ -1,6 +1,6 @@
 "use client";
 
-import type { AwsAccount } from "@/api/awsAccounts";
+import type { DataSource } from "@/api/dataSource";
 import type { ReportMonthSummary } from "@/api/reports";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
@@ -9,7 +9,7 @@ import { NoticeList } from "@/components/ui/NoticeList";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { TextLink } from "@/components/ui/TextLink";
 import { useReports } from "@/hooks/useReports";
-import { useSelectedConnection } from "@/hooks/useSelectedConnection";
+import { useAppPath } from "@/hooks/useAppMode";
 import {
   formatMoney,
   formatSignedMoney,
@@ -17,7 +17,7 @@ import {
 } from "@/lib/formatMoney";
 import { formatYearMonth } from "@/lib/kstDate";
 import { useCurrencyStore } from "@/stores/currencyStore";
-import { NoConnectionState } from "./NoConnectionState";
+import { DataSourceGate } from "@/components/layout/DataSourceGate";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ReportEmptyState } from "./ReportEmptyState";
 
@@ -27,6 +27,7 @@ function Muted({ children }: { children: string }) {
 
 function getColumns(
   currency: "KRW" | "USD",
+  appPath: (path: string) => string,
 ): DataTableColumn<ReportMonthSummary>[] {
   return [
     {
@@ -37,7 +38,7 @@ function getColumns(
           {formatYearMonth(row.month)}
           {row.status !== "FINAL" && (
             <Badge tone={row.status === "PREVIEW" ? "info" : "neutral"}>
-              {row.statusLabel}
+              {row.status === "PREVIEW" ? "이번 달" : row.statusLabel}
             </Badge>
           )}
         </span>
@@ -46,8 +47,8 @@ function getColumns(
     {
       key: "estimatedCost",
       header: "추정 비용",
-      align: "right",
-      className: "w-45",
+      align: "center",
+      className: "w-1/5 whitespace-nowrap tabular-nums",
       render: (row) =>
         row.estimatedCost === null ? (
           <Muted>—</Muted>
@@ -58,11 +59,11 @@ function getColumns(
     {
       key: "change",
       header: "전월 대비",
-      align: "right",
-      className: "w-55",
+      align: "center",
+      className: "w-1/4 whitespace-nowrap tabular-nums",
       render: (row) =>
         row.change === null ? (
-          <Muted>—</Muted>
+          <Muted>비교 없음</Muted>
         ) : (
           `${row.changeRate === null ? "" : `${formatSignedPercent(row.changeRate)} `}(${formatSignedMoney(row.change, currency)})`
         ),
@@ -70,13 +71,13 @@ function getColumns(
     {
       key: "link",
       header: <span className="sr-only">리포트</span>,
-      align: "right",
-      className: "w-30",
+      align: "center",
+      className: "w-44",
       render: (row) =>
         row.status === "EMPTY" ? (
           <Muted>기록 없음</Muted>
         ) : (
-          <TextLink href={`/reports/${row.month}`}>
+          <TextLink href={appPath(`/reports/${row.month}`)}>
             {row.status === "PREVIEW" ? "미리 보기" : "보기"}
           </TextLink>
         ),
@@ -84,10 +85,11 @@ function getColumns(
   ];
 }
 
-function ReportListBody({ connection }: { connection: AwsAccount }) {
+function ReportListBody({ source }: { source: DataSource }) {
+  const appPath = useAppPath();
   const currency = useCurrencyStore((state) => state.currency);
   const { data, isPending, isError, error, refetch } = useReports(
-    connection.accountId,
+    source,
     currency,
   );
 
@@ -114,42 +116,27 @@ function ReportListBody({ connection }: { connection: AwsAccount }) {
     <>
       <DataTable
         caption="월간 리포트 목록"
-        columns={getColumns(data.currency)}
+        columns={getColumns(data.currency, appPath)}
         rows={data.months}
         getRowKey={(row) => row.month}
       />
-      <NoticeList
-        variant="plain"
-        lines={notes}
-        className="flex-row flex-wrap gap-x-gap-large gap-y-gap-xxsmall"
-      />
+      <NoticeList variant="plain" lines={notes} />
     </>
   );
 }
 
 export function ReportListScreen() {
-  const { selected, isPending, error, refetch } = useSelectedConnection();
-
-  let body;
-  if (isPending) body = <Skeleton shape="block" className="h-72 w-full" />;
-  else if (error)
-    body = (
-      <Banner
-        title="연결 목록을 불러오지 못했어요"
-        description={error.message}
-        action={{ label: "다시 시도", onClick: () => refetch() }}
-      />
-    );
-  else if (!selected) body = <NoConnectionState />;
-  else body = <ReportListBody key={selected.accountId} connection={selected} />;
-
   return (
     <div className="flex flex-col gap-spacing-medium">
       <PageHeader
         title="월간 리포트"
         description="매달 비용과 절감 제안을 한 장으로 정리해요."
       />
-      {body}
+      <DataSourceGate
+        loading={<Skeleton shape="block" className="h-72 w-full" />}
+      >
+        {(source) => <ReportListBody source={source} />}
+      </DataSourceGate>
     </div>
   );
 }

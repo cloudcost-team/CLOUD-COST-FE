@@ -27,7 +27,7 @@ describe("FieldHelpText", () => {
     expect(container.querySelector("svg")).not.toBeInTheDocument();
   });
 
-  it("loading 톤은 아이콘 대신 회전하는 스피너를 보여 주고 글자색이 text-tertiary다", () => {
+  it("loading 톤은 아이콘 대신 움직이는 점 3개를 보여 주고 글자색이 text-tertiary다", () => {
     const { container } = render(
       <FieldHelpText tone="loading">확인 중</FieldHelpText>,
     );
@@ -35,7 +35,7 @@ describe("FieldHelpText", () => {
     expect(screen.getByText("확인 중").closest("p")).toHaveClass(
       "text-text-tertiary",
     );
-    expect(container.querySelector("svg")).toHaveClass("animate-spin");
-    expect(container.querySelector("svg path")).not.toBeInTheDocument();
+    expect(container.querySelectorAll(".animate-dot-pulse")).toHaveLength(3);
+    expect(container.querySelector("svg")).not.toBeInTheDocument();
   });
 });

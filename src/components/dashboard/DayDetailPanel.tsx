@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { Currency } from "@/api/costs";
 import type { DailyCostWithInstances } from "./DashboardScreen";
 import { Badge } from "@/components/ui/Badge";
@@ -18,15 +19,18 @@ type DayDetailPanelProps = {
 };
 
 export function DayDetailPanel({
-  day,
+  day: currentDay,
   currency,
   onClose,
   onMove,
 }: DayDetailPanelProps) {
+  const [lastDay, setLastDay] = useState(currentDay);
+  if (currentDay && currentDay !== lastDay) setLastDay(currentDay);
+  const day = currentDay ?? lastDay;
   if (!day) return null;
   return (
     <SidePanel
-      open
+      open={currentDay !== null}
       onClose={onClose}
       title={formatLongDateWithWeekday(day.date)}
       badge={day.spike ? <Badge tone="danger">급증</Badge> : undefined}
@@ -35,18 +39,17 @@ export function DayDetailPanel({
         <>
           <Button
             variant="assistive"
-            icon="chevron-left"
             className="flex-1"
             onClick={() => onMove(-1)}
           >
-            전날
+            이전
           </Button>
           <Button
             variant="assistive"
             className="flex-1"
             onClick={() => onMove(1)}
           >
-            다음 날
+            다음
           </Button>
         </>
       }
@@ -54,7 +57,6 @@ export function DayDetailPanel({
       <div className="grid grid-cols-3 gap-gap-medium">
         <StatCard
           label="추정 비용"
-          estimated
           value={
             day.estimatedCost === null
               ? "—"
@@ -78,8 +80,12 @@ export function DayDetailPanel({
         <ServerCostTable rows={day.instances} currency={currency} />
         {day.spike?.causeName && (
           <p className="text-subtext-medium text-text-tertiary">
-            {day.spike.causeName} 사용 시간이 평소보다 늘어 비용 증가에 가장
-            크게 영향을 줬어요.
+            {day.spike.causeName} 사용 시간이{" "}
+            {day.spike.causeUsageHours !== null &&
+            day.spike.causeBaselineHours !== null
+              ? `평소 ${formatHours(day.spike.causeBaselineHours)}에서 ${formatHours(day.spike.causeUsageHours)}으로`
+              : "평소보다"}{" "}
+            늘어 비용 증가에 가장 크게 영향을 줬어요.
           </p>
         )}
       </section>

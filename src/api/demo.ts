@@ -13,9 +13,9 @@ type DemoAccount = {
   region: string;
 };
 
-export type DemoCurrency = "KRW" | "USD";
 export type DemoOs = "LINUX" | "WINDOWS";
-export type DemoSchedule = "ALWAYS" | "WEEKDAY_OFFICE" | "DAILY_HOURS";
+export type DemoSchedule =
+  "ALWAYS" | "WEEKDAY_OFFICE" | "DAILY_HOURS" | "MONTHLY_SPIKE";
 
 export type DemoSetupRequest = {
   from: string;
@@ -29,6 +29,8 @@ export type DemoSetupRequest = {
     hoursPerDay?: number;
     usagePattern?: string;
   }>;
+  recommendationIds?: string[];
+  trafficGrowthPercent?: number;
 };
 
 export type DemoCatalog = {
@@ -46,44 +48,6 @@ export type DemoCatalog = {
   priceNote: string;
 };
 
-type InstanceUsage = {
-  instanceId: string;
-  name: string | null;
-  instanceType: string | null;
-  state: string;
-  usageHours: number;
-  estimatedHourlyCost: number | null;
-  estimatedCost: number | null;
-  note: string;
-};
-
-export type DemoCostSummary = {
-  dataSource: "demo";
-  currency: DemoCurrency;
-  from: string;
-  to: string;
-  usageHours: number;
-  estimatedCost: number;
-  instances: InstanceUsage[];
-  notes: string[];
-};
-
-export type DemoDailyCost = {
-  dataSource: "demo";
-  currency: DemoCurrency;
-  from: string;
-  to: string;
-  usageHours: number;
-  estimatedCost: number;
-  days: Array<{
-    date: string;
-    usageHours: number;
-    estimatedCost: number;
-    instances: InstanceUsage[];
-  }>;
-  notes: string[];
-};
-
 export function loginDemo(input: DemoLoginRequest) {
   return apiRequest<DemoAccount>("/demo/login", {
     method: "POST",
@@ -93,26 +57,4 @@ export function loginDemo(input: DemoLoginRequest) {
 
 export function getDemoCatalog() {
   return apiRequest<DemoCatalog>("/demo/catalog");
-}
-
-function postDemo<T>(
-  path: string,
-  input: DemoSetupRequest,
-  currency: DemoCurrency,
-) {
-  return apiRequest<T>(`${path}?currency=${currency}`, {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
-}
-
-export function getDemoCosts(input: DemoSetupRequest, currency: DemoCurrency) {
-  return postDemo<DemoCostSummary>("/demo/costs", input, currency);
-}
-
-export function getDemoDailyCosts(
-  input: DemoSetupRequest,
-  currency: DemoCurrency,
-) {
-  return postDemo<DemoDailyCost>("/demo/costs/daily", input, currency);
 }

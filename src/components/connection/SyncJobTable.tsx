@@ -26,7 +26,8 @@ const COLUMNS: DataTableColumn<SyncJob>[] = [
   {
     key: "status",
     header: "결과",
-    className: "w-50",
+    align: "center",
+    className: "w-1/5",
     render: (job) => (
       <Badge tone={STATUS_BADGES[job.status].tone}>
         {STATUS_BADGES[job.status].label}
@@ -36,20 +37,23 @@ const COLUMNS: DataTableColumn<SyncJob>[] = [
   {
     key: "startedAt",
     header: "시작 (KST)",
-    className: "w-40 whitespace-nowrap",
+    align: "center",
+    className: "w-1/5 whitespace-nowrap",
     render: (job) => formatKstDateTime(job.startedAt),
   },
   {
     key: "finishedAt",
     header: "종료 (KST)",
-    className: "w-40 whitespace-nowrap",
+    align: "center",
+    className: "w-1/5 whitespace-nowrap",
     render: (job) =>
       job.finishedAt ? formatKstDateTime(job.finishedAt) : <Muted>—</Muted>,
   },
   {
     key: "message",
     header: "오류 · 경고",
-    className: "break-words",
+    align: "center",
+    className: "w-2/5 break-words",
     render: (job) => {
       if (job.error) return job.error.message;
       if (job.warning) return `경고: ${job.warning}`;

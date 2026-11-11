@@ -1,10 +1,59 @@
 "use client";
 
-import type { ComponentProps } from "react";
-import { DayPicker } from "react-day-picker";
+import { useState, type ChangeEvent, type ComponentProps } from "react";
+import { DayPicker, type DropdownProps } from "react-day-picker";
 import { ko } from "react-day-picker/locale";
 import { cn } from "@/lib/cn";
 import { Icon } from "./Icon";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./Select";
+
+function CalendarDropdown({
+  options = [],
+  value,
+  onChange,
+  disabled,
+  "aria-label": ariaLabel,
+}: DropdownProps) {
+  const [container, setContainer] = useState<HTMLSpanElement | null>(null);
+
+  function changeValue(next: string) {
+    onChange?.({ target: { value: next } } as ChangeEvent<HTMLSelectElement>);
+  }
+
+  return (
+    <span ref={setContainer}>
+      <Select
+        value={String(value)}
+        disabled={disabled}
+        onValueChange={changeValue}
+      >
+        <SelectTrigger
+          aria-label={ariaLabel}
+          className="w-auto gap-gap-xxsmall px-padding-xsmall text-label-xsmall text-text-strong"
+        >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent container={container}>
+          {options.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={String(option.value)}
+              disabled={option.disabled}
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </span>
+  );
+}
 
 export function Calendar({
   className,
@@ -16,23 +65,25 @@ export function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       locale={ko}
-      className={cn("p-4", className)}
+      className={cn("relative", className)}
       classNames={{
         months: "flex flex-col",
-        month: "space-y-3",
-        month_caption: "relative flex h-8 items-center justify-center",
-        caption_label: "text-label-xsmall text-text-strong",
-        nav: "absolute inset-x-4 top-4 flex h-8 items-center justify-between",
+        month: "w-full space-y-3",
+        month_caption: "flex h-8 items-center",
+        caption_label:
+          "flex items-center gap-gap-xxsmall text-label-xsmall text-text-strong",
+        dropdowns: "flex items-center gap-gap-xsmall",
+        nav: "absolute top-0 right-0 flex h-8 items-center gap-gap-xxsmall",
         button_previous:
           "z-10 flex size-8 cursor-pointer items-center justify-center rounded-medium text-icon-primary outline-none hover:bg-fill-neutral-weak focus-visible:ring-2 focus-visible:ring-border-brand",
         button_next:
-          "z-10 ml-auto flex size-8 cursor-pointer items-center justify-center rounded-medium text-icon-primary outline-none hover:bg-fill-neutral-weak focus-visible:ring-2 focus-visible:ring-border-brand",
+          "z-10 flex size-8 cursor-pointer items-center justify-center rounded-medium text-icon-primary outline-none hover:bg-fill-neutral-weak focus-visible:ring-2 focus-visible:ring-border-brand",
         month_grid: "w-full border-collapse",
         weekdays: "flex",
         weekday:
-          "flex size-8 items-center justify-center text-subtext-small text-text-tertiary",
+          "flex h-8 flex-1 items-center justify-center text-subtext-small text-text-tertiary",
         week: "mt-1 flex w-full",
-        day: "relative size-8 p-0 text-center",
+        day: "relative flex flex-1 justify-center p-0",
         day_button:
           "size-8 cursor-pointer rounded-medium text-subtext-small text-text-primary outline-none hover:bg-fill-brand-weak hover:text-text-brand focus-visible:ring-2 focus-visible:ring-border-brand",
         selected:
@@ -46,11 +97,9 @@ export function Calendar({
         ...classNames,
       }}
       components={{
-        Chevron: ({ orientation }) => (
-          <Icon
-            name={orientation === "left" ? "chevron-left" : "chevron-right"}
-            size={16}
-          />
+        Dropdown: CalendarDropdown,
+        Chevron: ({ orientation = "right" }) => (
+          <Icon name={`chevron-${orientation}`} size={16} />
         ),
       }}
       {...props}

@@ -1,5 +1,6 @@
 import { apiRequest } from "./client";
 import type { Currency } from "./costs";
+import { getSourceKey, type DataSource } from "./dataSource";
 
 type SimulationRequest = {
   recommendationIds: string[];
@@ -8,10 +9,10 @@ type SimulationRequest = {
 
 export const simulationKeys = {
   all: ["simulations"] as const,
-  result: (accountId: string, currency: Currency, input: SimulationRequest) =>
+  result: (source: DataSource, currency: Currency, input: SimulationRequest) =>
     [
       ...simulationKeys.all,
-      accountId,
+      getSourceKey(source),
       currency,
       input.recommendationIds,
       input.trafficGrowthPercent,
@@ -19,12 +20,17 @@ export const simulationKeys = {
 };
 
 export function simulate<T>(
-  accountId: string,
+  source: DataSource,
   currency: Currency,
   input: SimulationRequest,
 ) {
-  return apiRequest<T>(
-    `/aws/accounts/${accountId}/simulations?currency=${currency}`,
-    { method: "POST", body: JSON.stringify(input) },
-  );
+  const path =
+    source.kind === "aws"
+      ? `/aws/accounts/${source.account.accountId}/simulations`
+      : "/demo/simulations";
+  const body = source.kind === "aws" ? input : { ...source.setup, ...input };
+  return apiRequest<T>(`${path}?currency=${currency}`, {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
 }

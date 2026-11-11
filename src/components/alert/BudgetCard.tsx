@@ -228,19 +228,21 @@ export function BudgetCard({ connections }: { connections: Connection[] }) {
         )
       }
     >
-      <p className="text-subtext-medium text-text-tertiary">
-        연결마다 따로 정해요. 대시보드의 예산 대비 비율과 시뮬레이터에도 쓰여요.
-      </p>
       {connection ? (
-        <BudgetBody
-          connection={connection}
-          editing={editing}
-          onDone={() => setEditing(false)}
-        />
+        <>
+          <p className="text-subtext-medium text-text-tertiary">
+            연결마다 따로 정해요. 대시보드의 예산 대비 비율과 시뮬레이터에도
+            쓰여요.
+          </p>
+          <BudgetBody
+            connection={connection}
+            editing={editing}
+            onDone={() => setEditing(false)}
+          />
+        </>
       ) : (
         <p className="text-subtext-medium text-text-tertiary">
-          예산을 정할 연결이 없어요. 먼저 데이터 연결에서 AWS 계정을 연결해
-          주세요.
+          AWS 계정을 연결하면 예산을 정할 수 있어요.
         </p>
       )}
     </Card>

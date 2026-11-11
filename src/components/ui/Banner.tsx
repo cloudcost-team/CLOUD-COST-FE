@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Button } from "./Button";
 import { Icon } from "./Icon";
@@ -9,6 +10,7 @@ type BannerProps = {
   tone?: BannerTone;
   title: string;
   description?: string;
+  icon?: ReactNode;
   action?: { label: string; onClick: () => void };
   className?: string;
 };
@@ -38,6 +40,7 @@ export function Banner({
   tone = "danger",
   title,
   description,
+  icon,
   action,
   className,
 }: BannerProps) {
@@ -51,7 +54,7 @@ export function Banner({
         className,
       )}
     >
-      <Icon name={styles.icon} className={styles.iconColor} />
+      {icon ?? <Icon name={styles.icon} className={styles.iconColor} />}
       <div className="flex min-w-0 flex-1 flex-col gap-gap-xxsmall">
         <p className="text-label-small text-text-strong">{title}</p>
         {description && (

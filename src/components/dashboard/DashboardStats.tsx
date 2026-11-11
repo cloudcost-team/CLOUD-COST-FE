@@ -47,7 +47,6 @@ export function DashboardStats({ dashboard }: DashboardStatsProps) {
     <div className="grid gap-gap-large md:grid-cols-2 xl:grid-cols-4">
       <StatCard
         label="이번 달 추정 비용"
-        estimated
         value={
           monthToDate.estimatedCost === null
             ? "—"
@@ -66,7 +65,6 @@ export function DashboardStats({ dashboard }: DashboardStatsProps) {
       />
       <StatCard
         label="월말 예상 비용"
-        estimated
         value={
           forecast === null ? "—" : formatMoney(forecast.monthEndCost, currency)
         }

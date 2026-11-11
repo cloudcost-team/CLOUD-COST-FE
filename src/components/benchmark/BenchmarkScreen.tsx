@@ -1,14 +1,13 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
-import type { AwsAccount } from "@/api/awsAccounts";
 import { benchmarkKeys, getBenchmark } from "@/api/benchmark";
 import type { Currency } from "@/api/costs";
+import { getSourceId, type DataSource } from "@/api/dataSource";
 import type { ExchangeRate } from "@/api/reports";
+import { DataSourceGate } from "@/components/layout/DataSourceGate";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { NoConnectionState } from "@/components/report/NoConnectionState";
-import { useSimulation } from "@/components/savings/SimulatorScreen";
 import { Banner } from "@/components/ui/Banner";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
@@ -18,13 +17,15 @@ import { Panel } from "@/components/ui/Panel";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { formatMoney } from "@/lib/formatMoney";
-import { useSelectedConnection } from "@/hooks/useSelectedConnection";
+import { useAppMode, useAppPath } from "@/hooks/useAppMode";
 import { formatKoreanMonthDay } from "@/lib/kstDate";
 import { useCurrencyStore } from "@/stores/currencyStore";
 import { useSimulationSelectionStore } from "@/stores/simulationSelectionStore";
 import { BenchmarkMetricCard } from "./BenchmarkMetricCard";
 import { formatPercent } from "./benchmarkFormat";
+import { DistributionChart } from "./DistributionChart";
 import { OversizedRatioDetailPanel } from "./OversizedRatioDetailPanel";
+import { RangeBar } from "./RangeBar";
 import { UnavailableMetricCard } from "./UnavailableMetricCard";
 
 export type BenchmarkServer = {
@@ -64,6 +65,24 @@ export type BenchmarkSizeBand = {
   matchesOurs: boolean;
 };
 
+export type BenchmarkDistributionBucket = {
+  fromPercent: number;
+  toPercent: number;
+  label: string;
+  teamsPercent: number;
+  ours: boolean;
+  afterSimulation: boolean;
+};
+
+export type BenchmarkDistribution = {
+  approximate: boolean;
+  basis: string;
+  sizeBand: string;
+  buckets: BenchmarkDistributionBucket[];
+  oursBucketIndex: number | null;
+  afterSimulationBucketIndex: number | null;
+};
+
 export type BenchmarkOversizedRatio = {
   status: "OK" | "NOT_COMPARABLE" | "INSUFFICIENT_HISTORY";
   ours: BenchmarkRatio | null;
@@ -71,6 +90,7 @@ export type BenchmarkOversizedRatio = {
   matchedSizeBand: string | null;
   reference: BenchmarkOversizedReference;
   sizeBands: BenchmarkSizeBand[];
+  distribution: BenchmarkDistribution | null;
   servers: BenchmarkServer[];
   afterSimulation: BenchmarkRatio | null;
 };
@@ -97,11 +117,15 @@ export type BenchmarkSpendRange = {
 export type BenchmarkMonthlySpend = {
   status: "OK" | "NO_FORECAST";
   monthlyCost: number | null;
+  monthlyCostUsd: number | null;
   position: BenchmarkSpendPosition | null;
+  barPositionPercent: number | null;
   range: BenchmarkSpendRange;
   afterSimulation: {
     monthlyCost: number;
+    monthlyCostUsd: number;
     position: BenchmarkSpendPosition;
+    barPositionPercent: number;
   } | null;
 };
 
@@ -112,6 +136,7 @@ export type BenchmarkFreshness = {
   usageFromCache: boolean;
   nextUsageRefreshAt: string | null;
   warnings: string[];
+  warningDetails?: { code: string; message: string }[];
 };
 
 export type BenchmarkResponse = {
@@ -124,6 +149,7 @@ export type BenchmarkResponse = {
   availableAt: string | null;
   window: { from: string; to: string };
   appliedRecommendationIds: string[];
+  selectedMonthlySavings: number | null;
   oversizedRatio: BenchmarkOversizedRatio;
   wasteRatio: BenchmarkWasteRatio;
   monthlySpend: BenchmarkMonthlySpend;
@@ -211,6 +237,21 @@ function OversizedRatioSection({
             : `소규모 팀 ${sampleSize}곳 중 우리보다 효율적인 팀 ${moreEfficientTeamsPercent}%`
         }
         source={`비교 기준: ${reference.source} · ${reference.sizeBandLabel} 구독 ${sampleSize}곳 (평균 ${formatPercent(reference.averageRatio)}, 중앙값 ${formatPercent(reference.medianRatio)})`}
+        chart={
+          oversizedRatio.distribution && (
+            <DistributionChart
+              bars={{
+                values: oversizedRatio.distribution.buckets.map(
+                  (bucket) => bucket.teamsPercent,
+                ),
+                oursIndex: oversizedRatio.distribution.oursBucketIndex,
+                afterIndex:
+                  oversizedRatio.distribution.afterSimulationBucketIndex,
+              }}
+              showAfter={Boolean(after)}
+            />
+          )
+        }
         onOpenDetail={() => setDetailOpen(true)}
       />
       <OversizedRatioDetailPanel
@@ -232,19 +273,22 @@ function MonthlySpendSection({
   showAfter: boolean;
 }) {
   const { range } = monthlySpend;
-  const rangeLabel = `$${range.minUsd}~$${range.maxUsd}`;
-  const source = `비교 기준: ${range.source} · ${SPEND_TEAM_LABEL} 일반 범위 ${rangeLabel}`;
+  const startLabel = formatMoney(range.min, currency);
+  const endLabel = formatMoney(range.max, currency);
+  const rangeLabel = `${startLabel}~${endLabel}`;
+  const source = `비교 기준: ${range.source} · ${SPEND_TEAM_LABEL} 일반 범위`;
 
   if (
     monthlySpend.status === "NO_FORECAST" ||
     monthlySpend.monthlyCost === null ||
-    monthlySpend.position === null
+    monthlySpend.position === null ||
+    monthlySpend.barPositionPercent === null
   )
     return (
       <UnavailableMetricCard
         title="③ 규모 대비 월 지출"
         reason="이번 달 월말 예상 비용이 없어 비교하지 않았어요."
-        source={source}
+        source={`${source} ${rangeLabel}`}
       />
     );
 
@@ -254,7 +298,7 @@ function MonthlySpendSection({
   return (
     <BenchmarkMetricCard
       title="③ 규모 대비 월 지출"
-      description="월 클라우드 지출 (추정)"
+      description="월 추정 클라우드 지출"
       value={
         after
           ? `${current} → ${formatMoney(after.monthlyCost, currency)}`
@@ -262,6 +306,22 @@ function MonthlySpendSection({
       }
       comparison={positionSentence[after?.position ?? monthlySpend.position]}
       source={source}
+      chart={
+        <RangeBar
+          scale={{
+            rangeStart: 0,
+            rangeEnd: 100,
+            marker: monthlySpend.barPositionPercent,
+            afterMarker: after?.barPositionPercent ?? null,
+            startLabel,
+            endLabel,
+            oursLabel: current,
+            afterLabel: after ? formatMoney(after.monthlyCost, currency) : null,
+          }}
+          rangeLabel={`일반 범위 ${rangeLabel}`}
+          showAfter={Boolean(after)}
+        />
+      }
     />
   );
 }
@@ -279,6 +339,7 @@ function BenchmarkToolbar({
   selectedMonthlySavings: number | null;
   currency: Currency;
 }) {
+  const appPath = useAppPath();
   return (
     <div className="flex flex-wrap items-center gap-gap-medium">
       <SegmentedControl
@@ -301,7 +362,7 @@ function BenchmarkToolbar({
           <ButtonLink
             variant="secondary"
             size="small"
-            href="/savings/simulator"
+            href={appPath("/savings/simulator")}
           >
             변경 다시 고르기
           </ButtonLink>
@@ -322,6 +383,7 @@ function BenchmarkBody({
   data: BenchmarkResponse;
   view: BenchmarkView;
 }) {
+  const appPath = useAppPath();
   const showAfter = view === "after";
   const { wasteRatio } = data;
   const notes = [...data.freshness.warnings, ...data.notes];
@@ -335,7 +397,7 @@ function BenchmarkBody({
           description="고른 변경이 있어야 적용 후 이동할 위치를 보여 드릴 수 있어요."
           action={{
             label: "비용 시뮬레이터로 가기",
-            href: "/savings/simulator",
+            href: appPath("/savings/simulator"),
           }}
           className="w-140 max-w-full"
         />
@@ -365,8 +427,9 @@ function BenchmarkBody({
   );
 }
 
-function BenchmarkContent({ connection }: { connection: AwsAccount }) {
-  const { accountId } = connection;
+function BenchmarkContent({ source }: { source: DataSource }) {
+  const { demo } = useAppMode();
+  const accountId = getSourceId(source);
   const currency = useCurrencyStore((state) => state.currency);
   const selection = useSimulationSelectionStore((state) =>
     state.selection?.accountId === accountId ? state.selection : null,
@@ -374,16 +437,11 @@ function BenchmarkContent({ connection }: { connection: AwsAccount }) {
   const recommendationIds = selection?.recommendationIds ?? [];
   const [view, setView] = useState<BenchmarkView>("current");
   const { data, isPending, isError, error, refetch } = useQuery({
-    queryKey: benchmarkKeys.detail(accountId, currency, recommendationIds),
+    queryKey: benchmarkKeys.detail(source, currency, recommendationIds),
     queryFn: () =>
-      getBenchmark<BenchmarkResponse>(accountId, currency, recommendationIds),
+      getBenchmark<BenchmarkResponse>(source, currency, recommendationIds),
+    placeholderData: keepPreviousData,
   });
-  const simulation = useSimulation(
-    accountId,
-    recommendationIds,
-    selection?.trafficGrowthPercent ?? 0,
-    recommendationIds.length > 0,
-  );
 
   if (isPending) return <BenchmarkLoading />;
   if (isError)
@@ -397,13 +455,15 @@ function BenchmarkContent({ connection }: { connection: AwsAccount }) {
 
   return (
     <>
-      <BenchmarkToolbar
-        view={view}
-        onViewChange={setView}
-        appliedCount={data.appliedRecommendationIds.length}
-        selectedMonthlySavings={simulation.data?.selectedMonthlySavings ?? null}
-        currency={data.currency}
-      />
+      {!demo && (
+        <BenchmarkToolbar
+          view={view}
+          onViewChange={setView}
+          appliedCount={data.appliedRecommendationIds.length}
+          selectedMonthlySavings={data.selectedMonthlySavings}
+          currency={data.currency}
+        />
+      )}
       <BenchmarkBody data={data} view={view} />
     </>
   );
@@ -419,29 +479,15 @@ function BenchmarkLoading() {
 }
 
 export function BenchmarkScreen() {
-  const { selected, isPending, error, refetch } = useSelectedConnection();
-
-  let body;
-  if (isPending) body = <BenchmarkLoading />;
-  else if (error)
-    body = (
-      <Banner
-        title="연결 목록을 불러오지 못했어요"
-        description={error.message}
-        action={{ label: "다시 시도", onClick: () => refetch() }}
-      />
-    );
-  else if (!selected) body = <NoConnectionState />;
-  else
-    body = <BenchmarkContent key={selected.accountId} connection={selected} />;
-
   return (
     <div className="flex flex-col gap-spacing-medium">
       <PageHeader
         title="팀 벤치마킹"
         description="비슷한 규모 팀과 비교해 우리 팀의 비용 효율을 봐요."
       />
-      {body}
+      <DataSourceGate loading={<BenchmarkLoading />}>
+        {(source) => <BenchmarkContent source={source} />}
+      </DataSourceGate>
     </div>
   );
 }

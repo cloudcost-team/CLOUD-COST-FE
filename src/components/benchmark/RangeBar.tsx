@@ -1,14 +1,8 @@
 "use client";
 
-import {
-  Bar,
-  BarChart,
-  ReferenceArea,
-  ReferenceLine,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from "recharts";
+import type { CSSProperties } from "react";
+import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
+import { useProfilePicture } from "@/hooks/useProfilePicture";
 import { cn } from "@/lib/cn";
 
 export type SpendScale = {
@@ -29,71 +23,57 @@ type RangeBarProps = {
   className?: string;
 };
 
-const trackData = [{ name: "track", value: 0 }];
-
 export function RangeBar({
   scale,
   rangeLabel,
   showAfter,
   className,
 }: RangeBarProps) {
+  const pictureUrl = useProfilePicture();
   const afterVisible = showAfter && scale.afterMarker !== null;
+  const positions = {
+    "--range-start": `${scale.rangeStart}%`,
+    "--range-end": `${100 - scale.rangeEnd}%`,
+    "--marker": `${scale.marker}%`,
+    "--after-marker": `${scale.afterMarker ?? 0}%`,
+  } as CSSProperties;
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-gap-small", className)}>
-      <div
-        role="img"
-        aria-label={`${rangeLabel} 안에서 우리 팀 위치`}
-        className="h-9 w-full overflow-hidden rounded-medium bg-fill-neutral-weak"
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={trackData}
-            layout="vertical"
-            margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
-          >
-            <XAxis type="number" domain={[0, 100]} hide />
-            <YAxis type="category" dataKey="name" hide />
-            <ReferenceArea
-              x1={scale.rangeStart}
-              x2={scale.rangeEnd}
-              fill="var(--color-fill-brand-weak)"
-              fillOpacity={1}
-              label={{
-                value: rangeLabel,
-                position: "center",
-                fill: "var(--color-text-brand)",
-                fontSize: 12,
-              }}
-            />
-            {afterVisible && (
-              <ReferenceLine
-                x={scale.afterMarker ?? undefined}
-                stroke="var(--color-border-brand)"
-                strokeWidth={1.5}
-                strokeDasharray="3 3"
-              />
-            )}
-            <ReferenceLine
-              x={scale.marker}
-              stroke="var(--color-fill-brand)"
-              strokeWidth={3}
-            />
-            <Bar dataKey="value" isAnimationActive={false} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+    <div
+      className={cn("flex min-w-0 flex-col gap-gap-small", className)}
+      style={positions}
+    >
       <div className="flex items-start justify-between">
         <span className="text-subtext-small text-text-quaternary">
           {scale.startLabel}
         </span>
-        <span className="text-label-xsmall text-text-brand">
-          ▲ 우리 팀 {scale.oursLabel}
-          {afterVisible && scale.afterLabel && ` → ${scale.afterLabel}`}
-        </span>
         <span className="text-subtext-small text-text-quaternary">
           {scale.endLabel}
         </span>
+      </div>
+      <div
+        role="img"
+        aria-label={`${rangeLabel} 안에서 우리 팀 ${scale.oursLabel}`}
+        className="relative h-14 w-full rounded-large bg-fill-neutral-weak/70"
+      >
+        <div className="absolute inset-y-0 right-(--range-end) left-(--range-start) flex items-center justify-center overflow-hidden rounded-large bg-fill-brand-weak">
+          <span className="text-label-xsmall text-text-brand">
+            {rangeLabel}
+          </span>
+        </div>
+        {afterVisible && (
+          <span className="absolute inset-y-0 left-(--after-marker) w-0 -translate-x-1/2 border-l-2 border-dashed border-border-brand" />
+        )}
+      </div>
+      <div className="relative h-9">
+        <div className="absolute top-0 left-(--marker) flex -translate-x-1/2 flex-col items-center gap-gap-xxsmall">
+          <span className="size-0 border-x-5 border-b-6 border-x-transparent border-b-fill-brand-strong" />
+          <ProfileAvatar
+            pictureUrl={pictureUrl}
+            size={28}
+            className="size-7 border-2 border-fill-default shadow-default"
+          />
+        </div>
       </div>
     </div>
   );

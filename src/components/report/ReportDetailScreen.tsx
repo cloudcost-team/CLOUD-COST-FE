@@ -1,12 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import type { AwsAccount } from "@/api/awsAccounts";
+import type { DataSource } from "@/api/dataSource";
 import type { ReportDetailResponse } from "@/api/reports";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { Card } from "@/components/ui/Card";
-import { IconButton } from "@/components/ui/IconButton";
 import { Panel } from "@/components/ui/Panel";
 import {
   Select,
@@ -18,7 +17,7 @@ import {
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatCard } from "@/components/ui/StatCard";
 import { useReport, useReports } from "@/hooks/useReports";
-import { useSelectedConnection } from "@/hooks/useSelectedConnection";
+import { useAppPath } from "@/hooks/useAppMode";
 import {
   formatMoney,
   formatSignedMoney,
@@ -32,7 +31,7 @@ import {
   shiftYearMonth,
 } from "@/lib/kstDate";
 import { useCurrencyStore } from "@/stores/currencyStore";
-import { NoConnectionState } from "./NoConnectionState";
+import { DataSourceGate } from "@/components/layout/DataSourceGate";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { ReportDailyChart } from "./ReportDailyChart";
 import { ReportEmptyState } from "./ReportEmptyState";
@@ -59,7 +58,6 @@ function ReportStats({ report }: { report: ReportDetailResponse }) {
     <div className="grid gap-gap-large md:grid-cols-3">
       <StatCard
         label={`${month}월 추정 비용`}
-        estimated
         value={
           summary.estimatedCost === null
             ? "—"
@@ -126,12 +124,18 @@ function ReportSpikes({ report }: { report: ReportDetailResponse }) {
   );
 }
 
+function getSourceLabel(source: DataSource) {
+  if (source.kind === "demo") return "체험 데이터";
+  const { alias, regionLabel } = source.account;
+  return `${alias ?? "이름 없는 연결"} · ${regionLabel}`;
+}
+
 function ReportBody({
   report,
-  connection,
+  source,
 }: {
   report: ReportDetailResponse;
-  connection: AwsAccount;
+  source: DataSource;
 }) {
   const currency = report.currency ?? "KRW";
   const notice = getStatusNotice(report);
@@ -144,13 +148,14 @@ function ReportBody({
           <h2 className="text-title-medium text-text-strong">
             {formatYearMonth(report.month)} 비용 리포트
           </h2>
-          <Badge>추정</Badge>
           {report.status !== "FINAL" && (
-            <Badge tone="info">{report.statusLabel}</Badge>
+            <Badge tone="info">
+              {report.status === "PREVIEW" ? "이번 달" : report.statusLabel}
+            </Badge>
           )}
         </div>
         <p className="text-subtext-medium text-text-tertiary">
-          {connection.alias ?? "이름 없는 연결"} · {connection.regionLabel}
+          {getSourceLabel(source)}
         </p>
       </div>
       {notice && <Banner tone="info" title={notice} />}
@@ -161,7 +166,7 @@ function ReportBody({
           <h2 className="text-title-xsmall text-text-strong">급증일</h2>
           <ReportSpikes report={report} />
           <ReportDailyChart
-            accountId={connection.accountId}
+            source={source}
             from={report.from}
             to={report.to}
             monthLabel={monthLabel}
@@ -170,7 +175,11 @@ function ReportBody({
         </section>
       </div>
       {report.savings && (
-        <SavingsSuggestionList savings={report.savings} currency={currency} />
+        <SavingsSuggestionList
+          savings={report.savings}
+          currency={currency}
+          source={source}
+        />
       )}
       <ul className="flex flex-col gap-gap-xxsmall text-subtext-small text-text-quaternary">
         <li>
@@ -186,16 +195,17 @@ function ReportBody({
 }
 
 function ReportDetail({
-  connection,
+  source,
   month,
 }: {
-  connection: AwsAccount;
+  source: DataSource;
   month: string;
 }) {
   const router = useRouter();
+  const appPath = useAppPath();
   const currency = useCurrencyStore((state) => state.currency);
-  const reports = useReports(connection.accountId, currency);
-  const report = useReport(connection.accountId, month, currency);
+  const reports = useReports(source, currency);
+  const report = useReport(source, month, currency);
   const months = reports.data?.months ?? [];
 
   let body;
@@ -211,22 +221,16 @@ function ReportDetail({
     );
   else if (report.data.status === "EMPTY")
     body = <ReportEmptyState reason="emptyMonth" />;
-  else body = <ReportBody report={report.data} connection={connection} />;
+  else body = <ReportBody report={report.data} source={source} />;
 
   return (
     <>
       <div className="flex flex-wrap items-center gap-gap-large">
-        <IconButton
-          icon="chevron-left"
-          size="medium"
-          aria-label="월간 리포트 목록으로"
-          onClick={() => router.push("/reports")}
-        />
         <PageHeader title="월간 리포트" className="flex-1" />
         {months.length > 0 && (
           <Select
             value={month}
-            onValueChange={(value) => router.push(`/reports/${value}`)}
+            onValueChange={(value) => router.push(appPath(`/reports/${value}`))}
           >
             <SelectTrigger
               aria-label="리포트 달"
@@ -250,27 +254,13 @@ function ReportDetail({
 }
 
 export function ReportDetailScreen({ month }: { month: string }) {
-  const { selected, isPending, error, refetch } = useSelectedConnection();
-
-  let content;
-  if (isPending) content = <Skeleton shape="block" className="h-96 w-full" />;
-  else if (error)
-    content = (
-      <Banner
-        title="연결 목록을 불러오지 못했어요"
-        description={error.message}
-        action={{ label: "다시 시도", onClick: () => refetch() }}
-      />
-    );
-  else if (!selected) content = <NoConnectionState />;
-  else
-    content = (
-      <ReportDetail
-        key={selected.accountId}
-        connection={selected}
-        month={month}
-      />
-    );
-
-  return <div className="flex flex-col gap-spacing-medium">{content}</div>;
+  return (
+    <div className="flex animate-slide-in-right flex-col gap-spacing-medium motion-reduce:animate-none">
+      <DataSourceGate
+        loading={<Skeleton shape="block" className="h-96 w-full" />}
+      >
+        {(source) => <ReportDetail source={source} month={month} />}
+      </DataSourceGate>
+    </div>
+  );
 }

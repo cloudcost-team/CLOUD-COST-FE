@@ -1,141 +1,31 @@
 "use client";
 
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import type { AwsAccount } from "@/api/awsAccounts";
-import type { Currency } from "@/api/costs";
-import type { ExchangeRate } from "@/api/reports";
-import { getWaste, wasteKeys } from "@/api/waste";
+import type { DataSource } from "@/api/dataSource";
+import type { WasteKind, WasteResponse, WasteSort } from "@/api/waste";
+import { DataSourceGate } from "@/components/layout/DataSourceGate";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { NoConnectionState } from "@/components/report/NoConnectionState";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
+import { CostBasisPopover } from "@/components/ui/CostBasisPopover";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChips } from "@/components/ui/FilterChips";
+import { Icon } from "@/components/ui/Icon";
 import { NoticeList } from "@/components/ui/NoticeList";
 import { Panel } from "@/components/ui/Panel";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatCard } from "@/components/ui/StatCard";
-import { useSelectedConnection } from "@/hooks/useSelectedConnection";
 import { formatMoney } from "@/lib/formatMoney";
-import { formatKoreanMonthDay } from "@/lib/kstDate";
-import { useCurrencyStore } from "@/stores/currencyStore";
+import {
+  formatKoreanMonthDay,
+  formatKstDate,
+  formatMonthDay,
+} from "@/lib/kstDate";
+import { useWaste } from "@/hooks/useWaste";
 import { RecommendationCard } from "./RecommendationCard";
 import { RecommendationDetailPanel } from "./RecommendationDetailPanel";
-
-export type WasteStatus = "OK" | "NONE_FOUND" | "INSUFFICIENT_HISTORY";
-
-export type WasteKind = "OVERSIZED" | "IDLE";
-
-export type WasteSort = "SAVINGS" | "COST" | "UTILIZATION" | "NAME";
-
-export type Freshness = {
-  instancesRefreshedAt: string | null;
-  instancesFromCache: boolean;
-  usageRefreshedAt: string | null;
-  usageFromCache: boolean;
-  nextUsageRefreshAt: string | null;
-  warnings: string[];
-};
-
-export type WasteSummaryLine = {
-  title: string;
-  detail: string;
-};
-
-export type WasteBasis = {
-  projectedCpuP95: number;
-  targetBaselinePercent: number;
-  nextCandidate: { instanceType: string; hourlyCost: number } | null;
-};
-
-export type WasteCpuPoint = {
-  hour: string;
-  avg: number;
-  max: number;
-};
-
-export type WasteCpuChart = {
-  points: WasteCpuPoint[];
-  max: number;
-  maxAt: string;
-  baselinePercent: number | null;
-  baselineLabel: string | null;
-};
-
-export type WasteMetrics = {
-  cpuAvg: number;
-  cpuP95: number;
-  cpuMax: number;
-  networkBytes: number;
-  cpuHours: number;
-};
-
-export type WasteInstanceSpec = {
-  instanceType: string;
-  vcpu: number;
-  memoryGib: number;
-  hourlyCost: number;
-  monthlyCostAt730h: number;
-};
-
-export type WasteItem = {
-  recommendationId: string;
-  instanceId: string;
-  name: string | null;
-  instanceType: string;
-  state: string;
-  kind: WasteKind;
-  kindLabel: string;
-  evidence: string;
-  action: string;
-  reason: string;
-  memoryCheckNeeded: boolean;
-  summary: WasteSummaryLine[];
-  summaryNote: string | null;
-  basis: WasteBasis | null;
-  cpuChart: WasteCpuChart;
-  metrics: WasteMetrics;
-  monthlyHours: number;
-  estimatedMonthlyCost: number;
-  estimatedMonthlySavings: number;
-  comparison: {
-    current: WasteInstanceSpec;
-    recommended: WasteInstanceSpec | null;
-  };
-  cautions: string[];
-  consoleSteps: string[];
-};
-
-export type WasteSkipped = {
-  instanceId: string;
-  name: string | null;
-  reason: string;
-};
-
-export type WasteResponse = {
-  dataSource: "aws" | "demo";
-  costBasis: "estimated_on_demand";
-  currency: Currency;
-  exchangeRate?: ExchangeRate | null;
-  status: WasteStatus;
-  availableAt: string | null;
-  window: { from: string; to: string };
-  sort?: WasteSort;
-  type?: WasteKind | null;
-  totalMonthlySavings: number;
-  forecastMonthEndCost: number | null;
-  savingsRateOfForecast: number | null;
-  findingCount: number;
-  counts: { oversized: number; idle: number };
-  judgedCount: number;
-  items: WasteItem[];
-  skipped: WasteSkipped[];
-  freshness: Freshness;
-  notes: string[];
-  asOf: string;
-};
+import { SkippedServersPopover } from "./SkippedServersPopover";
 
 type WasteFilter = "ALL" | WasteKind;
 
@@ -146,25 +36,11 @@ const sortOptions = [
   { value: "NAME", label: "이름순" },
 ] satisfies { value: WasteSort; label: string }[];
 
-export function useWaste(
-  accountId: string,
-  sort: WasteSort = "SAVINGS",
-  type: WasteKind | null = null,
-) {
-  const currency = useCurrencyStore((state) => state.currency);
-  return useQuery({
-    queryKey: wasteKeys.list(accountId, currency, sort, type),
-    queryFn: () => getWaste<WasteResponse>(accountId, currency, sort, type),
-    placeholderData: keepPreviousData,
-  });
-}
-
 function WasteSummary({ data }: { data: WasteResponse }) {
   return (
     <div className="grid gap-gap-large md:grid-cols-3">
       <StatCard
         label="예상 절감액"
-        estimated
         value={`월 ${formatMoney(data.totalMonthlySavings, data.currency)}`}
         caption="모든 추천을 적용했을 때"
       />
@@ -186,6 +62,25 @@ function WasteSummary({ data }: { data: WasteResponse }) {
             : `월말 예상 ${formatMoney(data.forecastMonthEndCost, data.currency)} 기준`
         }
       />
+    </div>
+  );
+}
+
+function WasteBasisLine({ data }: { data: WasteResponse }) {
+  const from = formatMonthDay(formatKstDate(new Date(data.window.from)));
+  const to = formatMonthDay(formatKstDate(new Date(data.window.to)));
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-gap-medium">
+      <div className="flex flex-wrap items-center gap-gap-medium text-subtext-medium text-text-tertiary">
+        <p className="flex items-center gap-gap-xsmall">
+          <Icon name="bar-chart" size={16} className="text-icon-tertiary" />
+          {`${from}~${to} (KST) CloudWatch CPU·네트워크 기록으로 판단 · 24시간 이상 켜진 서버 ${data.judgedCount}대`}
+        </p>
+        {data.skipped.length > 0 && (
+          <SkippedServersPopover skipped={data.skipped} />
+        )}
+      </div>
+      <CostBasisPopover exchangeRateDate={data.exchangeRate?.date} />
     </div>
   );
 }
@@ -214,12 +109,12 @@ function WasteStatusState({ data }: { data: WasteResponse }) {
   );
 }
 
-function WasteBody({ connection }: { connection: AwsAccount }) {
+function WasteBody({ source }: { source: DataSource }) {
   const [filter, setFilter] = useState<WasteFilter>("ALL");
   const [sort, setSort] = useState<WasteSort>("SAVINGS");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data, isPending, isError, error, refetch } = useWaste(
-    connection.accountId,
+    source,
     sort,
     filter === "ALL" ? null : filter,
   );
@@ -256,6 +151,7 @@ function WasteBody({ connection }: { connection: AwsAccount }) {
       ) : (
         <>
           <WasteSummary data={data} />
+          <WasteBasisLine data={data} />
           <div className="flex flex-wrap items-center justify-between gap-gap-medium">
             <FilterChips
               options={filters}
@@ -306,28 +202,15 @@ function WasteBody({ connection }: { connection: AwsAccount }) {
 }
 
 export function WasteScreen() {
-  const { selected, isPending, error, refetch } = useSelectedConnection();
-
-  let body;
-  if (isPending) body = <WasteLoading />;
-  else if (error)
-    body = (
-      <Banner
-        title="연결 목록을 불러오지 못했어요"
-        description={error.message}
-        action={{ label: "다시 시도", onClick: () => refetch() }}
-      />
-    );
-  else if (!selected) body = <NoConnectionState />;
-  else body = <WasteBody key={selected.accountId} connection={selected} />;
-
   return (
     <div className="flex flex-col gap-spacing-medium">
       <PageHeader
         title="낭비 리소스"
         description="EC2 사용률을 보고 줄일 수 있는 비용을 찾아요. 실제 변경은 AWS 콘솔에서 직접 해 주세요."
       />
-      {body}
+      <DataSourceGate loading={<WasteLoading />}>
+        {(source) => <WasteBody source={source} />}
+      </DataSourceGate>
     </div>
   );
 }

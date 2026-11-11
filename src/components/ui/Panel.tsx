@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 export type PanelVariant =
   | "subtle"
   | "brand"
+  | "mint"
   | "warning"
   | "danger"
   | "outline"
@@ -23,6 +24,7 @@ type PanelProps = {
 const variantClasses: Record<PanelVariant, string> = {
   subtle: "bg-background-lower",
   brand: "bg-fill-brand-weak",
+  mint: "bg-fill-mint-weak",
   warning: "bg-fill-warning-weak",
   danger: "bg-fill-danger-weak",
   outline: "border border-border-default",

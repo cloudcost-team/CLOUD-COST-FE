@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "./Icon";
 import type { IconName } from "./iconPaths";
-import { Spinner } from "./Spinner";
+import { LoadingDots } from "./LoadingDots";
 
 export type FieldHelpTextTone = "default" | "error" | "success" | "loading";
 
@@ -61,7 +61,7 @@ export function FieldHelpText({
         (styles.icon ? (
           <Icon name={styles.icon} size={16} className={styles.iconColor} />
         ) : (
-          <Spinner className="size-4" />
+          <LoadingDots size="small" dotClassName="bg-fill-brand" />
         ))}
       <span className="min-w-0">{children}</span>
     </p>

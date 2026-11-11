@@ -2,35 +2,36 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { costKeys, getDailyCosts, type Currency } from "@/api/costs";
+import type { DataSource } from "@/api/dataSource";
 import { getReport, getReports, reportKeys } from "@/api/reports";
 
-export function useReports(accountId: string, currency: Currency) {
+export function useReports(source: DataSource, currency: Currency) {
   return useQuery({
-    queryKey: reportKeys.list(accountId, currency),
-    queryFn: () => getReports(accountId, currency),
+    queryKey: reportKeys.list(source, currency),
+    queryFn: () => getReports(source, currency),
   });
 }
 
 export function useReport(
-  accountId: string,
+  source: DataSource,
   month: string,
   currency: Currency,
 ) {
   return useQuery({
-    queryKey: reportKeys.detail(accountId, month, currency),
-    queryFn: () => getReport(accountId, month, currency),
+    queryKey: reportKeys.detail(source, month, currency),
+    queryFn: () => getReport(source, month, currency),
     retry: false,
   });
 }
 
 export function useDailyCosts(
-  accountId: string,
+  source: DataSource,
   from: string,
   to: string,
   currency: Currency,
 ) {
   return useQuery({
-    queryKey: costKeys.daily(accountId, currency, { from, to }),
-    queryFn: () => getDailyCosts(accountId, currency, { from, to }),
+    queryKey: costKeys.daily(source, currency, { from, to }),
+    queryFn: () => getDailyCosts(source, currency, { from, to }),
   });
 }

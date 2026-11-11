@@ -1,22 +1,31 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-type Notification = {
-  isNotDisplayed: () => boolean;
-  isSkippedMoment: () => boolean;
+type CodeClientOptions = {
+  client_id: string;
+  scope: string;
+  ux_mode: string;
+  callback: (response: { code?: string; error?: string }) => void;
+  error_callback: (error: {
+    type: "popup_failed_to_open" | "popup_closed" | "unknown";
+  }) => void;
 };
 
-type Callback = (response: { credential: string }) => void;
-
-function installGoogle(notification?: Notification) {
-  let callback: Callback | undefined;
-  const initialize = vi.fn((options: { callback: Callback }) => {
-    callback = options.callback;
+function installGoogle() {
+  let options: CodeClientOptions | undefined;
+  const requestCode = vi.fn();
+  const initCodeClient = vi.fn((received: CodeClientOptions) => {
+    options = received;
+    return { requestCode };
   });
-  const prompt = vi.fn((listener?: (n: Notification) => void) => {
-    if (notification) listener?.(notification);
-  });
-  window.google = { accounts: { id: { initialize, prompt } } };
-  return { respond: (credential: string) => callback?.({ credential }) };
+  window.google = { accounts: { oauth2: { initCodeClient } } };
+  return {
+    initCodeClient,
+    requestCode,
+    respond: (response: { code?: string; error?: string }) =>
+      options?.callback(response),
+    fail: (type: "popup_failed_to_open" | "popup_closed" | "unknown") =>
+      options?.error_callback({ type }),
+  };
 }
 
 async function loadModule() {
@@ -24,65 +33,85 @@ async function loadModule() {
   return import("@/lib/googleIdentity");
 }
 
-describe("Google 인증 정보 요청", () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-  });
-
+describe("Google 팝업 로그인", () => {
   afterEach(() => {
-    vi.useRealTimers();
     delete window.google;
   });
 
-  it("로그인 창이 표시되지 않으면 기다리지 않고 안내 문구로 실패한다", async () => {
-    installGoogle({ isNotDisplayed: () => true, isSkippedMoment: () => false });
-    const { requestGoogleCredential, GoogleIdentityError } = await loadModule();
+  it("로그인 정보만 요청하는 팝업 방식으로 준비한다", async () => {
+    const google = installGoogle();
+    const { createGoogleCodeClient } = await loadModule();
 
-    const result = requestGoogleCredential("client-id");
+    await createGoogleCodeClient("client-id", vi.fn(), vi.fn());
 
-    await expect(result).rejects.toThrow(
-      "Google 로그인 창이 닫혔거나 표시되지 않았어요. 다시 시도해 주세요.",
-    );
-    await expect(result).rejects.toBeInstanceOf(GoogleIdentityError);
-  });
-
-  it("로그인 창이 건너뛰어지면 바로 실패한다", async () => {
-    installGoogle({ isNotDisplayed: () => false, isSkippedMoment: () => true });
-    const { requestGoogleCredential } = await loadModule();
-
-    await expect(requestGoogleCredential("client-id")).rejects.toThrow(
-      "Google 로그인 창이 닫혔거나 표시되지 않았어요. 다시 시도해 주세요.",
+    expect(google.initCodeClient).toHaveBeenCalledWith(
+      expect.objectContaining({
+        client_id: "client-id",
+        scope: "openid email profile",
+        ux_mode: "popup",
+      }),
     );
   });
 
-  it("Google이 인증 정보를 돌려주면 그 값으로 성공한다", async () => {
-    const google = installGoogle({
-      isNotDisplayed: () => false,
-      isSkippedMoment: () => false,
-    });
-    const { requestGoogleCredential } = await loadModule();
+  it("버튼을 누르면 Google 팝업을 연다", async () => {
+    const google = installGoogle();
+    const { createGoogleCodeClient } = await loadModule();
 
-    const result = requestGoogleCredential("client-id");
-    await vi.advanceTimersByTimeAsync(0);
-    google.respond("google-credential");
+    const client = await createGoogleCodeClient("client-id", vi.fn(), vi.fn());
+    client.requestCode();
 
-    await expect(result).resolves.toBe("google-credential");
+    expect(google.requestCode).toHaveBeenCalledTimes(1);
   });
 
-  it("응답이 없으면 60초 뒤 시간 초과로 실패한다", async () => {
-    installGoogle({
-      isNotDisplayed: () => false,
-      isSkippedMoment: () => false,
-    });
-    const { requestGoogleCredential } = await loadModule();
+  it("Google이 준 인가 코드를 넘긴다", async () => {
+    const google = installGoogle();
+    const { createGoogleCodeClient } = await loadModule();
+    const onCode = vi.fn();
+    const onError = vi.fn();
 
-    const result = requestGoogleCredential("client-id");
-    const assertion = expect(result).rejects.toThrow(
-      "Google 로그인 응답 시간이 초과되었습니다.",
+    await createGoogleCodeClient("client-id", onCode, onError);
+    google.respond({ code: "auth-code" });
+
+    expect(onCode).toHaveBeenCalledWith("auth-code");
+    expect(onError).not.toHaveBeenCalled();
+  });
+
+  it("사용자가 동의하지 않으면 다시 시도하라고 알린다", async () => {
+    const google = installGoogle();
+    const { createGoogleCodeClient } = await loadModule();
+    const onCode = vi.fn();
+    const onError = vi.fn();
+
+    await createGoogleCodeClient("client-id", onCode, onError);
+    google.respond({ error: "access_denied" });
+
+    expect(onCode).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(
+      "Google 로그인을 마치지 못했습니다. 다시 시도해 주세요.",
     );
-    await vi.advanceTimersByTimeAsync(59_999);
-    await vi.advanceTimersByTimeAsync(1);
+  });
 
-    await assertion;
+  it("팝업이 차단되면 팝업 차단을 풀라고 알린다", async () => {
+    const google = installGoogle();
+    const { createGoogleCodeClient } = await loadModule();
+    const onError = vi.fn();
+
+    await createGoogleCodeClient("client-id", vi.fn(), onError);
+    google.fail("popup_failed_to_open");
+
+    expect(onError).toHaveBeenCalledWith(
+      "Google 로그인 창을 열지 못했습니다. 브라우저의 팝업 차단을 해제해 주세요.",
+    );
+  });
+
+  it("사용자가 팝업을 닫으면 오류로 보지 않는다", async () => {
+    const google = installGoogle();
+    const { createGoogleCodeClient } = await loadModule();
+    const onError = vi.fn();
+
+    await createGoogleCodeClient("client-id", vi.fn(), onError);
+    google.fail("popup_closed");
+
+    expect(onError).not.toHaveBeenCalled();
   });
 });

@@ -1,12 +1,13 @@
 import { cn } from "@/lib/cn";
 
 type LoadingDotsProps = {
-  size?: "large" | "small";
+  size?: "xlarge" | "large" | "small";
   dotClassName: string;
   className?: string;
 };
 
 const sizeClasses = {
+  xlarge: { gap: "gap-2.5", first: "size-5", rest: "size-4" },
   large: { gap: "gap-1.5", first: "size-2.5", rest: "size-2" },
   small: { gap: "gap-1", first: "size-2", rest: "size-1.5" },
 };

@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu } from "@/components/ui/DropdownMenu";
 import { Icon } from "@/components/ui/Icon";
 import { InteractionOverlay } from "@/components/ui/InteractionOverlay";
+import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
 import { useLogout, useMe } from "@/hooks/useAuth";
 import { clearAccessToken } from "@/lib/authSession";
+import { useProfilePictureStore } from "@/stores/profilePictureStore";
 
 const PROVIDER_LABELS: Record<string, string> = {
   google: "Google 계정으로 로그인됨",
@@ -19,13 +21,17 @@ export function UserMenu() {
   const [open, setOpen] = useState(false);
   const me = useMe();
   const logoutRequest = useLogout();
+  const profile = useProfilePictureStore((state) => state.profile);
 
   if (!me.data) return null;
   const { name, email, provider } = me.data;
+  const pictureUrl =
+    profile && profile.email === email ? profile.picture : undefined;
 
   async function logout() {
     await logoutRequest.mutateAsync().catch(() => undefined);
     clearAccessToken();
+    useProfilePictureStore.getState().clear();
     queryClient.clear();
     router.replace("/login");
   }
@@ -77,9 +83,7 @@ export function UserMenu() {
           className="group relative flex h-9 cursor-pointer items-center gap-gap-small rounded-medium px-padding-xxsmall focus-visible:outline-2 focus-visible:outline-border-brand"
         >
           <InteractionOverlay tone="neutral" />
-          <span className="relative flex size-7 items-center justify-center rounded-full bg-fill-brand-weak text-label-xsmall text-text-brand">
-            {name.slice(0, 1)}
-          </span>
+          <ProfileAvatar pictureUrl={pictureUrl} size={28} className="size-7" />
           <span className="relative text-label-xsmall-weak text-text-primary">
             {name}
           </span>

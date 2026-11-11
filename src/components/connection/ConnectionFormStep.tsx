@@ -34,15 +34,24 @@ export function ConnectionFormStep({
   error,
 }: ConnectionFormStepProps) {
   const [alias, setAlias] = useState("");
+  const [aliasMissing, setAliasMissing] = useState(false);
   const [region, setRegion] = useState(REGION_OPTIONS[0].value);
-  const aliasError =
-    error?.code === "INVALID_ALIAS" ? error.message : undefined;
+  const aliasError = aliasMissing
+    ? "연결 이름을 입력해 주세요"
+    : error?.code === "INVALID_ALIAS"
+      ? error.message
+      : undefined;
   const requestError = error && !aliasError ? error.message : undefined;
   const isOnboarding = variant === "onboarding";
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSubmit({ region, alias: alias.trim() || undefined });
+    const trimmedAlias = alias.trim();
+    if (!trimmedAlias) {
+      setAliasMissing(true);
+      return;
+    }
+    onSubmit({ region, alias: trimmedAlias });
   }
 
   const fields = (
@@ -50,20 +59,25 @@ export function ConnectionFormStep({
       <Input
         label="연결 이름"
         placeholder="예: 운영 서버"
-        helperText="비워 두면 '이름 없는 연결'로 보여요"
+        required
         maxLength={ALIAS_MAX_LENGTH}
         showCounter
         value={alias}
-        onChange={(event) => setAlias(event.currentTarget.value)}
+        onChange={(event) => {
+          setAlias(event.currentTarget.value);
+          setAliasMissing(false);
+        }}
         error={aliasError}
       />
       <SelectBox
-        label="리전"
+        label="EC2 서버가 있는 리전"
+        required
+        helperText="이 리전의 EC2만 읽어요. 스택도 이 리전에 자동으로 만들어져요. 서버가 여러 리전에 있으면 리전마다 따로 연결해 주세요."
         options={REGION_OPTIONS}
         value={region}
         onValueChange={setRegion}
       />
-      <PermissionList />
+      {isOnboarding && <PermissionList />}
     </>
   );
   const submit = (
@@ -79,17 +93,23 @@ export function ConnectionFormStep({
 
   if (!isOnboarding)
     return (
-      <form onSubmit={handleSubmit}>
-        <Card className="gap-spacing-medium">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col">
+        <Card className="flex-1 gap-spacing-large">
           <ConnectionStepper currentStep={1} />
           {fields}
-          {submit}
+          <div className="mt-auto flex flex-col gap-spacing-small pt-spacing-small">
+            {submit}
+          </div>
         </Card>
       </form>
     );
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-spacing-medium">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="flex flex-col gap-spacing-medium"
+    >
       <ConnectionStepper currentStep={1} />
       <div className="flex flex-col gap-gap-small">
         <h1 className="text-display-small text-text-strong">

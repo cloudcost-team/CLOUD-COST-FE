@@ -15,7 +15,14 @@ export function NoticeList({
   className,
 }: NoticeListProps) {
   if (lines.length === 0) return null;
-  const items = lines.map((line) => <li key={line}>· {line}</li>);
+  const items = lines.map((line) => (
+    <li key={line} className="flex gap-gap-xxsmall">
+      <span aria-hidden className="text-text-brand">
+        *
+      </span>
+      <span>{line}</span>
+    </li>
+  ));
 
   if (variant === "plain")
     return (

@@ -13,7 +13,6 @@ export function useAuthConfig() {
   return useQuery({
     queryKey: authKeys.config(),
     queryFn: getAuthConfig,
-    enabled: false,
     retry: false,
   });
 }
@@ -22,8 +21,8 @@ export function useGoogleLogin() {
   return useMutation({ mutationFn: loginWithGoogle });
 }
 
-export function useMe() {
-  return useQuery({ queryKey: authKeys.me(), queryFn: getMe });
+export function useMe({ enabled = true }: { enabled?: boolean } = {}) {
+  return useQuery({ queryKey: authKeys.me(), queryFn: getMe, enabled });
 }
 
 export function useLogout() {

@@ -35,14 +35,8 @@ export function Slider({
           value={value - min}
           max={max - min}
           aria-hidden
-          className="absolute top-1/2 h-1 w-full -translate-y-1/2 appearance-none overflow-hidden rounded-full bg-fill-neutral-medium [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-fill-brand [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-fill-neutral-medium [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-fill-brand"
+          className="absolute top-1/2 h-6 w-full -translate-y-1/2 appearance-none overflow-hidden rounded-full bg-fill-neutral-medium [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-fill-brand [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-fill-neutral-medium [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-fill-brand"
         />
-        {markerLabel && (
-          <span
-            aria-hidden
-            className="absolute top-1/2 left-1/2 h-3 w-1 -translate-x-1/2 -translate-y-1/2 bg-fill-neutral opacity-50"
-          />
-        )}
         <input
           type="range"
           value={value}
