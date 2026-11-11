@@ -31,9 +31,7 @@ const CONDITIONS: {
   },
 ];
 
-const NOTES = [
-  "서비스에 접속하지 않은 동안에는 새 알림이 생기지 않아요.",
-];
+const NOTES = ["서비스에 접속하지 않은 동안에는 새 알림이 생기지 않아요."];
 
 function pickConditions(settings: AlertSettings): AlertConditions {
   const { budget80, budget100, budget120, spike, weeklySummary } = settings;
