@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { Logo } from "@/components/ui/Logo";
 import { useAuthConfig, useGoogleLogin } from "@/hooks/useAuth";
+import { trackEvent } from "@/lib/analytics";
 import { setAccessToken, takeReturnPath } from "@/lib/authSession";
 import { useProfilePictureStore } from "@/stores/profilePictureStore";
 import { GoogleLoginButton } from "./GoogleLoginButton";
@@ -44,6 +45,7 @@ export function LoginScreen() {
     try {
       const session = await googleLogin.mutateAsync({ code });
       setAccessToken(session.accessToken);
+      trackEvent("login", { method: "google" });
       const { email, picture } = session.user;
       useProfilePictureStore
         .getState()
