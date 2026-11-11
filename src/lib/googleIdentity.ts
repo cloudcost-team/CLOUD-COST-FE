@@ -1,31 +1,31 @@
-type GoogleCredentialResponse = {
-  credential: string;
+type GoogleCodeResponse = {
+  code?: string;
+  error?: string;
 };
 
-type GoogleButtonOptions = {
-  type: "standard";
-  theme: "outline";
-  size: "large";
-  text: "continue_with";
-  shape: "rectangular";
-  logo_alignment: "center";
-  locale: string;
-  width: number;
+type GoogleCodeClientError = {
+  type: "popup_failed_to_open" | "popup_closed" | "unknown";
 };
 
-type GoogleIdentity = {
-  initialize: (options: {
+export type GoogleCodeClient = {
+  requestCode: () => void;
+};
+
+type GoogleOAuth2 = {
+  initCodeClient: (options: {
     client_id: string;
-    callback: (response: GoogleCredentialResponse) => void;
-  }) => void;
-  renderButton: (parent: HTMLElement, options: GoogleButtonOptions) => void;
+    scope: string;
+    ux_mode: "popup";
+    callback: (response: GoogleCodeResponse) => void;
+    error_callback: (error: GoogleCodeClientError) => void;
+  }) => GoogleCodeClient;
 };
 
 declare global {
   interface Window {
     google?: {
       accounts: {
-        id: GoogleIdentity;
+        oauth2: GoogleOAuth2;
       };
     };
   }
@@ -41,11 +41,9 @@ export class GoogleIdentityError extends Error {
 const SCRIPT_SELECTOR = 'script[data-cloudcost-google-identity="true"]';
 
 let scriptPromise: Promise<void> | undefined;
-let initializedClientId: string | undefined;
-let handleCredential: ((credential: string) => void) | undefined;
 
 function loadGoogleIdentity() {
-  if (window.google?.accounts.id) return Promise.resolve();
+  if (window.google?.accounts.oauth2) return Promise.resolve();
   if (scriptPromise) return scriptPromise;
 
   scriptPromise = new Promise((resolve, reject) => {
@@ -76,61 +74,33 @@ function loadGoogleIdentity() {
   return scriptPromise;
 }
 
-const GOOGLE_BUTTON_MIN_WIDTH = 200;
-const GOOGLE_BUTTON_MAX_WIDTH = 400;
-
-export async function renderGoogleButton(
-  parent: HTMLElement,
+export async function createGoogleCodeClient(
   clientId: string,
-  onCredential: (credential: string) => void,
+  onCode: (code: string) => void,
+  onError: (message: string) => void,
 ) {
   await loadGoogleIdentity();
 
-  const identity = window.google?.accounts.id;
-  if (!identity) {
+  const oauth2 = window.google?.accounts.oauth2;
+  if (!oauth2) {
     throw new GoogleIdentityError("Google 로그인을 시작하지 못했습니다.");
   }
 
-  handleCredential = onCredential;
-  if (initializedClientId !== clientId) {
-    identity.initialize({
-      client_id: clientId,
-      callback: (response) => handleCredential?.(response.credential),
-    });
-    initializedClientId = clientId;
-  }
-
-  identity.renderButton(parent, {
-    type: "standard",
-    theme: "outline",
-    size: "large",
-    text: "continue_with",
-    shape: "rectangular",
-    logo_alignment: "center",
-    locale: "ko",
-    width: Math.min(
-      Math.max(parent.clientWidth, GOOGLE_BUTTON_MIN_WIDTH),
-      GOOGLE_BUTTON_MAX_WIDTH,
-    ),
+  return oauth2.initCodeClient({
+    client_id: clientId,
+    scope: "openid email profile",
+    ux_mode: "popup",
+    callback: (response) => {
+      if (response.code) onCode(response.code);
+      else onError("Google 로그인을 마치지 못했습니다. 다시 시도해 주세요.");
+    },
+    error_callback: (error) => {
+      if (error.type === "popup_closed") return;
+      onError(
+        error.type === "popup_failed_to_open"
+          ? "Google 로그인 창을 열지 못했습니다. 브라우저의 팝업 차단을 해제해 주세요."
+          : "Google 로그인을 시작하지 못했습니다.",
+      );
+    },
   });
-}
-
-export type GoogleProfile = {
-  email: string;
-  picture: string;
-};
-
-export function readGoogleProfile(idToken: string): GoogleProfile | null {
-  try {
-    const payload = idToken.split(".")[1];
-    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
-    const bytes = Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
-    const claims: unknown = JSON.parse(new TextDecoder().decode(bytes));
-    if (typeof claims !== "object" || claims === null) return null;
-    const { email, picture } = claims as Record<string, unknown>;
-    if (typeof email !== "string" || typeof picture !== "string") return null;
-    return { email, picture };
-  } catch {
-    return null;
-  }
 }

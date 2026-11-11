@@ -5,15 +5,14 @@ type AuthConfig = {
   googleClientId: string;
 };
 
-type GoogleLoginRequest = {
-  idToken: string;
-};
+type GoogleLoginRequest = { idToken: string } | { code: string };
 
 type AuthUser = {
   id: string;
   email: string;
   name: string;
   provider: string;
+  picture: string | null;
   createdAt: string;
   lastLoginAt: string;
 };

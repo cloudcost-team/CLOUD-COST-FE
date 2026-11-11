@@ -38,7 +38,7 @@ describe("인증 API", () => {
     );
   });
 
-  it("Google credential을 idToken 필드로 전달한다", async () => {
+  it("Google 팝업이 준 인가 코드를 code 필드로 전달한다", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -53,13 +53,13 @@ describe("인증 API", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await loginWithGoogle({ idToken: "google-credential" });
+    await loginWithGoogle({ code: "google-auth-code" });
 
     expect(fetchMock).toHaveBeenCalledWith(
       `${TEST_API_BASE_URL}/auth/google`,
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ idToken: "google-credential" }),
+        body: JSON.stringify({ code: "google-auth-code" }),
       }),
     );
   });

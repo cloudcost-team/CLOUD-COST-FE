@@ -1,25 +1,31 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-type Callback = (response: { credential: string }) => void;
+type CodeClientOptions = {
+  client_id: string;
+  scope: string;
+  ux_mode: string;
+  callback: (response: { code?: string; error?: string }) => void;
+  error_callback: (error: {
+    type: "popup_failed_to_open" | "popup_closed" | "unknown";
+  }) => void;
+};
 
 function installGoogle() {
-  let callback: Callback | undefined;
-  const initialize = vi.fn((options: { callback: Callback }) => {
-    callback = options.callback;
+  let options: CodeClientOptions | undefined;
+  const requestCode = vi.fn();
+  const initCodeClient = vi.fn((received: CodeClientOptions) => {
+    options = received;
+    return { requestCode };
   });
-  const renderButton = vi.fn();
-  window.google = { accounts: { id: { initialize, renderButton } } };
+  window.google = { accounts: { oauth2: { initCodeClient } } };
   return {
-    initialize,
-    renderButton,
-    respond: (credential: string) => callback?.({ credential }),
+    initCodeClient,
+    requestCode,
+    respond: (response: { code?: string; error?: string }) =>
+      options?.callback(response),
+    fail: (type: "popup_failed_to_open" | "popup_closed" | "unknown") =>
+      options?.error_callback({ type }),
   };
-}
-
-function createContainer(width: number) {
-  const container = document.createElement("div");
-  Object.defineProperty(container, "clientWidth", { value: width });
-  return container;
 }
 
 async function loadModule() {
@@ -27,56 +33,85 @@ async function loadModule() {
   return import("@/lib/googleIdentity");
 }
 
-describe("Google 공식 로그인 버튼", () => {
+describe("Google 팝업 로그인", () => {
   afterEach(() => {
     delete window.google;
   });
 
-  it("넘겨받은 영역에 한국어 Google 버튼을 그린다", async () => {
+  it("로그인 정보만 요청하는 팝업 방식으로 준비한다", async () => {
     const google = installGoogle();
-    const { renderGoogleButton } = await loadModule();
-    const container = createContainer(300);
+    const { createGoogleCodeClient } = await loadModule();
 
-    await renderGoogleButton(container, "client-id", vi.fn());
+    await createGoogleCodeClient("client-id", vi.fn(), vi.fn());
 
-    expect(google.renderButton).toHaveBeenCalledWith(
-      container,
-      expect.objectContaining({ locale: "ko", width: 300 }),
+    expect(google.initCodeClient).toHaveBeenCalledWith(
+      expect.objectContaining({
+        client_id: "client-id",
+        scope: "openid email profile",
+        ux_mode: "popup",
+      }),
     );
   });
 
-  it("버튼 너비는 Google이 허용하는 200~400px 안으로 맞춘다", async () => {
+  it("버튼을 누르면 Google 팝업을 연다", async () => {
     const google = installGoogle();
-    const { renderGoogleButton } = await loadModule();
+    const { createGoogleCodeClient } = await loadModule();
 
-    await renderGoogleButton(createContainer(120), "client-id", vi.fn());
-    await renderGoogleButton(createContainer(640), "client-id", vi.fn());
+    const client = await createGoogleCodeClient("client-id", vi.fn(), vi.fn());
+    client.requestCode();
 
-    expect(google.renderButton.mock.calls[0][1].width).toBe(200);
-    expect(google.renderButton.mock.calls[1][1].width).toBe(400);
+    expect(google.requestCode).toHaveBeenCalledTimes(1);
   });
 
-  it("Google이 돌려준 인증 정보를 마지막으로 그린 버튼의 콜백에 넘긴다", async () => {
+  it("Google이 준 인가 코드를 넘긴다", async () => {
     const google = installGoogle();
-    const { renderGoogleButton } = await loadModule();
-    const first = vi.fn();
-    const second = vi.fn();
+    const { createGoogleCodeClient } = await loadModule();
+    const onCode = vi.fn();
+    const onError = vi.fn();
 
-    await renderGoogleButton(createContainer(300), "client-id", first);
-    await renderGoogleButton(createContainer(300), "client-id", second);
-    google.respond("google-credential");
+    await createGoogleCodeClient("client-id", onCode, onError);
+    google.respond({ code: "auth-code" });
 
-    expect(first).not.toHaveBeenCalled();
-    expect(second).toHaveBeenCalledWith("google-credential");
+    expect(onCode).toHaveBeenCalledWith("auth-code");
+    expect(onError).not.toHaveBeenCalled();
   });
 
-  it("같은 클라이언트 ID로 다시 그려도 초기화는 한 번만 한다", async () => {
+  it("사용자가 동의하지 않으면 다시 시도하라고 알린다", async () => {
     const google = installGoogle();
-    const { renderGoogleButton } = await loadModule();
+    const { createGoogleCodeClient } = await loadModule();
+    const onCode = vi.fn();
+    const onError = vi.fn();
 
-    await renderGoogleButton(createContainer(300), "client-id", vi.fn());
-    await renderGoogleButton(createContainer(300), "client-id", vi.fn());
+    await createGoogleCodeClient("client-id", onCode, onError);
+    google.respond({ error: "access_denied" });
 
-    expect(google.initialize).toHaveBeenCalledTimes(1);
+    expect(onCode).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledWith(
+      "Google 로그인을 마치지 못했습니다. 다시 시도해 주세요.",
+    );
+  });
+
+  it("팝업이 차단되면 팝업 차단을 풀라고 알린다", async () => {
+    const google = installGoogle();
+    const { createGoogleCodeClient } = await loadModule();
+    const onError = vi.fn();
+
+    await createGoogleCodeClient("client-id", vi.fn(), onError);
+    google.fail("popup_failed_to_open");
+
+    expect(onError).toHaveBeenCalledWith(
+      "Google 로그인 창을 열지 못했습니다. 브라우저의 팝업 차단을 해제해 주세요.",
+    );
+  });
+
+  it("사용자가 팝업을 닫으면 오류로 보지 않는다", async () => {
+    const google = installGoogle();
+    const { createGoogleCodeClient } = await loadModule();
+    const onError = vi.fn();
+
+    await createGoogleCodeClient("client-id", vi.fn(), onError);
+    google.fail("popup_closed");
+
+    expect(onError).not.toHaveBeenCalled();
   });
 });

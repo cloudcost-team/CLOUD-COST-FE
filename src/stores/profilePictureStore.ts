@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import type { GoogleProfile } from "@/lib/googleIdentity";
+
+type GoogleProfile = {
+  email: string;
+  picture: string;
+};
 
 type ProfilePictureState = {
   profile: GoogleProfile | null;
