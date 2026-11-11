@@ -1,5 +1,5 @@
 const ARN_PATTERN = /arn:aws[\w-]*:[^\s"'<>]*/g;
-const ACCOUNT_ID_PATTERN = /(?<!\d)\d{12}(?!\d)/g;
+const ACCOUNT_ID_PATTERN = /\b\d{12}\b/g;
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   if (value === null || typeof value !== "object") return false;
