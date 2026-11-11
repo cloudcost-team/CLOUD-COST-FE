@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { AwsAccount, CreateAwsAccountRequest } from "@/api/awsAccounts";
 import { ApiError } from "@/api/client";
+import { trackEvent } from "@/lib/analytics";
 import {
   useAwsAccount,
   useCreateAwsAccount,
@@ -70,6 +71,7 @@ export function useConnectionFlow() {
     const consoleTab = window.open("", "_blank");
     createAccount.mutate(values, {
       onSuccess: ({ account, roleSetup }) => {
+        trackEvent("aws_connect_start");
         setWaitPhase("normal");
         setRoleArnFormOpen(roleSetup.quickCreateUrl === null);
         setAccountId(account.accountId);
@@ -106,13 +108,26 @@ export function useConnectionFlow() {
 
   const account = accountQuery.data?.account;
   const createError = createAccount.error;
+  const status = account?.status;
+  const failure = account ? getFailure(account, waitPhase) : null;
+  const failureReason =
+    failure && (failure.code ?? (status === "PENDING" ? "TIMEOUT" : status));
+
+  useEffect(() => {
+    if (status === "ACTIVE") trackEvent("aws_connect_success");
+  }, [status]);
+
+  useEffect(() => {
+    if (failureReason)
+      trackEvent("aws_connect_fail", { reason: failureReason });
+  }, [failureReason]);
 
   return {
     accountId,
     setup: accountQuery.data,
     accountQuery,
     waitPhase,
-    failure: account ? getFailure(account, waitPhase) : null,
+    failure,
     roleArnFormOpen,
     openRoleArnForm: () => setRoleArnFormOpen(true),
     start,

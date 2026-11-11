@@ -13,6 +13,7 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@next/third-parties": "16.4.5",
     "@tanstack/react-query": "^5.105.3",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",

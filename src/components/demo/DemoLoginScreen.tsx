@@ -11,6 +11,7 @@ import { Logo } from "@/components/ui/Logo";
 import { Panel } from "@/components/ui/Panel";
 import { TextLink } from "@/components/ui/TextLink";
 import { useSaveDemoSetup } from "@/hooks/useDemoSetup";
+import { trackEvent } from "@/lib/analytics";
 import { formatKstDate } from "@/lib/kstDate";
 
 const DEMO_USERNAME = "cloudcost";
@@ -73,6 +74,7 @@ export function DemoLoginScreen() {
     );
     const setup = createDefaultDemoSetup();
     saveDemoSetup(setup);
+    trackEvent("demo_start");
     router.push("/demo/dashboard");
   }
 
