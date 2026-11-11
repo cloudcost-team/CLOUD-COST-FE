@@ -2,7 +2,7 @@
 
 import type { Currency } from "@/api/costs";
 import { useAppPath } from "@/hooks/useAppMode";
-import type { WasteInstanceSpec, WasteItem } from "./WasteScreen";
+import type { WasteInstanceSpec, WasteItem } from "@/api/waste";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Callout } from "@/components/ui/Callout";
@@ -80,10 +80,16 @@ export function RecommendationDetailPanel({
     currency,
   );
   const columns: DataTableColumn<SpecRow>[] = [
-    { key: "label", header: "항목", render: (row) => row.label },
+    {
+      key: "label",
+      header: "항목",
+      align: "center",
+      render: (row) => row.label,
+    },
     {
       key: "current",
       header: `지금 · ${item.comparison.current.instanceType}`,
+      align: "center",
       render: (row) => row.current,
     },
     {
@@ -91,6 +97,7 @@ export function RecommendationDetailPanel({
       header: item.comparison.recommended
         ? `추천 · ${item.comparison.recommended.instanceType}`
         : "추천",
+      align: "center",
       render: (row) => (
         <span className="text-text-brand">{row.recommended}</span>
       ),
@@ -133,14 +140,13 @@ export function RecommendationDetailPanel({
         </p>
         <p className="mt-gap-xxsmall text-subtext-medium text-text-tertiary">
           {formatMoney(item.estimatedMonthlySavings, currency)} 매달 절감 예상
-          (추정)
         </p>
       </Panel>
       <Panel as="section" variant="outline-brand">
         <div className="mb-gap-medium flex items-center gap-gap-small">
-          <Badge tone="brand">10초 요약</Badge>
+          <Badge tone="brand">추천 이유</Badge>
           <p className="text-subtext-medium text-text-tertiary">
-            왜 이 조치를 추천하는지 세 줄로 정리했어요
+            이 서버에 이 조치를 추천하는 근거예요
           </p>
         </div>
         <NumberedSteps

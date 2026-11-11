@@ -140,7 +140,7 @@ export function DashboardStateContent({
       tone="warning"
       title="AWS 요청이 잠시 제한됐어요"
       description="저장된 데이터를 보여 드리고 있어요. 잠시 뒤 다시 시도해 주세요."
-      action={{ label: "다시 시도", onClick: () => undefined }}
+      action={onRetry && { label: "다시 시도", onClick: onRetry }}
     />
   );
 }

@@ -38,7 +38,7 @@ function getColumns(
           {formatYearMonth(row.month)}
           {row.status !== "FINAL" && (
             <Badge tone={row.status === "PREVIEW" ? "info" : "neutral"}>
-              {row.statusLabel}
+              {row.status === "PREVIEW" ? "이번 달" : row.statusLabel}
             </Badge>
           )}
         </span>
@@ -47,8 +47,8 @@ function getColumns(
     {
       key: "estimatedCost",
       header: "추정 비용",
-      align: "right",
-      className: "w-45",
+      align: "center",
+      className: "w-1/5 whitespace-nowrap tabular-nums",
       render: (row) =>
         row.estimatedCost === null ? (
           <Muted>—</Muted>
@@ -59,11 +59,11 @@ function getColumns(
     {
       key: "change",
       header: "전월 대비",
-      align: "right",
-      className: "w-55",
+      align: "center",
+      className: "w-1/4 whitespace-nowrap tabular-nums",
       render: (row) =>
         row.change === null ? (
-          <Muted>—</Muted>
+          <Muted>비교 없음</Muted>
         ) : (
           `${row.changeRate === null ? "" : `${formatSignedPercent(row.changeRate)} `}(${formatSignedMoney(row.change, currency)})`
         ),
@@ -71,8 +71,8 @@ function getColumns(
     {
       key: "link",
       header: <span className="sr-only">리포트</span>,
-      align: "right",
-      className: "w-40",
+      align: "center",
+      className: "w-44",
       render: (row) =>
         row.status === "EMPTY" ? (
           <Muted>기록 없음</Muted>

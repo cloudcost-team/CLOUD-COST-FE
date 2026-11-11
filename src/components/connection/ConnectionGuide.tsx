@@ -3,7 +3,7 @@ import { NumberedSteps } from "@/components/ui/NumberedSteps";
 import { PermissionList } from "./PermissionList";
 
 const CONNECTION_STEPS = [
-  "연결 이름과 리전을 정하고 [AWS 콘솔에서 스택 만들기]를 눌러요",
+  "연결 이름과 EC2 서버가 있는 리전을 정하고 [AWS 콘솔에서 스택 만들기]를 눌러요",
   "새 탭에 열린 AWS 콘솔에서 [스택 생성]을 눌러요",
   "스택이 만들어지면 연결을 자동으로 확인해요",
 ];

@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, useEffect, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import {
   getDemoCatalog,
@@ -9,11 +9,13 @@ import {
   type DemoSchedule,
   type DemoSetupRequest,
 } from "@/api/demo";
+import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { Icon } from "@/components/ui/Icon";
+import { IconButton } from "@/components/ui/IconButton";
 import { NumberInput } from "@/components/ui/NumberInput";
+import { useSaveDemoSetup } from "@/hooks/useDemoSetup";
 import { formatKstDate } from "@/lib/kstDate";
 import {
   Select,
@@ -26,7 +28,7 @@ import {
 type ServerRow = DemoSetupRequest["servers"][number] & { id: string };
 
 const selectClass =
-  "h-8 w-full rounded-medium border border-border-default bg-background-default px-3 text-subtext-small text-text-primary outline-none focus:border-border-brand";
+  "h-8 w-full rounded-medium border border-border-default bg-background-default px-padding-small text-subtext-small text-text-primary outline-none focus:border-border-brand";
 
 const defaultInstanceTypes = [
   "t3.micro",
@@ -88,7 +90,7 @@ export function DemoSetupScreen() {
   const [from, setFrom] = useState(dates.from);
   const [to, setTo] = useState(dates.to);
   const [servers, setServers] = useState(initialServers);
-  const queryClient = useQueryClient();
+  const saveDemoSetup = useSaveDemoSetup();
   const catalog = useQuery({
     queryKey: ["demo", "catalog"],
     queryFn: getDemoCatalog,
@@ -120,8 +122,7 @@ export function DemoSetupScreen() {
         usagePattern: server.usagePattern,
       })),
     };
-    sessionStorage.setItem("cloudcost.demoSetup", JSON.stringify(request));
-    queryClient.setQueryData(["demo", "stored-setup"], request);
+    saveDemoSetup(request);
     router.push("/demo/dashboard");
   }
 
@@ -131,27 +132,26 @@ export function DemoSetupScreen() {
   const schedules = catalog.data?.schedules ?? defaultSchedules;
 
   return (
-    <>
-      <div className="mb-6">
-        <h1 className="text-title-large text-text-strong">
-          예시 서버를 구성해 주세요
-        </h1>
-        <p className="mt-2 text-subtext-medium text-text-tertiary">
-          서버 구성과 조회 기간을 정하면 예시 단가로 비용을 계산해 보여 줘요.
-        </p>
-      </div>
-      <form className="flex flex-col gap-6" onSubmit={submit}>
+    <div className="flex flex-col gap-spacing-medium">
+      <PageHeader
+        title="예시 서버를 구성해 주세요"
+        description="서버 구성과 조회 기간을 정하면 예시 단가로 비용을 계산해 보여 줘요."
+      />
+      <form className="flex flex-col gap-spacing-medium" onSubmit={submit}>
         <Card
           title="서버 구성"
           meta={`${servers.length} / ${catalog.data?.maxServers ?? 20}`}
         >
           <div className="overflow-x-auto rounded-large border border-border-default">
-            <table className="w-full min-w-[900px] table-fixed text-left">
+            <table className="w-full min-w-225 table-fixed text-left">
               <thead className="bg-fill-neutral-weak text-subtext-small text-text-tertiary">
                 <tr>
                   {["이름", "인스턴스 타입", "OS", "실행 일정", "대수", ""].map(
                     (label) => (
-                      <th key={label} className="px-4 py-3 font-normal">
+                      <th
+                        key={label}
+                        className="px-padding-medium py-padding-small font-normal"
+                      >
                         {label}
                       </th>
                     ),
@@ -164,7 +164,7 @@ export function DemoSetupScreen() {
                     key={server.id}
                     className="border-t border-border-default text-subtext-small"
                   >
-                    <td className="p-3">
+                    <td className="p-padding-small">
                       <input
                         aria-label="서버 이름"
                         className={selectClass}
@@ -175,7 +175,7 @@ export function DemoSetupScreen() {
                         required
                       />
                     </td>
-                    <td className="p-3">
+                    <td className="p-padding-small">
                       <Select
                         value={server.instanceType}
                         onValueChange={(instanceType) =>
@@ -194,7 +194,7 @@ export function DemoSetupScreen() {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-3">
+                    <td className="p-padding-small">
                       <Select
                         value={server.os}
                         onValueChange={(os) =>
@@ -212,7 +212,7 @@ export function DemoSetupScreen() {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-3">
+                    <td className="p-padding-small">
                       <Select
                         value={server.schedule}
                         onValueChange={(value) => {
@@ -242,7 +242,7 @@ export function DemoSetupScreen() {
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-3">
+                    <td className="p-padding-small">
                       <NumberInput
                         aria-label={`${server.name} 서버 대수`}
                         min={1}
@@ -255,20 +255,17 @@ export function DemoSetupScreen() {
                         }
                       />
                     </td>
-                    <td className="p-3 text-center">
-                      <button
-                        type="button"
+                    <td className="p-padding-small text-center">
+                      <IconButton
+                        icon="close"
                         aria-label={`${server.name} 삭제`}
-                        className="text-icon-primary disabled:text-icon-tertiary"
                         disabled={servers.length === 1}
                         onClick={() =>
                           setServers((rows) =>
                             rows.filter((row) => row.id !== server.id),
                           )
                         }
-                      >
-                        <Icon name="close" size={16} />
-                      </button>
+                      />
                     </td>
                   </tr>
                 ))}
@@ -298,8 +295,8 @@ export function DemoSetupScreen() {
           </Button>
         </Card>
         <Card title="조회 기간">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-            <label className="flex w-full max-w-[360px] flex-col gap-2 text-subtext-small text-text-secondary">
+          <div className="flex flex-col gap-gap-medium sm:flex-row sm:items-end">
+            <label className="flex w-full max-w-90 flex-col gap-gap-small text-subtext-small text-text-secondary">
               시작일
               <DatePicker
                 aria-label="조회 시작일"
@@ -308,8 +305,8 @@ export function DemoSetupScreen() {
                 onChange={setFrom}
               />
             </label>
-            <span className="pb-4 text-text-tertiary">~</span>
-            <label className="flex w-full max-w-[360px] flex-col gap-2 text-subtext-small text-text-secondary">
+            <span className="pb-padding-medium text-text-tertiary">~</span>
+            <label className="flex w-full max-w-90 flex-col gap-gap-small text-subtext-small text-text-secondary">
               종료일
               <DatePicker
                 aria-label="조회 종료일"
@@ -328,6 +325,6 @@ export function DemoSetupScreen() {
           예시 비용 보기
         </Button>
       </form>
-    </>
+    </div>
   );
 }

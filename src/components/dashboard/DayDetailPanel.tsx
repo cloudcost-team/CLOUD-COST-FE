@@ -57,7 +57,6 @@ export function DayDetailPanel({
       <div className="grid grid-cols-3 gap-gap-medium">
         <StatCard
           label="추정 비용"
-          estimated
           value={
             day.estimatedCost === null
               ? "—"

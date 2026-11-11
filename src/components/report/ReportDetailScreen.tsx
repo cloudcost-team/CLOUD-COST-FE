@@ -58,7 +58,6 @@ function ReportStats({ report }: { report: ReportDetailResponse }) {
     <div className="grid gap-gap-large md:grid-cols-3">
       <StatCard
         label={`${month}월 추정 비용`}
-        estimated
         value={
           summary.estimatedCost === null
             ? "—"
@@ -149,9 +148,10 @@ function ReportBody({
           <h2 className="text-title-medium text-text-strong">
             {formatYearMonth(report.month)} 비용 리포트
           </h2>
-          <Badge>추정</Badge>
           {report.status !== "FINAL" && (
-            <Badge tone="info">{report.statusLabel}</Badge>
+            <Badge tone="info">
+              {report.status === "PREVIEW" ? "이번 달" : report.statusLabel}
+            </Badge>
           )}
         </div>
         <p className="text-subtext-medium text-text-tertiary">
@@ -175,7 +175,11 @@ function ReportBody({
         </section>
       </div>
       {report.savings && (
-        <SavingsSuggestionList savings={report.savings} currency={currency} />
+        <SavingsSuggestionList
+          savings={report.savings}
+          currency={currency}
+          source={source}
+        />
       )}
       <ul className="flex flex-col gap-gap-xxsmall text-subtext-small text-text-quaternary">
         <li>

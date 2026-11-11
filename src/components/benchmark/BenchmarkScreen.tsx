@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useState, type ReactNode } from "react";
 import { benchmarkKeys, getBenchmark } from "@/api/benchmark";
 import type { Currency } from "@/api/costs";
@@ -273,8 +273,10 @@ function MonthlySpendSection({
   showAfter: boolean;
 }) {
   const { range } = monthlySpend;
-  const rangeLabel = `$${range.minUsd}~$${range.maxUsd}`;
-  const source = `비교 기준: ${range.source} · ${SPEND_TEAM_LABEL} 일반 범위 ${rangeLabel}`;
+  const startLabel = formatMoney(range.min, currency);
+  const endLabel = formatMoney(range.max, currency);
+  const rangeLabel = `${startLabel}~${endLabel}`;
+  const source = `비교 기준: ${range.source} · ${SPEND_TEAM_LABEL} 일반 범위`;
 
   if (
     monthlySpend.status === "NO_FORECAST" ||
@@ -286,7 +288,7 @@ function MonthlySpendSection({
       <UnavailableMetricCard
         title="③ 규모 대비 월 지출"
         reason="이번 달 월말 예상 비용이 없어 비교하지 않았어요."
-        source={source}
+        source={`${source} ${rangeLabel}`}
       />
     );
 
@@ -296,7 +298,7 @@ function MonthlySpendSection({
   return (
     <BenchmarkMetricCard
       title="③ 규모 대비 월 지출"
-      description="월 클라우드 지출 (추정)"
+      description="월 추정 클라우드 지출"
       value={
         after
           ? `${current} → ${formatMoney(after.monthlyCost, currency)}`
@@ -311,8 +313,8 @@ function MonthlySpendSection({
             rangeEnd: 100,
             marker: monthlySpend.barPositionPercent,
             afterMarker: after?.barPositionPercent ?? null,
-            startLabel: `$${range.minUsd}`,
-            endLabel: `$${range.maxUsd}`,
+            startLabel,
+            endLabel,
             oursLabel: current,
             afterLabel: after ? formatMoney(after.monthlyCost, currency) : null,
           }}
@@ -438,6 +440,7 @@ function BenchmarkContent({ source }: { source: DataSource }) {
     queryKey: benchmarkKeys.detail(source, currency, recommendationIds),
     queryFn: () =>
       getBenchmark<BenchmarkResponse>(source, currency, recommendationIds),
+    placeholderData: keepPreviousData,
   });
 
   if (isPending) return <BenchmarkLoading />;

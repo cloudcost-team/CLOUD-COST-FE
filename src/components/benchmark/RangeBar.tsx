@@ -56,22 +56,24 @@ export function RangeBar({
         aria-label={`${rangeLabel} 안에서 우리 팀 ${scale.oursLabel}`}
         className="relative h-14 w-full rounded-large bg-fill-neutral-weak/70"
       >
-        <div className="absolute inset-y-0 right-(--range-end) left-(--range-start) flex items-center justify-center overflow-hidden rounded-large bg-linear-to-br from-fill-brand/80 via-fill-brand/65 to-fill-sky/70 shadow-[inset_2px_3px_6px_color-mix(in_srgb,var(--color-fill-default)_45%,transparent),inset_-2px_-4px_8px_color-mix(in_srgb,var(--color-fill-brand-strong)_35%,transparent),0_10px_20px_-8px_color-mix(in_srgb,var(--color-fill-brand)_60%,transparent)]">
-          <span className="relative text-label-xsmall text-text-strong">
+        <div className="absolute inset-y-0 right-(--range-end) left-(--range-start) flex items-center justify-center overflow-hidden rounded-large bg-fill-brand-weak">
+          <span className="text-label-xsmall text-text-brand">
             {rangeLabel}
           </span>
         </div>
         {afterVisible && (
           <span className="absolute inset-y-0 left-(--after-marker) w-0 -translate-x-1/2 border-l-2 border-dashed border-border-brand" />
         )}
-        <span className="absolute -inset-y-1 left-(--marker) w-1 -translate-x-1/2 rounded-full bg-fill-brand-strong" />
       </div>
-      <div className="relative h-7">
-        <ProfileAvatar
-          pictureUrl={pictureUrl}
-          size={28}
-          className="absolute top-0 left-(--marker) size-7 -translate-x-1/2 border-2 border-fill-default shadow-default"
-        />
+      <div className="relative h-9">
+        <div className="absolute top-0 left-(--marker) flex -translate-x-1/2 flex-col items-center gap-gap-xxsmall">
+          <span className="size-0 border-x-5 border-b-6 border-x-transparent border-b-fill-brand-strong" />
+          <ProfileAvatar
+            pictureUrl={pictureUrl}
+            size={28}
+            className="size-7 border-2 border-fill-default shadow-default"
+          />
+        </div>
       </div>
     </div>
   );

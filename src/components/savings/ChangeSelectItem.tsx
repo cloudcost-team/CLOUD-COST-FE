@@ -1,7 +1,7 @@
 import type { Currency } from "@/api/costs";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { formatMoney } from "@/lib/formatMoney";
-import type { WasteItem } from "./WasteScreen";
+import type { WasteItem } from "@/api/waste";
 
 type ChangeSelectItemProps = {
   item: WasteItem;
@@ -31,7 +31,7 @@ export function ChangeSelectItem({
           {item.action}
         </span>
       </span>
-      <span className="text-label-small text-text-brand">
+      <span className="text-label-small text-text-success">
         월 {formatMoney(item.estimatedMonthlySavings, currency)} 절감
       </span>
     </label>

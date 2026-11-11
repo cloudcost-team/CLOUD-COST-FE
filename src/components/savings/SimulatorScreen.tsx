@@ -6,6 +6,7 @@ import type { Currency } from "@/api/costs";
 import { getSourceId, type DataSource } from "@/api/dataSource";
 import type { ExchangeRate } from "@/api/reports";
 import { simulate, simulationKeys } from "@/api/simulations";
+import type { Freshness, WasteItem, WasteKind } from "@/api/waste";
 import { DataSourceGate } from "@/components/layout/DataSourceGate";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Banner } from "@/components/ui/Banner";
@@ -15,16 +16,11 @@ import { NoticeList } from "@/components/ui/NoticeList";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { Slider } from "@/components/ui/Slider";
 import { useAppPath } from "@/hooks/useAppMode";
+import { useWaste } from "@/hooks/useWaste";
 import { useCurrencyStore } from "@/stores/currencyStore";
 import { useSimulationSelectionStore } from "@/stores/simulationSelectionStore";
 import { ChangeSelectItem } from "./ChangeSelectItem";
 import { SimulationResultCard } from "./SimulationResultCard";
-import {
-  useWaste,
-  type Freshness,
-  type WasteItem,
-  type WasteKind,
-} from "./WasteScreen";
 
 export type SimulationSelectedItem = {
   recommendationId: string;

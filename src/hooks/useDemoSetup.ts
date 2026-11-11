@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import type { DemoSetupRequest } from "@/api/demo";
@@ -36,4 +36,16 @@ export function useDemoSetup() {
   }, [router, setup, result.isSuccess]);
 
   return { setup, isPending: result.isPending || !setup };
+}
+
+export function useSaveDemoSetup() {
+  const queryClient = useQueryClient();
+  return (setup: DemoSetupRequest) => {
+    sessionStorage.setItem(DEMO_SETUP_KEY, JSON.stringify(setup));
+    queryClient.setQueryData(demoSetupQueryKey, setup);
+  };
+}
+
+export function clearDemoSetup() {
+  sessionStorage.removeItem(DEMO_SETUP_KEY);
 }

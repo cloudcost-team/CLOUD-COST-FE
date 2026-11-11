@@ -35,8 +35,7 @@ export function BudgetUsage({
           </p>
         ) : (
           <p className="text-text-secondary">
-            이번 달 월말 예상 비용 {formatMoney(forecastMonthEndCost, currency)}{" "}
-            <span className="text-text-tertiary">(추정)</span>
+            이번 달 월말 예상 비용 {formatMoney(forecastMonthEndCost, currency)}
           </p>
         )}
         {usageRate !== null && usageRate !== undefined && (

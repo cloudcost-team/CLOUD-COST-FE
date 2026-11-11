@@ -1,4 +1,3 @@
-// Figma [클코] UI/UX 파일 › 4. 컴포넌트 라이브러리 › Icons(97:807)의 path를 그대로 옮겼다. 색은 currentColor로 받는다.
 export type IconPath = {
   d: string;
   strokeWidth: number;

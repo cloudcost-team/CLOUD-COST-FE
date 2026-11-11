@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./Select";
+import { FieldHelpText } from "./FieldHelpText";
 
 export type SelectBoxOption = {
   value: string;
@@ -22,6 +23,7 @@ type SelectBoxProps = {
   onValueChange: (value: string) => void;
   required?: boolean;
   disabled?: boolean;
+  helperText?: string;
   className?: string;
 };
 
@@ -32,52 +34,58 @@ export function SelectBox({
   onValueChange,
   required,
   disabled,
+  helperText,
   className,
 }: SelectBoxProps) {
   const triggerId = useId();
+  const helpId = `${triggerId}-help`;
   return (
     <div
       className={cn(
-        "flex flex-col gap-gap-xxsmall rounded-xxxlarge border-2 border-transparent bg-fill-neutral-weak px-padding-large py-padding-medium transition-colors focus-within:border-border-brand focus-within:bg-background-default",
+        "flex flex-col gap-gap-small",
         disabled && "opacity-45",
         className,
       )}
     >
-      <div className="flex items-start gap-gap-xxsmall pt-1 text-subtext-medium-strong">
-        <label htmlFor={triggerId} className="text-text-secondary">
-          {label}
-        </label>
-        {required && (
-          <span aria-hidden className="text-text-danger">
-            *
-          </span>
-        )}
-      </div>
-      <Select
-        value={value}
-        onValueChange={onValueChange}
-        required={required}
-        disabled={disabled}
-      >
-        <SelectTrigger
-          id={triggerId}
-          aria-required={required || undefined}
-          className="h-8 rounded-none border-0 bg-transparent px-0 text-body-medium text-text-strong hover:border-0 focus:border-0 focus:ring-0 [&>svg]:size-5"
+      <div className="flex flex-col gap-gap-xxsmall rounded-xxxlarge border-2 border-transparent bg-fill-neutral-weak px-padding-large py-padding-medium transition-colors focus-within:border-border-brand focus-within:bg-background-default">
+        <div className="flex items-start gap-gap-xxsmall pt-1 text-subtext-medium-strong">
+          <label htmlFor={triggerId} className="text-text-secondary">
+            {label}
+          </label>
+          {required && (
+            <span aria-hidden className="text-text-danger">
+              *
+            </span>
+          )}
+        </div>
+        <Select
+          value={value}
+          onValueChange={onValueChange}
+          required={required}
+          disabled={disabled}
         >
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent className="max-h-80 rounded-xlarge p-1.5">
-          {options.map((option) => (
-            <SelectItem
-              key={option.value}
-              value={option.value}
-              className="h-12 rounded-large pl-10 text-body-medium"
-            >
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+          <SelectTrigger
+            id={triggerId}
+            aria-required={required || undefined}
+            aria-describedby={helperText ? helpId : undefined}
+            className="h-8 rounded-none border-0 bg-transparent px-0 text-body-medium text-text-strong hover:border-0 focus:border-0 focus:ring-0 [&>svg]:size-5"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="max-h-80 rounded-xlarge p-1.5">
+            {options.map((option) => (
+              <SelectItem
+                key={option.value}
+                value={option.value}
+                className="h-12 rounded-large pl-10 text-body-medium"
+              >
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {helperText && <FieldHelpText id={helpId}>{helperText}</FieldHelpText>}
     </div>
   );
 }

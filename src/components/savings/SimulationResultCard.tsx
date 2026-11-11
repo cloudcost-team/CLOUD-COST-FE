@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { Panel } from "@/components/ui/Panel";
@@ -52,16 +51,15 @@ function CostRow({
 }
 
 export function SimulationResultCard({ data }: SimulationResultCardProps) {
-  const before = data.before?.monthlyCost ?? 0;
-  const after = data.after?.monthlyCost ?? 0;
-  const max = Math.max(before, after, 1);
+  const before = data.before?.monthlyCost ?? null;
+  const after = data.after?.monthlyCost ?? null;
   return (
-    <Card title="시뮬레이션 결과" action={<Badge>추정</Badge>}>
-      <Panel variant="brand">
+    <Card title="시뮬레이션 결과">
+      <Panel variant="mint">
         <p className="text-subtext-medium text-text-tertiary">
           고른 {data.selectedCount}건을 적용하면
         </p>
-        <p className="mt-gap-xsmall text-title-medium text-text-brand">
+        <p className="mt-gap-xsmall text-title-medium text-text-success">
           매달{" "}
           {data.monthlySavings === null
             ? "—"
@@ -83,27 +81,27 @@ export function SimulationResultCard({ data }: SimulationResultCardProps) {
             사용량 +{data.trafficGrowthPercent}% 가정
           </span>
         </div>
-        <CostRow
-          label="지금"
-          amount={
-            data.before?.monthlyCost === null || !data.before
-              ? "—"
-              : formatMoney(data.before.monthlyCost, data.currency)
-          }
-          max={max}
-          value={before}
-        />
-        <CostRow
-          label="변경 후"
-          amount={
-            data.after?.monthlyCost === null || !data.after
-              ? "—"
-              : formatMoney(data.after.monthlyCost, data.currency)
-          }
-          max={max}
-          value={after}
-          strong
-        />
+        {before === null || after === null ? (
+          <p className="text-subtext-medium text-text-tertiary">
+            월말 예상 비용이 없어 계산하지 못했어요. 아래 안내를 확인해 주세요.
+          </p>
+        ) : (
+          <>
+            <CostRow
+              label="지금"
+              amount={formatMoney(before, data.currency)}
+              max={Math.max(before, after, 1)}
+              value={before}
+            />
+            <CostRow
+              label="변경 후"
+              amount={formatMoney(after, data.currency)}
+              max={Math.max(before, after, 1)}
+              value={after}
+              strong
+            />
+          </>
+        )}
       </div>
       {data.budget ? (
         <div className="flex items-center border-t border-border-weak pt-padding-large text-subtext-medium text-text-tertiary">

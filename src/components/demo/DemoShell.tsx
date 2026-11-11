@@ -8,6 +8,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { AppModeContext, DEMO_APP_MODE } from "@/hooks/useAppMode";
+import { clearDemoSetup } from "@/hooks/useDemoSetup";
 
 type DemoShellProps = {
   variant: "setup" | "app";
@@ -19,7 +20,7 @@ export function DemoShell({ variant, children }: DemoShellProps) {
 
   function exitDemo() {
     sessionStorage.removeItem("cloudcost.demoAccount");
-    sessionStorage.removeItem("cloudcost.demoSetup");
+    clearDemoSetup();
     router.push("/login");
   }
 

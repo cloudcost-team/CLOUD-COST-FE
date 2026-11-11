@@ -19,9 +19,11 @@ import { DataSourceGate } from "@/components/layout/DataSourceGate";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
+import { NotificationBellIcon } from "@/components/ui/NotificationBellIcon";
 import { Button } from "@/components/ui/Button";
 import { Calendar } from "@/components/ui/Calendar";
 import { Card } from "@/components/ui/Card";
+import { CostBasisPopover } from "@/components/ui/CostBasisPopover";
 import { IconButton } from "@/components/ui/IconButton";
 import { NoticeList } from "@/components/ui/NoticeList";
 import { Popover } from "@/components/ui/Popover";
@@ -35,6 +37,7 @@ import { DashboardStats } from "./DashboardStats";
 import { DayDetailPanel } from "./DayDetailPanel";
 import { FreshnessLine } from "./FreshnessLine";
 import { MonthlyCostChart } from "./MonthlyCostChart";
+import { SavingsOpportunityCard } from "./SavingsOpportunityCard";
 import { ServerCostTable } from "./ServerCostTable";
 import { formatDateRange } from "./dashboardFormat";
 
@@ -263,7 +266,7 @@ function DateRangePicker({
       onOpenChange={changeOpen}
       title="기간 선택"
       align="end"
-      className="w-180"
+      className="w-200"
       trigger={(props) => (
         <Button {...props} variant="assistive" size="medium" icon="calendar">
           {formatDateRange(from, to)}
@@ -305,6 +308,12 @@ function DateRangePicker({
               onSelect={field.onSelect}
               defaultMonth={field.value}
               aria-label={field.label}
+              classNames={{
+                weekday:
+                  "flex h-10 flex-1 items-center justify-center text-subtext-medium text-text-tertiary",
+                day_button:
+                  "size-10 cursor-pointer rounded-medium text-subtext-medium text-text-primary outline-none hover:bg-fill-brand-weak hover:text-text-brand focus-visible:ring-2 focus-visible:ring-border-brand",
+              }}
             />
           </div>
         ))}
@@ -455,7 +464,13 @@ function DashboardView({
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-gap-medium">
-        <FreshnessLine freshness={dashboard.freshness} />
+        <div className="flex flex-wrap items-center gap-gap-medium">
+          <FreshnessLine freshness={dashboard.freshness} />
+          <CostBasisPopover
+            align="start"
+            exchangeRateDate={dashboard.exchangeRate?.date}
+          />
+        </div>
         {source.kind === "aws" && (
           <DateRangePicker
             from={daily.from}
@@ -477,6 +492,7 @@ function DashboardView({
       )}
       {latestSpike && (
         <Banner
+          icon={<NotificationBellIcon />}
           title={latestSpike.message}
           description={
             latestSpike.causeName
@@ -492,6 +508,7 @@ function DashboardView({
           }}
         />
       )}
+      <SavingsOpportunityCard source={source} />
       <DashboardStats dashboard={dashboard} />
       <Card
         title={`일별 추정 비용 · ${range || source.kind === "demo" ? formatDateRange(daily.from, daily.to) : "최근 30일"}`}

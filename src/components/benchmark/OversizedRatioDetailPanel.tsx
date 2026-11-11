@@ -23,17 +23,20 @@ const columns: DataTableColumn<BenchmarkServer>[] = [
   {
     key: "name",
     header: "서버",
+    align: "center",
     render: (server) => server.name ?? server.instanceId,
   },
   {
     key: "cpuP95",
     header: "CPU P95",
+    align: "center",
     className: "w-24",
     render: (server) => `${server.cpuP95}%`,
   },
   {
     key: "verdict",
     header: "판정",
+    align: "center",
     className: "w-36",
     render: (server) =>
       server.oversized ? (
