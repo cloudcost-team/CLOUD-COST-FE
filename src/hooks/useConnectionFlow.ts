@@ -45,6 +45,15 @@ function getFailure(
   return null;
 }
 
+function getFailureReason(
+  account: AwsAccount,
+  failure: ConnectionFailure | null,
+) {
+  if (account.status === "ERROR") return account.lastError?.code ?? "ERROR";
+  if (!failure) return null;
+  return account.status === "PENDING" ? "TIMEOUT" : account.status;
+}
+
 export function useConnectionFlow() {
   const [accountId, setAccountId] = useState<string | null>(null);
   const [waitPhase, setWaitPhase] = useState<WaitPhase>("normal");
@@ -69,9 +78,9 @@ export function useConnectionFlow() {
 
   function start(values: CreateAwsAccountRequest) {
     const consoleTab = window.open("", "_blank");
+    trackEvent("aws_connect_start");
     createAccount.mutate(values, {
       onSuccess: ({ account, roleSetup }) => {
-        trackEvent("aws_connect_start");
         setWaitPhase("normal");
         setRoleArnFormOpen(roleSetup.quickCreateUrl === null);
         setAccountId(account.accountId);
@@ -80,7 +89,12 @@ export function useConnectionFlow() {
           consoleTab.location.href = roleSetup.quickCreateUrl;
         } else consoleTab?.close();
       },
-      onError: () => consoleTab?.close(),
+      onError: (error) => {
+        consoleTab?.close();
+        trackEvent("aws_connect_fail", {
+          reason: (error instanceof ApiError && error.code) || "CREATE_FAILED",
+        });
+      },
     });
   }
 
@@ -110,8 +124,7 @@ export function useConnectionFlow() {
   const createError = createAccount.error;
   const status = account?.status;
   const failure = account ? getFailure(account, waitPhase) : null;
-  const failureReason =
-    failure && (failure.code ?? (status === "PENDING" ? "TIMEOUT" : status));
+  const failureReason = account && getFailureReason(account, failure);
 
   useEffect(() => {
     if (status === "ACTIVE") trackEvent("aws_connect_success");
