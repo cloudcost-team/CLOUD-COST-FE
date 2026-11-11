@@ -1,13 +1,14 @@
-export type SentryWebhookPayload = {
-  project_name?: string;
-  level?: string;
-  culprit?: string;
-  message?: string;
-  url?: string;
-  event?: {
-    title?: string;
-    environment?: string;
-    tags?: [string, string][];
+export type SentryIssueWebhook = {
+  action?: string;
+  data?: {
+    issue?: {
+      title?: string;
+      culprit?: string;
+      level?: string;
+      shortId?: string;
+      web_url?: string;
+      project?: { name?: string; slug?: string };
+    };
   };
 };
 
@@ -19,31 +20,26 @@ const LEVEL_COLORS: Record<string, number> = {
 const DEFAULT_COLOR = 0x5865f2;
 const MAX_TITLE_LENGTH = 200;
 
-function findEnvironment(payload: SentryWebhookPayload) {
-  return (
-    payload.event?.environment ??
-    payload.event?.tags?.find(([key]) => key === "environment")?.[1] ??
-    "unknown"
-  );
-}
-
-export function toDiscordMessage(payload: SentryWebhookPayload) {
-  const title = payload.event?.title || payload.message || "제목 없는 에러";
-  const level = payload.level ?? "error";
+export function toDiscordMessage(payload: SentryIssueWebhook) {
+  const issue = payload.data?.issue ?? {};
+  const title = issue.title || "제목 없는 에러";
+  const level = issue.level ?? "error";
 
   return {
     content: "🚨 **[FE] Sentry에 새 에러가 들어왔어요**",
     embeds: [
       {
         title: title.slice(0, MAX_TITLE_LENGTH),
-        url: payload.url,
+        url: issue.web_url,
         color: LEVEL_COLORS[level] ?? DEFAULT_COLOR,
         fields: [
-          { name: "환경", value: findEnvironment(payload), inline: true },
+          { name: "이슈", value: issue.shortId || "-", inline: true },
           { name: "레벨", value: level, inline: true },
-          { name: "위치", value: payload.culprit || "-", inline: false },
+          { name: "위치", value: issue.culprit || "-", inline: false },
         ],
-        footer: { text: payload.project_name ?? "cloud-cost-fe" },
+        footer: {
+          text: issue.project?.slug ?? issue.project?.name ?? "cloud-cost-fe",
+        },
       },
     ],
   };
