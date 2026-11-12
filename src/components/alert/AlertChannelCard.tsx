@@ -26,7 +26,12 @@ function ChannelRow({ channel }: { channel: AlertChannel }) {
   const remove = useDeleteAlertChannel();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sentToastOpen, setSentToastOpen] = useState(false);
-  const error = update.error ?? remove.error ?? test.error;
+  const error = update.error ?? remove.error;
+  const testFailure =
+    test.error?.message ??
+    (test.data?.ok === false
+      ? `보내지 못했어요. ${test.data.reason ?? ""}`
+      : null);
 
   return (
     <li className="flex flex-col gap-gap-small border-b border-border-weak py-padding-medium first:pt-0 last:border-b-0 last:pb-0">
@@ -66,9 +71,9 @@ function ChannelRow({ channel }: { channel: AlertChannel }) {
           disabled={update.isPending}
         />
       </div>
-      {test.data && !test.data.ok && (
+      {testFailure && (
         <p role="alert" className="text-subtext-medium text-text-danger">
-          {`보내지 못했어요. ${test.data.reason ?? ""}`}
+          {testFailure}
         </p>
       )}
       {error && (
