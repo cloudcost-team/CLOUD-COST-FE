@@ -2,7 +2,11 @@ import type { DashboardResponse } from "./DashboardScreen";
 import { StatCard } from "@/components/ui/StatCard";
 import { formatMoney, formatSignedMoney } from "@/lib/formatMoney";
 import { getMonthNumber } from "@/lib/kstDate";
-import { formatHours, formatSignedRate } from "./dashboardFormat";
+import {
+  formatHours,
+  formatHoursAsDays,
+  formatSignedRate,
+} from "./dashboardFormat";
 
 type DashboardStatsProps = {
   dashboard: DashboardResponse;
@@ -43,6 +47,7 @@ function PreviousMonthCard({ dashboard }: DashboardStatsProps) {
 export function DashboardStats({ dashboard }: DashboardStatsProps) {
   const { monthToDate, instanceCounts, forecast, currency, exchangeRate } =
     dashboard;
+  const usageDays = formatHoursAsDays(monthToDate.usageHours);
   return (
     <div className="grid gap-gap-large md:grid-cols-2 xl:grid-cols-4">
       <StatCard
@@ -60,7 +65,16 @@ export function DashboardStats({ dashboard }: DashboardStatsProps) {
       />
       <StatCard
         label="사용 시간"
-        value={formatHours(monthToDate.usageHours)}
+        value={
+          <>
+            {formatHours(monthToDate.usageHours)}
+            {usageDays && (
+              <span className="ml-gap-small text-subtext-large text-text-tertiary">
+                {usageDays}
+              </span>
+            )}
+          </>
+        }
         caption={`실행 중 ${instanceCounts.running}대 · 중지 ${instanceCounts.stopped}대`}
       />
       <StatCard

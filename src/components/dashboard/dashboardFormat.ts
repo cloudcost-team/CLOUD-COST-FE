@@ -10,6 +10,14 @@ export function formatHours(hours: number) {
   return `${hoursFormat.format(hours)}시간`;
 }
 
+export function formatHoursAsDays(hours: number) {
+  if (hours < 24) return null;
+  const rounded = Math.round(hours);
+  const days = Math.floor(rounded / 24);
+  const rest = rounded % 24;
+  return rest === 0 ? `${days}일` : `${days}일 ${rest}시간`;
+}
+
 export function formatHourlyCost(amount: number, currency: Currency) {
   if (currency === "USD") return `$ ${amount.toFixed(4)}`;
   return `₩ ${new Intl.NumberFormat("ko-KR", {
