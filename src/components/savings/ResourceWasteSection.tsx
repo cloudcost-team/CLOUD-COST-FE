@@ -214,8 +214,8 @@ export function ResourceWasteSection({
       {resources.refreshing && (
         <Banner
           tone="info"
-          title="리전을 다시 확인하고 있어요"
-          description="지금은 저장된 결과를 보여 드려요. 잠시 뒤 새로고침하면 최신 결과가 보여요."
+          title="방치 리소스를 확인 중이에요"
+          description="지금은 저장된 결과를 보여 드려요. 확인이 끝나면 자동으로 다시 불러와요."
         />
       )}
       {showTotal && (
