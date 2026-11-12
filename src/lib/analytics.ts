@@ -6,6 +6,7 @@ type AnalyticsEvents = {
   aws_connect_start: Record<string, never>;
   aws_connect_success: Record<string, never>;
   aws_connect_fail: { reason: string };
+  alert_channel_register: Record<string, never>;
 };
 
 export function trackEvent<Name extends keyof AnalyticsEvents>(

@@ -8,15 +8,21 @@ import {
 } from "@tanstack/react-query";
 import {
   alertKeys,
+  createAlertChannel,
+  deleteAlertChannel,
+  getAlertChannels,
   getAlertSettings,
   getNotifications,
   getUnreadNotificationCount,
   notificationKeys,
   readAllNotifications,
   readNotification,
+  testAlertChannel,
+  updateAlertChannel,
   updateAlertConditions,
   type AlertConditions,
   type AlertSettings,
+  type UpdateAlertChannelRequest,
 } from "@/api/alerts";
 import {
   budgetKeys,
@@ -55,6 +61,50 @@ export function useUpdateAlertConditions() {
     onSuccess: (settings) =>
       queryClient.setQueryData(alertKeys.settings, settings),
   });
+}
+
+export function useAlertChannels() {
+  return useQuery({ queryKey: alertKeys.channels, queryFn: getAlertChannels });
+}
+
+export function useCreateAlertChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (webhookUrl: string) =>
+      createAlertChannel({ type: "DISCORD", webhookUrl }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: alertKeys.channels }),
+  });
+}
+
+export function useUpdateAlertChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      channelId,
+      request,
+    }: {
+      channelId: string;
+      request: UpdateAlertChannelRequest;
+    }) => updateAlertChannel(channelId, request),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: alertKeys.channels }),
+  });
+}
+
+export function useDeleteAlertChannel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteAlertChannel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: alertKeys.channels });
+      queryClient.invalidateQueries({ queryKey: notificationKeys.all });
+    },
+  });
+}
+
+export function useTestAlertChannel() {
+  return useMutation({ mutationFn: testAlertChannel });
 }
 
 export function useBudget(accountId: string | null, currency: BudgetCurrency) {

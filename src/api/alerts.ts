@@ -21,7 +21,54 @@ export type AlertSettings = AlertConditions & {
   notes: string[];
 };
 
+export type AlertChannelType = "DISCORD";
+
+export type AlertChannel = {
+  channelId: string;
+  type: AlertChannelType;
+  typeLabel: string;
+  target: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AlertChannelList = {
+  items: AlertChannel[];
+  maxChannels: number;
+  notes: string[];
+};
+
+export type CreateAlertChannelRequest = {
+  type: AlertChannelType;
+  webhookUrl: string;
+  enabled?: boolean;
+};
+
+export type UpdateAlertChannelRequest = {
+  webhookUrl?: string;
+  enabled: boolean;
+};
+
+export type AlertChannelTestResult = {
+  ok: boolean;
+  reason: string | null;
+};
+
 export type NotificationType = "BUDGET" | "SPIKE" | "WEEKLY_SUMMARY";
+
+export type DeliveryStatus = "PENDING" | "SENT" | "FAILED";
+
+export type NotificationDelivery = {
+  channelId: string;
+  channelType: AlertChannelType;
+  target: string;
+  status: DeliveryStatus;
+  statusLabel: string;
+  attempts: number;
+  lastError: string | null;
+  sentAt: string | null;
+};
 
 export type Notification = {
   id: string;
@@ -33,6 +80,7 @@ export type Notification = {
   createdAt: string;
   read: boolean;
   readAt: string | null;
+  deliveries: NotificationDelivery[];
 };
 
 export type NotificationPage = {
@@ -44,6 +92,7 @@ export type NotificationPage = {
 
 export const alertKeys = {
   settings: ["alertSettings"] as const,
+  channels: ["alertChannels"] as const,
 };
 
 export const notificationKeys = {
@@ -62,6 +111,40 @@ export function updateAlertConditions(conditions: AlertConditions) {
     method: "PUT",
     body: JSON.stringify(conditions),
   });
+}
+
+export function getAlertChannels() {
+  return apiRequest<AlertChannelList>("/settings/alerts/channels");
+}
+
+export function createAlertChannel(request: CreateAlertChannelRequest) {
+  return apiRequest<AlertChannel>("/settings/alerts/channels", {
+    method: "POST",
+    body: JSON.stringify(request),
+  });
+}
+
+export function updateAlertChannel(
+  channelId: string,
+  request: UpdateAlertChannelRequest,
+) {
+  return apiRequest<AlertChannel>(`/settings/alerts/channels/${channelId}`, {
+    method: "PUT",
+    body: JSON.stringify(request),
+  });
+}
+
+export function deleteAlertChannel(channelId: string) {
+  return apiRequest<void>(`/settings/alerts/channels/${channelId}`, {
+    method: "DELETE",
+  });
+}
+
+export function testAlertChannel(channelId: string) {
+  return apiRequest<AlertChannelTestResult>(
+    `/settings/alerts/channels/${channelId}/test`,
+    { method: "POST" },
+  );
 }
 
 export function getNotifications(limit: number, cursor?: string | null) {
