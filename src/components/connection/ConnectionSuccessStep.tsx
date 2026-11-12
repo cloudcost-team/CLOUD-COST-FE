@@ -25,7 +25,10 @@ export function ConnectionSuccessStep({
         { label: "연결 이름", value: account.alias ?? "이름 없는 연결" },
         { label: "AWS 계정 ID", value: account.awsAccountId },
         { label: "리전", value: account.regionLabel },
-        { label: "권한", value: "읽기 전용 (EC2 · CloudWatch)" },
+        {
+          label: "권한",
+          value: "EC2·볼륨·스냅샷·고정 IP·로드밸런서 조회 (모두 읽기 전용)",
+        },
       ]}
     />
   );

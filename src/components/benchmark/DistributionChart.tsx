@@ -1,7 +1,9 @@
 "use client";
 
-import { Bar, BarChart, Cell, ResponsiveContainer } from "recharts";
+import type { CSSProperties } from "react";
+import { Bar, BarChart, Cell, ResponsiveContainer, YAxis } from "recharts";
 import { cn } from "@/lib/cn";
+import { OursMarker } from "./OursMarker";
 
 export type DistributionBars = {
   values: number[];
@@ -24,7 +26,7 @@ function barColors(index: number, bars: DistributionBars, showAfter: boolean) {
       strokeDasharray: "4 3",
     };
   if (index === bars.oursIndex) return { fill: "var(--color-fill-brand)" };
-  return { fill: "var(--color-fill-neutral-weak)" };
+  return { fill: "var(--color-fill-neutral-medium)" };
 }
 
 export function DistributionChart({
@@ -33,13 +35,26 @@ export function DistributionChart({
   className,
 }: DistributionChartProps) {
   const data = bars.values.map((value, index) => ({ index, value }));
+  const columns = {
+    "--bar-count": `repeat(${bars.values.length}, minmax(0, 1fr))`,
+  } as CSSProperties;
 
   return (
-    <div className={cn("flex min-w-0 flex-col gap-gap-small", className)}>
+    <div
+      className={cn("flex min-w-0 flex-col gap-gap-small", className)}
+      style={columns}
+    >
+      <div className="grid grid-cols-(--bar-count)">
+        {bars.values.map((_, index) => (
+          <div key={index} className="flex justify-center">
+            {index === bars.oursIndex && <OursMarker pointer={false} />}
+          </div>
+        ))}
+      </div>
       <div
         role="img"
         aria-label="비교 팀 과다 사양 비율 분포와 우리 팀 위치"
-        className="h-30 w-full"
+        className="h-36 w-full"
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -47,6 +62,7 @@ export function DistributionChart({
             margin={{ top: 0, right: 0, bottom: 0, left: 0 }}
             barCategoryGap={2}
           >
+            <YAxis hide domain={[0, "dataMax"]} />
             <Bar
               dataKey="value"
               radius={[3, 3, 0, 0]}
@@ -62,19 +78,20 @@ export function DistributionChart({
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex items-start justify-between text-subtext-small">
-        <span className="text-text-quaternary">0%</span>
-        <span className="flex items-center gap-gap-xsmall text-text-secondary">
-          <span className="size-2 rounded-[2px] bg-fill-brand" />
-          {showAfter ? "우리 팀 (현재)" : "우리 팀"}
-          {showAfter && (
-            <>
-              <span className="size-2 rounded-[2px] border border-dashed border-border-brand" />
-              적용 후
-            </>
-          )}
-        </span>
-        <span className="text-text-quaternary">100%</span>
+      {showAfter && bars.afterIndex !== null && (
+        <div className="grid grid-cols-(--bar-count) text-label-xsmall">
+          {bars.values.map((_, index) => (
+            <span key={index} className="flex justify-center whitespace-nowrap">
+              {index === bars.afterIndex && (
+                <span className="text-text-secondary">↑ 적용 후</span>
+              )}
+            </span>
+          ))}
+        </div>
+      )}
+      <div className="flex justify-between text-subtext-small text-text-quaternary">
+        <span>0%</span>
+        <span>100%</span>
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ type AnalyticsEvents = {
   aws_connect_success: Record<string, never>;
   aws_connect_fail: { reason: string };
   alert_channel_register: Record<string, never>;
+  permission_upgrade_click: { method: "STACK" | "MANUAL_ROLE" };
 };
 
 export function trackEvent<Name extends keyof AnalyticsEvents>(

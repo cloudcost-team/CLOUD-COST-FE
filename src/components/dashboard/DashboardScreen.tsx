@@ -37,6 +37,7 @@ import { DashboardStats } from "./DashboardStats";
 import { DayDetailPanel } from "./DayDetailPanel";
 import { FreshnessLine } from "./FreshnessLine";
 import { MonthlyCostChart } from "./MonthlyCostChart";
+import { ForgottenRegionCard } from "./ForgottenRegionCard";
 import { SavingsOpportunityCard } from "./SavingsOpportunityCard";
 import { ServerCostTable } from "./ServerCostTable";
 import { formatDateRange } from "./dashboardFormat";
@@ -509,6 +510,7 @@ function DashboardView({
         />
       )}
       <SavingsOpportunityCard source={source} />
+      <ForgottenRegionCard source={source} />
       <DashboardStats dashboard={dashboard} />
       <Card
         title={`일별 비용 · ${range || source.kind === "demo" ? formatDateRange(daily.from, daily.to) : "최근 30일"}`}

@@ -63,7 +63,7 @@ export function OversizedRatioDetailPanel({
     <SidePanel
       open={open}
       onClose={onClose}
-      title="① 컴퓨팅 과다 사양 비율"
+      title="① 컴퓨팅 리소스 활용도"
       className="w-130"
       footer={
         demo ? undefined : (
@@ -120,8 +120,9 @@ export function OversizedRatioDetailPanel({
             </li>
             {moreEfficientTeamsPercent !== null && ours && (
               <li>
-                · &quot;우리보다 효율적인 팀 {moreEfficientTeamsPercent}%&quot;
-                = {sampleSize}곳 중 과다 사양 비율이 우리(
+                · &quot;비교 대상 팀의 {moreEfficientTeamsPercent}%가 우리보다
+                리소스를 효율적으로 사용해요&quot; = {sampleSize}곳 중 과다 사양
+                비율이 우리(
                 {formatPercent(ours.ratio)})보다 낮은 곳의 비율
               </li>
             )}

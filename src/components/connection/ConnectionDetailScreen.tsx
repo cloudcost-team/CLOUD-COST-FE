@@ -16,10 +16,12 @@ import {
   useRegisterAwsAccountRole,
 } from "@/hooks/useAwsAccounts";
 import { cn } from "@/lib/cn";
+import { useResourceWaste } from "@/hooks/useWaste";
 import { formatKstDateTime } from "@/lib/kstDate";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { ConnectionDangerZone } from "./ConnectionDangerZone";
 import { getConnectionStatusLabel } from "./ConnectionStatusBadge";
+import { PermissionUpgradeNotice } from "./PermissionUpgradeNotice";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { RenameConnectionModal } from "./RenameConnectionModal";
 import { SyncJobTable } from "./SyncJobTable";
@@ -63,6 +65,21 @@ function ConnectionStatusNotice({ account }: { account: AwsAccount }) {
       />
     );
   return null;
+}
+
+function PermissionScanNotice({ account }: { account: AwsAccount }) {
+  const { data } = useResourceWaste(
+    account.accountId,
+    account.status === "ACTIVE",
+  );
+  if (data?.resources.scan.status !== "PERMISSION_UPGRADE_REQUIRED")
+    return null;
+  return (
+    <PermissionUpgradeNotice
+      scan={data.resources.scan}
+      upgrade={data.resources.upgrade}
+    />
+  );
 }
 
 function ConnectionDetail({ account }: { account: AwsAccount }) {
@@ -116,6 +133,7 @@ function ConnectionDetail({ account }: { account: AwsAccount }) {
         />
       </Card>
       <ConnectionStatusNotice account={account} />
+      <PermissionScanNotice account={account} />
       <section className={cn("flex flex-col gap-gap-medium", dimmed)}>
         <h2 className="text-title-small text-text-strong">
           수집 기록 (최근 20건)

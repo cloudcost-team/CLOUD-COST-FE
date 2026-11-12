@@ -72,7 +72,7 @@ export function ConnectionFormStep({
       <SelectBox
         label="EC2 서버가 있는 리전"
         required
-        helperText="이 리전의 EC2만 읽어요. 스택도 이 리전에 자동으로 만들어져요. 서버가 여러 리전에 있으면 리전마다 따로 연결해 주세요."
+        helperText="사용 시간과 비용은 이 리전 기준으로 모아요. 다른 리전에서는 방치 리소스와 잊고 켜 둔 서버만 찾아요. 스택도 이 리전에 자동으로 만들어져요."
         options={REGION_OPTIONS}
         value={region}
         onValueChange={setRegion}
