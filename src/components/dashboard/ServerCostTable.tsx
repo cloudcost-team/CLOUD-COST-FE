@@ -52,7 +52,7 @@ export function ServerCostTable({ rows, currency }: ServerCostTableProps) {
     },
     {
       key: "cost",
-      header: "추정 비용",
+      header: "비용",
       align: "right",
       className: "whitespace-nowrap",
       render: (row) =>
@@ -69,7 +69,7 @@ export function ServerCostTable({ rows, currency }: ServerCostTableProps) {
       rows={rows}
       getRowKey={(row) => row.instanceId}
       isRowDimmed={(row) => row.state !== "running"}
-      caption="서버별 추정 비용"
+      caption="서버별 비용"
     />
   );
 }

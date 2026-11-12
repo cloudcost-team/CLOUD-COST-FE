@@ -84,7 +84,7 @@ export function RecommendationCard({
       </div>
       <div className="flex shrink-0 flex-col items-end gap-gap-xxsmall whitespace-nowrap">
         <p className="text-subtext-small text-text-tertiary">
-          월 추정 비용 {formatMoney(item.estimatedMonthlyCost, currency)}
+          월 비용 {formatMoney(item.estimatedMonthlyCost, currency)}
         </p>
         <p className="text-title-medium text-text-success">
           {formatMoney(item.estimatedMonthlySavings, currency)}

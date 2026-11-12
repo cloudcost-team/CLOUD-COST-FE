@@ -57,15 +57,14 @@ function ReportStats({ report }: { report: ReportDetailResponse }) {
   return (
     <div className="grid gap-gap-large md:grid-cols-3">
       <StatCard
-        label={`${month}월 추정 비용`}
+        label={`${month}월 비용`}
         value={
           summary.estimatedCost === null
             ? "—"
             : formatMoney(summary.estimatedCost, currency)
         }
         caption={
-          report.exchangeRate &&
-          `${report.exchangeRate.date} 환율로 환산한 추정치`
+          report.exchangeRate && `${report.exchangeRate.date} 환율로 환산`
         }
       />
       <StatCard
@@ -183,7 +182,7 @@ function ReportBody({
       )}
       <ul className="flex flex-col gap-gap-xxsmall text-subtext-small text-text-quaternary">
         <li>
-          사용 시간 × 온디맨드 단가로 계산한 추정치예요. RI·Savings Plans·Spot
+          사용 시간 × 온디맨드 단가로 계산한 값이에요. RI·Savings Plans·Spot
           할인, EBS·데이터 전송 비용은 포함하지 않아요.
         </li>
         {report.notes.map((note) => (

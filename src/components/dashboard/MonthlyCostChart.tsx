@@ -24,7 +24,7 @@ export function MonthlyCostChart({
   return (
     <div
       role="img"
-      aria-label={`최근 ${months.length}개월 월별 추정 비용 막대 차트, ${Number(selectedMonth.slice(5))}월 선택됨`}
+      aria-label={`최근 ${months.length}개월 월별 비용 막대 차트, ${Number(selectedMonth.slice(5))}월 선택됨`}
       className="h-48 w-full"
     >
       <ResponsiveContainer width="100%" height="100%">

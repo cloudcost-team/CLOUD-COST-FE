@@ -43,7 +43,7 @@ export function ReportDailyChart({
     <Panel variant="outline" className="flex flex-col gap-gap-medium">
       <div className="flex flex-wrap items-start justify-between gap-gap-small">
         <p className="text-label-xsmall text-text-strong">
-          {monthLabel} 일별 추정 비용
+          {monthLabel} 일별 비용
         </p>
         <p className="text-subtext-small text-text-tertiary">
           빨간 막대 = 급증일
@@ -82,7 +82,7 @@ export function ReportDailyChart({
               />
               <Bar
                 dataKey="estimatedCost"
-                name="추정 비용"
+                name="비용"
                 radius={[2, 2, 0, 0]}
                 isAnimationActive={false}
               >

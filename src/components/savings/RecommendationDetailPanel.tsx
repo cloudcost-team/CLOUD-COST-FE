@@ -57,7 +57,7 @@ function getSpecRows(
     },
     {
       key: "monthly",
-      label: "월 추정 비용 (730시간)",
+      label: "월 비용 (730시간)",
       current: formatMoney(current.monthlyCostAt730h, currency),
       recommended: recommended
         ? formatMoney(recommended.monthlyCostAt730h, currency)

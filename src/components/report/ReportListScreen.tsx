@@ -46,7 +46,7 @@ function getColumns(
     },
     {
       key: "estimatedCost",
-      header: "추정 비용",
+      header: "비용",
       align: "center",
       className: "w-1/5 whitespace-nowrap tabular-nums",
       render: (row) =>
@@ -105,7 +105,7 @@ function ReportListBody({ source }: { source: DataSource }) {
   if (data.months.length === 0) return <ReportEmptyState reason="noRecord" />;
 
   const notes = [
-    "금액은 사용 시간 × 온디맨드 단가로 계산한 추정치예요",
+    "금액은 사용 시간 × 온디맨드 단가로 계산한 값이에요",
     ...(data.availableFrom
       ? [`기록 시작일(${data.availableFrom}) 이전 달은 리포트가 없어요`]
       : []),

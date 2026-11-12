@@ -17,8 +17,16 @@ const CONDITIONS: {
     label: "예산 80% 도달",
     description: "월말 예상 비용 기준",
   },
-  { key: "budget100", label: "예산 100% 도달" },
-  { key: "budget120", label: "예산 120% 도달" },
+  {
+    key: "budget100",
+    label: "예산 100% 도달",
+    description: "월말 예상 비용 기준",
+  },
+  {
+    key: "budget120",
+    label: "예산 120% 도달",
+    description: "월말 예상 비용 기준",
+  },
   {
     key: "spike",
     label: "비용 급증",
@@ -27,7 +35,7 @@ const CONDITIONS: {
   {
     key: "weeklySummary",
     label: "주간 요약",
-    description: "매주 월요일 오전, 지난주 추정 비용 요약",
+    description: "매주 월요일 오전, 지난주 비용 요약",
   },
 ];
 

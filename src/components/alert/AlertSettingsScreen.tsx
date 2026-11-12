@@ -3,6 +3,7 @@
 import { Banner } from "@/components/ui/Banner";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useAlertSettings } from "@/hooks/useAlerts";
+import { AlertChannelCard } from "./AlertChannelCard";
 import { AlertConditionsCard } from "./AlertConditionsCard";
 import { BudgetCard } from "./BudgetCard";
 import { PageHeader } from "@/components/layout/PageHeader";
@@ -43,6 +44,7 @@ export function AlertSettingsScreen() {
       />
       <ReceivedNotificationsCard />
       <AlertSettingsBody />
+      <AlertChannelCard />
     </div>
   );
 }

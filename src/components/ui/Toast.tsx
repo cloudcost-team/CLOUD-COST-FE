@@ -51,12 +51,12 @@ export function Toast({
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 bottom-spacing-large z-50 flex justify-center px-margin-screen"
+      className="pointer-events-none fixed inset-x-0 top-spacing-large z-50 flex justify-center px-margin-screen"
     >
       {open && (
         <div
           className={cn(
-            "pointer-events-auto flex w-80 max-w-full items-center gap-gap-large rounded-xlarge bg-fill-default/70 px-padding-large py-padding-medium shadow-default backdrop-blur-[10px]",
+            "pointer-events-auto flex w-max max-w-full items-center gap-gap-large rounded-xlarge bg-fill-default/70 px-padding-large py-padding-medium shadow-[0_4px_16px_0_rgb(0_0_0/0.08)] backdrop-blur-[10px]",
             className,
           )}
         >

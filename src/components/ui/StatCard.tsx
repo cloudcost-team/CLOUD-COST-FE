@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
-import { Badge } from "./Badge";
 
 type StatCardSize = "medium" | "small";
 
@@ -8,7 +7,6 @@ type StatCardProps = {
   label: string;
   value: ReactNode;
   caption?: ReactNode;
-  estimated?: boolean;
   size?: StatCardSize;
   className?: string;
 };
@@ -33,7 +31,6 @@ export function StatCard({
   label,
   value,
   caption,
-  estimated = false,
   size = "medium",
   className,
 }: StatCardProps) {
@@ -46,10 +43,7 @@ export function StatCard({
         className,
       )}
     >
-      <div className="flex items-center gap-gap-xsmall">
-        <p className={cn("text-text-tertiary", sizeClass.label)}>{label}</p>
-        {estimated && <Badge>추정</Badge>}
-      </div>
+      <p className={cn("text-text-tertiary", sizeClass.label)}>{label}</p>
       <p className={cn("break-words text-text-strong", sizeClass.value)}>
         {value}
       </p>

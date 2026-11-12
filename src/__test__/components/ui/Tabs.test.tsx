@@ -7,7 +7,7 @@ type Section = "usage" | "cost" | "alert";
 
 const items: { value: Section; label: string; content: string }[] = [
   { value: "usage", label: "사용량", content: "사용량 내용" },
-  { value: "cost", label: "추정 비용", content: "비용 내용" },
+  { value: "cost", label: "비용", content: "비용 내용" },
   { value: "alert", label: "알림", content: "알림 내용" },
 ];
 
@@ -40,7 +40,7 @@ describe("Tabs", () => {
       "aria-selected",
       "false",
     );
-    expect(screen.getByRole("tab", { name: "추정 비용" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "비용" })).toHaveAttribute(
       "aria-selected",
       "true",
     );
@@ -63,7 +63,7 @@ describe("Tabs", () => {
 
     expect(screen.getByRole("tabpanel")).toHaveAttribute(
       "aria-labelledby",
-      screen.getByRole("tab", { name: "추정 비용" }).id,
+      screen.getByRole("tab", { name: "비용" }).id,
     );
   });
 
@@ -92,7 +92,7 @@ describe("Tabs", () => {
       key: "ArrowRight",
     });
 
-    expect(screen.getByRole("tab", { name: "추정 비용" })).toHaveAttribute(
+    expect(screen.getByRole("tab", { name: "비용" })).toHaveAttribute(
       "aria-selected",
       "true",
     );

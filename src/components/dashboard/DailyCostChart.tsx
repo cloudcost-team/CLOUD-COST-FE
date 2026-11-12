@@ -45,8 +45,8 @@ function getSummary(days: DailyCostWithInstances[]) {
   const last = days.at(-1);
   return [
     first && last
-      ? `${formatShortDate(first.date)}~${formatShortDate(last.date)} 일별 추정 비용 막대 차트`
-      : "일별 추정 비용 막대 차트",
+      ? `${formatShortDate(first.date)}~${formatShortDate(last.date)} 일별 비용 막대 차트`
+      : "일별 비용 막대 차트",
     spikeDates.length > 0 ? `급증일 ${spikeDates.join(", ")}` : "급증일 없음",
   ].join(", ");
 }

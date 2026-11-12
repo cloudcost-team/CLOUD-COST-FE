@@ -1,8 +1,12 @@
-import type { Notification } from "@/api/alerts";
+import type { AlertChannelType, Notification } from "@/api/alerts";
 import { Icon } from "@/components/ui/Icon";
 import { cn } from "@/lib/cn";
 import { formatKstTimeOrDate } from "@/lib/kstDate";
 import { NotificationTypeBadge } from "./NotificationTypeBadge";
+
+const CHANNEL_LABELS: Record<AlertChannelType, string> = {
+  DISCORD: "Discord",
+};
 
 type NotificationItemProps = {
   notification: Notification;
@@ -48,6 +52,14 @@ export function NotificationItem({
         </span>
         <span className="text-subtext-small text-text-tertiary">
           {notification.accountName}
+          {notification.deliveries.map((delivery) => (
+            <span
+              key={delivery.channelId}
+              className={cn(delivery.status === "FAILED" && "text-text-danger")}
+            >
+              {` · ${CHANNEL_LABELS[delivery.channelType]} ${delivery.statusLabel}`}
+            </span>
+          ))}
         </span>
       </span>
       <span
