@@ -1,7 +1,7 @@
 "use client";
 
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
-import { useState, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { benchmarkKeys, getBenchmark } from "@/api/benchmark";
 import type { Currency } from "@/api/costs";
 import { getSourceId, type DataSource } from "@/api/dataSource";
@@ -14,8 +14,11 @@ import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { NoticeList } from "@/components/ui/NoticeList";
 import { Panel } from "@/components/ui/Panel";
+import { Popover } from "@/components/ui/Popover";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { TextButton } from "@/components/ui/TextButton";
+import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/formatMoney";
 import { useAppMode, useAppPath } from "@/hooks/useAppMode";
 import { formatKoreanMonthDay } from "@/lib/kstDate";
@@ -24,8 +27,8 @@ import { useSimulationSelectionStore } from "@/stores/simulationSelectionStore";
 import { BenchmarkMetricCard } from "./BenchmarkMetricCard";
 import { formatPercent } from "./benchmarkFormat";
 import { DistributionChart } from "./DistributionChart";
+import { OursMarker } from "./OursMarker";
 import { OversizedRatioDetailPanel } from "./OversizedRatioDetailPanel";
-import { RangeBar } from "./RangeBar";
 import { UnavailableMetricCard } from "./UnavailableMetricCard";
 
 export type BenchmarkServer = {
@@ -95,9 +98,31 @@ export type BenchmarkOversizedRatio = {
   afterSimulation: BenchmarkRatio | null;
 };
 
+export type BenchmarkWasteRatioStatus =
+  | "OK"
+  | "UNAVAILABLE"
+  | "INSUFFICIENT_HISTORY"
+  | "NO_FORECAST"
+  | "NOT_COMPARABLE";
+
+export type BenchmarkWasteComparison = "BELOW" | "SAME" | "ABOVE";
+
+export type BenchmarkWasteAmounts = {
+  serverWaste: number;
+  resourceWaste: number;
+  waste: number;
+  total: number;
+  wasteUsd: number;
+  totalUsd: number;
+};
+
 export type BenchmarkWasteRatio = {
-  status: "UNAVAILABLE";
-  reason: string;
+  status: BenchmarkWasteRatioStatus;
+  reason: string | null;
+  ratioPercent: number | null;
+  comparison: BenchmarkWasteComparison | null;
+  amounts: BenchmarkWasteAmounts | null;
+  afterSimulationRatioPercent: number | null;
   referenceSource: string;
   referenceDescription: string;
   referenceAverage: number;
@@ -105,22 +130,44 @@ export type BenchmarkWasteRatio = {
 
 export type BenchmarkSpendPosition = "BELOW" | "WITHIN" | "ABOVE";
 
+export type BenchmarkSpendModel = {
+  method: string;
+  sampleSize: number;
+  minServers: number;
+  maxServers: number;
+  testSize: number;
+  improvementPercent: number;
+  middleHalfCoveragePercent: number;
+};
+
 export type BenchmarkSpendRange = {
   source: string;
   description: string;
+  servers: number;
+  label: string;
   min: number;
   max: number;
   minUsd: number;
   maxUsd: number;
+  minVcpuHours: number;
+  maxVcpuHours: number;
+  medianVcpuHours: number;
+  model: BenchmarkSpendModel;
 };
 
+export type BenchmarkMonthlySpendStatus =
+  "OK" | "NO_FORECAST" | "INSUFFICIENT_HISTORY" | "NOT_COMPARABLE";
+
 export type BenchmarkMonthlySpend = {
-  status: "OK" | "NO_FORECAST";
+  status: BenchmarkMonthlySpendStatus;
   monthlyCost: number | null;
   monthlyCostUsd: number | null;
+  monthlyVcpuHours: number | null;
+  servers: number;
+  teamsUsingLessPercent: number | null;
   position: BenchmarkSpendPosition | null;
   barPositionPercent: number | null;
-  range: BenchmarkSpendRange;
+  range: BenchmarkSpendRange | null;
   afterSimulation: {
     monthlyCost: number;
     monthlyCostUsd: number;
@@ -160,17 +207,31 @@ export type BenchmarkResponse = {
 
 type BenchmarkView = "current" | "after";
 
+function percentStatus(percent: number | null) {
+  if (percent === null || !Number.isFinite(percent)) return undefined;
+  // 30%와 70%는 다음 구간에 포함해 경계값이 겹치지 않게 한다.
+  return percent < 30 ? "good" : percent < 70 ? "medium" : "risk";
+}
+
 const viewOptions: { value: BenchmarkView; label: string }[] = [
   { value: "current", label: "현재" },
   { value: "after", label: "시뮬레이션 적용 후" },
 ];
 
-const SPEND_TEAM_LABEL = "1~10명 팀";
-
 const positionSentence: Record<BenchmarkSpendPosition, string> = {
-  BELOW: `${SPEND_TEAM_LABEL} 일반 범위보다 적게 쓰고 있어요`,
-  WITHIN: `${SPEND_TEAM_LABEL} 일반 범위 안에 있어요`,
-  ABOVE: `${SPEND_TEAM_LABEL} 일반 범위보다 많이 쓰고 있어요`,
+  BELOW: "일반적인 지출보다 낮아요",
+  WITHIN: "일반적인 지출 범위 안이에요",
+  ABOVE: "일반적인 지출보다 높아요",
+};
+
+const spendUnavailableReason: Record<
+  Exclude<BenchmarkMonthlySpendStatus, "OK">,
+  string
+> = {
+  NO_FORECAST: "이번 달 월말 예상 비용이 없어 비교하지 않았어요.",
+  INSUFFICIENT_HISTORY: "사용 기록이 14일보다 짧아 아직 비교하지 않았어요.",
+  NOT_COMPARABLE:
+    "켜진 서버가 없거나 같은 규모 팀 자료가 없어 비교하지 않았어요.",
 };
 
 function StateCard({ children }: { children: ReactNode }) {
@@ -228,13 +289,14 @@ function OversizedRatioSection({
   return (
     <>
       <BenchmarkMetricCard
-        title="① 컴퓨팅 과다 사양 비율"
+        title="① 컴퓨팅 리소스 활용도"
         description="CPU 사용률(P95) 10% 미만 서버의 비중"
         value={after ? `${current} → ${formatPercent(after.ratio)}` : current}
+        status={percentStatus(after?.ratio ?? ours?.ratio ?? null)}
         comparison={
           moreEfficientTeamsPercent === null
             ? null
-            : `소규모 팀 ${sampleSize}곳 중 우리보다 효율적인 팀 ${moreEfficientTeamsPercent}%`
+            : `비교 대상 팀의 ${moreEfficientTeamsPercent}%가 우리보다 리소스를 효율적으로 사용해요`
         }
         source={`비교 기준: ${reference.source} · ${reference.sizeBandLabel} 구독 ${sampleSize}곳 (평균 ${formatPercent(reference.averageRatio)}, 중앙값 ${formatPercent(reference.medianRatio)})`}
         chart={
@@ -263,6 +325,44 @@ function OversizedRatioSection({
   );
 }
 
+function SpendLevelBar({
+  marker,
+  oursLabel,
+  minLabel,
+  maxLabel,
+}: {
+  marker: number;
+  oursLabel: string;
+  minLabel: string;
+  maxLabel: string;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-gap-small">
+      <div className="flex flex-col">
+        <OursMarker position={marker} label={oursLabel} />
+        <div
+          role="img"
+          aria-label={`낮음·일반·높음 구간 중 우리 팀 위치. 일반 범위 ${minLabel}~${maxLabel}`}
+          className="flex h-4 gap-0.5"
+        >
+          <span className="w-1/4 rounded-l-full bg-fill-neutral-weak" />
+          <span className="w-1/2 bg-fill-brand" />
+          <span className="w-1/4 rounded-r-full bg-fill-neutral-weak" />
+        </div>
+      </div>
+      <div className="relative h-5 text-subtext-small text-text-tertiary">
+        <span className="absolute left-0">낮음</span>
+        <span className="absolute left-1/4 -translate-x-1/2">{minLabel}</span>
+        <span className="absolute left-1/2 -translate-x-1/2 text-text-brand">
+          일반
+        </span>
+        <span className="absolute left-3/4 -translate-x-1/2">{maxLabel}</span>
+        <span className="absolute right-0">높음</span>
+      </div>
+    </div>
+  );
+}
+
 function MonthlySpendSection({
   monthlySpend,
   currency,
@@ -272,57 +372,235 @@ function MonthlySpendSection({
   currency: Currency;
   showAfter: boolean;
 }) {
-  const { range } = monthlySpend;
-  const startLabel = formatMoney(range.min, currency);
-  const endLabel = formatMoney(range.max, currency);
-  const rangeLabel = `${startLabel}~${endLabel}`;
-  const source = `비교 기준: ${range.source} · ${SPEND_TEAM_LABEL} 일반 범위`;
+  const { range, monthlyCost, teamsUsingLessPercent, position } = monthlySpend;
 
   if (
-    monthlySpend.status === "NO_FORECAST" ||
-    monthlySpend.monthlyCost === null ||
-    monthlySpend.position === null ||
-    monthlySpend.barPositionPercent === null
+    monthlySpend.status !== "OK" ||
+    range === null ||
+    monthlyCost === null ||
+    teamsUsingLessPercent === null ||
+    position === null
   )
     return (
       <UnavailableMetricCard
-        title="③ 규모 대비 월 지출"
-        reason="이번 달 월말 예상 비용이 없어 비교하지 않았어요."
-        source={`${source} ${rangeLabel}`}
+        title="③ 유사 규모 팀과 비용 비교"
+        reason={
+          monthlySpend.status === "OK"
+            ? "지금은 같은 규모 팀과 비교할 수 없어요."
+            : spendUnavailableReason[monthlySpend.status]
+        }
+        source={
+          range
+            ? `비교 기준: ${range.source} · ${range.label} 팀`
+            : "같은 규모 팀의 한 달 사용량과 비교해요"
+        }
       />
     );
 
   const after = showAfter ? monthlySpend.afterSimulation : null;
-  const current = formatMoney(monthlySpend.monthlyCost, currency);
+  const current = formatMoney(monthlyCost, currency);
+  const rangeAmount = `${formatMoney(range.min, currency)}~${formatMoney(range.max, currency)}`;
 
   return (
     <BenchmarkMetricCard
-      title="③ 규모 대비 월 지출"
+      title="③ 유사 규모 팀과 비용 비교"
       description="월말 예상 클라우드 지출"
       value={
         after
           ? `${current} → ${formatMoney(after.monthlyCost, currency)}`
           : current
       }
-      comparison={positionSentence[after?.position ?? monthlySpend.position]}
-      source={source}
+      status={
+        (after?.position ?? position) === "BELOW"
+          ? "good"
+          : (after?.position ?? position) === "WITHIN"
+            ? "medium"
+            : "risk"
+      }
+      comparison={
+        after
+          ? `적용 후 유사 규모 팀의 ${positionSentence[after.position]}`
+          : `유사 규모 팀의 ${teamsUsingLessPercent}%가 우리보다 적게 지출해요 · ${positionSentence[position]}`
+      }
+      source={`비교 기준: ${range.source} · ${range.label} 팀 일반 범위(가운데 절반)`}
       chart={
-        <RangeBar
-          scale={{
-            rangeStart: 0,
-            rangeEnd: 100,
-            marker: monthlySpend.barPositionPercent,
-            afterMarker: after?.barPositionPercent ?? null,
-            startLabel,
-            endLabel,
-            oursLabel: current,
-            afterLabel: after ? formatMoney(after.monthlyCost, currency) : null,
-          }}
-          rangeLabel={`일반 범위 ${rangeLabel}`}
-          showAfter={Boolean(after)}
-        />
+        <div className="flex flex-col gap-gap-medium">
+          <SpendLevelBar
+            marker={teamsUsingLessPercent}
+            oursLabel={`우리 팀 ${current}`}
+            minLabel={formatMoney(range.min, currency)}
+            maxLabel={formatMoney(range.max, currency)}
+          />
+          <p className="text-subtext-medium text-text-tertiary">
+            {`같은 규모 팀만큼 쓰면 월 ${rangeAmount}`}
+          </p>
+        </div>
       }
     />
+  );
+}
+
+const wasteComparisonSentence: Record<BenchmarkWasteComparison, string> = {
+  BELOW: "보다 낮아요",
+  SAME: "과 비슷해요",
+  ABOVE: "보다 높아요",
+};
+
+function WasteAmountRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex flex-wrap gap-x-gap-medium gap-y-gap-xxsmall">
+      <dt className="w-24 shrink-0 text-subtext-small text-text-quaternary">
+        {label}
+      </dt>
+      <dd className="text-subtext-medium text-text-secondary">{value}</dd>
+    </div>
+  );
+}
+
+function WasteRatioBar({
+  ours,
+  after,
+  average,
+}: {
+  ours: number;
+  after: number | null;
+  average: number;
+}) {
+  const shown = after ?? ours;
+  const overAverage = shown > average;
+  return (
+    <div
+      className="flex min-w-0 flex-col gap-gap-small"
+      style={
+        { "--shown": `${shown}%`, "--average": `${average}%` } as CSSProperties
+      }
+    >
+      <div className="flex flex-col">
+        <OursMarker
+          position={shown}
+          label={after === null ? "우리 팀" : "적용 후"}
+        />
+        <div
+          role="img"
+          aria-label={`우리 팀 ${shown}%, 업계 평균 ${average}%`}
+          className="relative h-4 overflow-hidden rounded-full bg-fill-neutral-weak"
+        >
+          <div
+            className={cn(
+              "absolute inset-y-0 left-0 bg-fill-brand",
+              overAverage ? "w-(--average)" : "w-(--shown)",
+            )}
+          />
+          {overAverage && (
+            <div className="absolute inset-y-0 right-[calc(100%-var(--shown))] left-(--average) bg-fill-warning" />
+          )}
+          <span className="absolute inset-y-0 left-(--average) w-0 border-l-2 border-dashed border-fill-default" />
+        </div>
+      </div>
+      <div className="relative h-5 text-subtext-small text-text-tertiary">
+        <span className="absolute left-0">0%</span>
+        <span className="absolute left-(--average) -translate-x-1/2 whitespace-nowrap text-text-brand">
+          업계 평균 {average}%
+        </span>
+        <span className="absolute right-0">100%</span>
+      </div>
+      {overAverage && (
+        <p className="flex items-center gap-gap-xsmall text-subtext-medium text-text-secondary">
+          <span aria-hidden className="size-2.5 rounded-full bg-fill-warning" />
+          업계 평균보다 더 낭비하는 부분
+        </p>
+      )}
+    </div>
+  );
+}
+
+function WasteRatioSection({
+  wasteRatio,
+  currency,
+  showAfter,
+}: {
+  wasteRatio: BenchmarkWasteRatio;
+  currency: Currency;
+  showAfter: boolean;
+}) {
+  const { referenceAverage, ratioPercent, comparison, amounts } = wasteRatio;
+  const source = `비교 기준: ${wasteRatio.referenceSource} (기업이 답한 클라우드 지출 중 낭비 비율 평균)`;
+
+  if (
+    wasteRatio.status !== "OK" ||
+    ratioPercent === null ||
+    comparison === null ||
+    amounts === null
+  )
+    return (
+      <UnavailableMetricCard
+        title="② 비용 절감 가능 비율"
+        reason={
+          wasteRatio.reason ?? "지금은 전체 낭비 비율을 계산할 수 없어요."
+        }
+        source={source}
+      />
+    );
+
+  const after = showAfter ? wasteRatio.afterSimulationRatioPercent : null;
+
+  return (
+    <BenchmarkMetricCard
+      title="② 비용 절감 가능 비율"
+      description="매달 쓰는 비용 중 줄일 수 있는 비용의 비율"
+      value={
+        after === null ? `${ratioPercent}%` : `${ratioPercent}% → ${after}%`
+      }
+      status={percentStatus(after ?? ratioPercent)}
+      comparison={`절감 가능 비율이 업계 평균(${referenceAverage}%)${wasteComparisonSentence[comparison]}`}
+      source={source}
+      chart={
+        <div className="flex flex-col gap-gap-medium">
+          <WasteRatioBar
+            ours={ratioPercent}
+            after={after}
+            average={referenceAverage}
+          />
+          <dl className="flex flex-col gap-gap-xsmall">
+            <WasteAmountRow
+              label="줄일 수 있는 비용"
+              value={`월 ${formatMoney(amounts.waste, currency)} (서버 사양·유휴 ${formatMoney(amounts.serverWaste, currency)} · 방치 리소스 ${formatMoney(amounts.resourceWaste, currency)})`}
+            />
+            <WasteAmountRow
+              label="전체 비용"
+              value={`월 ${formatMoney(amounts.total, currency)} (월말 예상 + 방치 리소스)`}
+            />
+          </dl>
+        </div>
+      }
+    />
+  );
+}
+
+function BenchmarkNotes({ notes }: { notes: string[] }) {
+  const [open, setOpen] = useState(false);
+  if (notes.length === 0) return null;
+  return (
+    <div className="ml-auto">
+      <Popover
+        open={open}
+        onOpenChange={setOpen}
+        title="계산 방법과 참고 사항"
+        align="end"
+        className="max-h-96 w-140 overflow-y-auto"
+        trigger={(props) => (
+          <TextButton
+            {...props}
+            icon="info"
+            className="flex text-subtext-small text-text-tertiary"
+          >
+            계산 방법
+          </TextButton>
+        )}
+      >
+        <NoticeList variant="plain" lines={notes} />
+      </Popover>
+    </div>
   );
 }
 
@@ -351,7 +629,7 @@ function BenchmarkToolbar({
       {view === "after" && appliedCount > 0 ? (
         <Panel
           variant="brand"
-          className="flex items-center gap-gap-medium py-padding-xsmall pr-padding-xsmall pl-padding-medium"
+          className="flex items-center gap-gap-medium py-padding-xxsmall pr-padding-xxsmall pl-padding-medium"
         >
           <p className="text-subtext-medium text-text-secondary">
             비용 시뮬레이터에서 고른 변경 {appliedCount}건
@@ -386,7 +664,6 @@ function BenchmarkBody({
   const appPath = useAppPath();
   const showAfter = view === "after";
   const { wasteRatio } = data;
-  const notes = [...data.freshness.warnings, ...data.notes];
 
   if (showAfter && data.appliedRecommendationIds.length === 0)
     return (
@@ -411,18 +688,17 @@ function BenchmarkBody({
         availableAt={data.availableAt}
         showAfter={showAfter}
       />
-      <UnavailableMetricCard
-        title="② 전체 낭비 비율"
-        badge="준비 중"
-        reason={wasteRatio.reason}
-        source={`비교 기준: ${wasteRatio.referenceSource} 업계 평균 ${wasteRatio.referenceAverage}%`}
+      <WasteRatioSection
+        wasteRatio={wasteRatio}
+        currency={data.currency}
+        showAfter={showAfter}
       />
       <MonthlySpendSection
         monthlySpend={data.monthlySpend}
         currency={data.currency}
         showAfter={showAfter}
       />
-      <NoticeList variant="plain" lines={notes} />
+      <NoticeList variant="plain" lines={data.freshness.warnings} />
     </>
   );
 }
@@ -455,15 +731,18 @@ function BenchmarkContent({ source }: { source: DataSource }) {
 
   return (
     <>
-      {!demo && (
-        <BenchmarkToolbar
-          view={view}
-          onViewChange={setView}
-          appliedCount={data.appliedRecommendationIds.length}
-          selectedMonthlySavings={data.selectedMonthlySavings}
-          currency={data.currency}
-        />
-      )}
+      <div className="flex flex-wrap items-center gap-gap-medium">
+        {!demo && (
+          <BenchmarkToolbar
+            view={view}
+            onViewChange={setView}
+            appliedCount={data.appliedRecommendationIds.length}
+            selectedMonthlySavings={data.selectedMonthlySavings}
+            currency={data.currency}
+          />
+        )}
+        <BenchmarkNotes notes={data.notes} />
+      </div>
       <BenchmarkBody data={data} view={view} />
     </>
   );
