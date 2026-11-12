@@ -1,2 +1,3 @@
 .harness
 pnpm-lock.yaml
+public/animations

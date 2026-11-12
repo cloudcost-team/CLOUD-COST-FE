@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import { Card } from "@/components/ui/Card";
 import { InteractionOverlay } from "@/components/ui/InteractionOverlay";
-import { BenchmarkStatusAnimation, type BenchmarkStatus } from "./BenchmarkStatusAnimation";
+import {
+  BenchmarkStatusAnimation,
+  type BenchmarkStatus,
+} from "./BenchmarkStatusAnimation";
 
 type BenchmarkMetricCardProps = {
   title: string;

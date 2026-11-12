@@ -5,11 +5,12 @@ import type { AnimationItem } from "lottie-web";
 
 export type BenchmarkStatus = "good" | "medium" | "risk";
 
-const statusDetails: Record<BenchmarkStatus, { label: string; path: string }> = {
-  good: { label: "양호", path: "/animations/benchmark/good.json" },
-  medium: { label: "보통", path: "/animations/benchmark/medium.json" },
-  risk: { label: "위험", path: "/animations/benchmark/risk.json" },
-};
+const statusDetails: Record<BenchmarkStatus, { label: string; path: string }> =
+  {
+    good: { label: "양호", path: "/animations/benchmark/good.json" },
+    medium: { label: "보통", path: "/animations/benchmark/medium.json" },
+    risk: { label: "위험", path: "/animations/benchmark/risk.json" },
+  };
 
 export function BenchmarkStatusAnimation({
   status,
@@ -54,7 +55,11 @@ export function BenchmarkStatusAnimation({
   }, [status]);
 
   return (
-    <div role="img" aria-label={statusDetails[status].label} className="size-24">
+    <div
+      role="img"
+      aria-label={statusDetails[status].label}
+      className="size-24"
+    >
       <div ref={containerRef} aria-hidden="true" className="size-full" />
     </div>
   );
