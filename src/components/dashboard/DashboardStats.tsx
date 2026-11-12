@@ -46,7 +46,7 @@ export function DashboardStats({ dashboard }: DashboardStatsProps) {
   return (
     <div className="grid gap-gap-large md:grid-cols-2 xl:grid-cols-4">
       <StatCard
-        label="이번 달 추정 비용"
+        label="이번 달 비용"
         value={
           monthToDate.estimatedCost === null
             ? "—"
@@ -54,8 +54,8 @@ export function DashboardStats({ dashboard }: DashboardStatsProps) {
         }
         caption={
           exchangeRate
-            ? `${exchangeRate.date} 환율로 환산한 추정치`
-            : "온디맨드 단가 기준 추정치"
+            ? `${exchangeRate.date} 환율로 환산`
+            : "온디맨드 단가 기준"
         }
       />
       <StatCard

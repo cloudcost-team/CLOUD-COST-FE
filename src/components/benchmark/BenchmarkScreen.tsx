@@ -298,7 +298,7 @@ function MonthlySpendSection({
   return (
     <BenchmarkMetricCard
       title="③ 규모 대비 월 지출"
-      description="월 추정 클라우드 지출"
+      description="월 클라우드 지출"
       value={
         after
           ? `${current} → ${formatMoney(after.monthlyCost, currency)}`

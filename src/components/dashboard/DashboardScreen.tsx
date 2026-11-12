@@ -334,7 +334,7 @@ function MonthlyCostCard({
   const index = months.findIndex((item) => item.month === selectedMonth);
   return (
     <Card
-      title="월별 추정 비용 · 최근 12개월"
+      title="월별 비용 · 최근 12개월"
       action={
         <div className="flex items-center gap-gap-small">
           <IconButton
@@ -363,8 +363,8 @@ function MonthlyCostCard({
         onSelectMonth={onSelectMonth}
       />
       <p className="text-subtext-medium text-text-tertiary">
-        {Number(selectedMonth.slice(5))}월 추정 비용을 선택하면 아래 서버별
-        비용도 같은 달 기준으로 바뀌어요.
+        {Number(selectedMonth.slice(5))}월 비용을 선택하면 아래 서버별 비용도
+        같은 달 기준으로 바뀌어요.
       </p>
     </Card>
   );
@@ -511,11 +511,11 @@ function DashboardView({
       <SavingsOpportunityCard source={source} />
       <DashboardStats dashboard={dashboard} />
       <Card
-        title={`일별 추정 비용 · ${range || source.kind === "demo" ? formatDateRange(daily.from, daily.to) : "최근 30일"}`}
+        title={`일별 비용 · ${range || source.kind === "demo" ? formatDateRange(daily.from, daily.to) : "최근 30일"}`}
         action={
           <>
             <div className="flex gap-gap-medium text-subtext-small text-text-tertiary">
-              <span>● 추정 비용</span>
+              <span>● 비용</span>
               <span className="text-text-danger">▲ 급증일</span>
             </div>
             <Button
@@ -638,7 +638,7 @@ export function DashboardScreen() {
     <div className="flex flex-col gap-spacing-medium">
       <PageHeader
         title="대시보드"
-        description="EC2 사용 시간과 추정 비용을 한눈에 봐요."
+        description="EC2 사용 시간과 비용을 한눈에 봐요."
         actions={
           demo ? (
             <Badge>체험 데이터</Badge>

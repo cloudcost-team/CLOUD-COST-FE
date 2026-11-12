@@ -4,9 +4,9 @@ import { Badge, type BadgeTone } from "@/components/ui/Badge";
 
 describe("Badge", () => {
   it("children 글자를 표시하고 tone이 없으면 neutral 색을 쓴다", () => {
-    render(<Badge>추정</Badge>);
+    render(<Badge>유휴</Badge>);
 
-    const badge = screen.getByText("추정");
+    const badge = screen.getByText("유휴");
     expect(badge).toBeInTheDocument();
     expect(badge).toHaveClass("bg-fill-neutral-weak", "text-text-secondary");
   });

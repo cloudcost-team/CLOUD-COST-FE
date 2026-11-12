@@ -14,19 +14,19 @@ const pretendard = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.cloud-cost.cloud"),
   title: { default: "CloudCost", template: "%s | CloudCost" },
-  description: "AWS EC2 사용량과 추정 비용 조회",
+  description: "AWS EC2 사용량과 비용 조회",
   openGraph: {
     type: "website",
     siteName: "CloudCost",
     locale: "ko_KR",
     url: "/",
     title: "CloudCost — AWS 비용, 어디서 새는지 한눈에",
-    description: "EC2 사용량과 추정 비용, 낭비 리소스를 한 화면에서 확인하세요",
+    description: "EC2 사용량과 비용, 낭비 리소스를 한 화면에서 확인하세요",
   },
   twitter: {
     card: "summary_large_image",
     title: "CloudCost — AWS 비용, 어디서 새는지 한눈에",
-    description: "EC2 사용량과 추정 비용, 낭비 리소스를 한 화면에서 확인하세요",
+    description: "EC2 사용량과 비용, 낭비 리소스를 한 화면에서 확인하세요",
   },
 };
 

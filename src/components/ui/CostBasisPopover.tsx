@@ -40,7 +40,7 @@ export function CostBasisPopover({
       onOpenChange={setOpen}
       title="숫자는 이렇게 계산해요"
       align={align}
-      helper="청구서 금액이 아니라 추정치라서 실제 청구액과 다를 수 있어요."
+      helper="청구서 금액이 아니라 사용 시간으로 계산한 값이라 실제 청구액과 다를 수 있어요."
       trigger={(props) => (
         <TextButton
           {...props}

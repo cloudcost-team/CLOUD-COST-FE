@@ -48,7 +48,7 @@ export function ConnectionSuccessStep({
             AWS 계정을 연결했어요
           </p>
           <p className="text-subtext-medium text-text-tertiary">
-            이제 대시보드에서 EC2 사용 시간과 추정 비용을 볼 수 있어요.
+            이제 대시보드에서 EC2 사용 시간과 비용을 볼 수 있어요.
           </p>
         </div>
         {details}
@@ -69,7 +69,7 @@ export function ConnectionSuccessStep({
           </h1>
         </div>
         <p className="text-subtext-large text-text-tertiary">
-          이제 대시보드에서 EC2 사용 시간과 추정 비용을 볼 수 있어요.
+          이제 대시보드에서 EC2 사용 시간과 비용을 볼 수 있어요.
         </p>
       </div>
       <Card>{details}</Card>

@@ -91,7 +91,7 @@ function ConnectionListBody() {
       <EmptyState
         icon="link"
         title="아직 연결한 AWS 계정이 없어요"
-        description="새 연결을 만들면 EC2 사용 시간과 추정 비용을 볼 수 있어요."
+        description="새 연결을 만들면 EC2 사용 시간과 비용을 볼 수 있어요."
         action={{
           label: "새 연결",
           onClick: () => router.push("/settings/connections/new"),
