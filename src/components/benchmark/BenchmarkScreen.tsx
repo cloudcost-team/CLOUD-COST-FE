@@ -192,7 +192,6 @@ const positionSentence: Record<BenchmarkSpendPosition, string> = {
   ABOVE: "일반 범위 위",
 };
 
-/** 우리보다 적게 쓰는 팀 비율 → "사용량 상위 N%" (같은 사용량인 팀은 우리와 같은 순위로 본다) */
 function spendRankLabel(teamsUsingLessPercent: number) {
   return `사용량 상위 ${Math.max(100 - teamsUsingLessPercent, 5)}%`;
 }
