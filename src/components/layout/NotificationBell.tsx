@@ -16,10 +16,7 @@ import {
 } from "@/hooks/useAlerts";
 import { cn } from "@/lib/cn";
 import { formatKstRelative } from "@/lib/kstDate";
-import {
-  getNotificationHref,
-  NotificationTypeBadge,
-} from "@/components/notification/NotificationTypeBadge";
+import { NotificationTypeBadge } from "@/components/notification/NotificationTypeBadge";
 
 const PREVIEW_LIMIT = 3;
 
@@ -100,7 +97,7 @@ export function NotificationBell() {
   function selectNotification(notification: Notification) {
     if (!notification.read) readNotification.mutate(notification.id);
     setOpen(false);
-    router.push(getNotificationHref(notification.type));
+    router.push("/notifications");
   }
 
   return (
