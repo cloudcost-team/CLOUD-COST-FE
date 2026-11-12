@@ -105,12 +105,21 @@ export type BenchmarkWasteRatio = {
 
 export type BenchmarkSpendPosition = "BELOW" | "WITHIN" | "ABOVE";
 
+export type BenchmarkSpendModel = {
+  method: "QUANTILE_REGRESSION";
+  sampleSize: number;
+  minServers: number;
+  maxServers: number;
+  testSize: number;
+  improvementPercent: number;
+  middleHalfCoveragePercent: number;
+};
+
 export type BenchmarkSpendRange = {
   source: string;
   description: string;
-  sizeBand: string;
-  sizeBandLabel: string;
-  sampleSize: number;
+  servers: number;
+  label: string;
   min: number;
   max: number;
   minUsd: number;
@@ -118,6 +127,7 @@ export type BenchmarkSpendRange = {
   minVcpuHours: number;
   maxVcpuHours: number;
   medianVcpuHours: number;
+  model: BenchmarkSpendModel;
 };
 
 export type BenchmarkMonthlySpend = {
@@ -197,7 +207,7 @@ function spendUnavailableReason(
       : "기록이 14일 미만이라 아직 같은 규모 팀과 비교하지 않았어요.";
   if (monthlySpend.status === "NOT_COMPARABLE")
     return monthlySpend.servers
-      ? `서버 ${monthlySpend.servers}대에 맞는 비교 자료가 없어 비교하지 않았어요.`
+      ? `비교 모델은 서버 50대까지 학습해 서버 ${monthlySpend.servers}대는 비교하지 않았어요.`
       : "최근 14일 동안 켜진 서버가 없어 비교하지 않았어요.";
   return "이번 달 월말 예상 비용이 없어 비교하지 않았어요.";
 }
@@ -323,7 +333,7 @@ function MonthlySpendSection({
 
   const startLabel = formatMoney(range.min, currency);
   const endLabel = formatMoney(range.max, currency);
-  const sampleSize = range.sampleSize.toLocaleString("ko-KR");
+  const sampleSize = range.model.sampleSize.toLocaleString("ko-KR");
   const after = showAfter ? monthlySpend.afterSimulation : null;
   const current = formatMoney(monthlySpend.monthlyCost, currency);
 
@@ -336,8 +346,8 @@ function MonthlySpendSection({
           ? `${current} → ${formatMoney(after.monthlyCost, currency)}`
           : current
       }
-      comparison={`${range.sizeBandLabel} 팀 중 ${spendRankLabel(monthlySpend.teamsUsingLessPercent)} · ${positionSentence[after?.position ?? monthlySpend.position]}`}
-      source={`비교 기준: ${range.source} · ${range.sizeBandLabel} 구독 ${sampleSize}곳의 한 달 사용량(vCPU × 켜진 시간)을 우리 단가로 환산 (참고용)`}
+      comparison={`${range.label} 팀 중 ${spendRankLabel(monthlySpend.teamsUsingLessPercent)} · ${positionSentence[after?.position ?? monthlySpend.position]}`}
+      source={`비교 기준: ${range.source} 구독 ${sampleSize}곳으로 학습한 분위 회귀 모델 (검증 오차 ${range.model.improvementPercent}% 개선 · 참고용)`}
       chart={
         <RangeBar
           scale={{
