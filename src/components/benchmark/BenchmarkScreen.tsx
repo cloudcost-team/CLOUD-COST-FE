@@ -23,7 +23,10 @@ import { formatMoney } from "@/lib/formatMoney";
 import { useAppMode, useAppPath } from "@/hooks/useAppMode";
 import { formatKoreanMonthDay } from "@/lib/kstDate";
 import { useCurrencyStore } from "@/stores/currencyStore";
-import { useSimulationSelectionStore } from "@/stores/simulationSelectionStore";
+import {
+  useSimulationSelectionStore,
+  type BenchmarkView,
+} from "@/stores/simulationSelectionStore";
 import { BenchmarkMetricCard } from "./BenchmarkMetricCard";
 import { formatPercent } from "./benchmarkFormat";
 import { DistributionChart } from "./DistributionChart";
@@ -206,8 +209,6 @@ export type BenchmarkResponse = {
   asOf: string;
 };
 
-type BenchmarkView = "current" | "after";
-
 function percentStatus(percent: number | null) {
   if (percent === null || !Number.isFinite(percent)) return undefined;
   // 30%와 70%는 다음 구간에 포함해 경계값이 겹치지 않게 한다.
@@ -297,14 +298,15 @@ function OversizedRatioSection({
   const after = showAfter ? oversizedRatio.afterSimulation : null;
   const sampleSize = reference.sampleSize.toLocaleString("ko-KR");
   const current = formatPercent(ours?.ratio ?? null);
+  const afterRatio = after ? (after.ratio ?? 0) : null;
 
   return (
     <>
       <BenchmarkMetricCard
         title="① 컴퓨팅 리소스 활용도"
         description="CPU 사용률(P95) 10% 미만 서버의 비중"
-        value={after ? `${current} → ${formatPercent(after.ratio)}` : current}
-        status={percentStatus(after?.ratio ?? ours?.ratio ?? null)}
+        value={after ? `${current} → ${formatPercent(afterRatio)}` : current}
+        status={percentStatus(after ? afterRatio : (ours?.ratio ?? null))}
         comparison={
           moreEfficientTeamsPercent === null
             ? null
@@ -320,7 +322,14 @@ function OversizedRatioSection({
                 ),
                 oursIndex: oversizedRatio.distribution.oursBucketIndex,
                 afterIndex:
-                  oversizedRatio.distribution.afterSimulationBucketIndex,
+                  oversizedRatio.distribution.afterSimulationBucketIndex ??
+                  (afterRatio === null
+                    ? null
+                    : oversizedRatio.distribution.buckets.findIndex(
+                        (bucket) =>
+                          bucket.fromPercent <= afterRatio &&
+                          afterRatio <= bucket.toPercent,
+                      )),
               }}
               showAfter={Boolean(after)}
             />
@@ -396,6 +405,7 @@ function MonthlySpendSection({
           barPositionPercent={
             after?.barPositionPercent ?? monthlySpend.barPositionPercent
           }
+          amount={after?.monthlyCost ?? monthlySpend.monthlyCost}
           markerLabel={
             after
               ? `적용 후 ${formatMoney(after.monthlyCost, currency)}`
@@ -512,7 +522,9 @@ function WasteRatioSection({
       />
     );
 
-  const after = showAfter ? wasteRatio.afterSimulationRatioPercent : null;
+  const after = showAfter
+    ? (wasteRatio.afterSimulationRatioPercent ?? 0)
+    : null;
 
   return (
     <BenchmarkMetricCard
@@ -682,7 +694,10 @@ function BenchmarkContent({ source }: { source: DataSource }) {
     state.selection?.accountId === accountId ? state.selection : null,
   );
   const recommendationIds = selection?.recommendationIds ?? [];
-  const [view, setView] = useState<BenchmarkView>("current");
+  const view = useSimulationSelectionStore((state) => state.benchmarkView);
+  const setView = useSimulationSelectionStore(
+    (state) => state.setBenchmarkView,
+  );
   const { data, isPending, isError, error, refetch } = useQuery({
     queryKey: benchmarkKeys.detail(source, currency, recommendationIds),
     queryFn: () =>

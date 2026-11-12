@@ -8,7 +8,9 @@ const RANGE_END = 75;
 function markerPosition(
   position: BenchmarkSpendPosition,
   barPositionPercent: number,
+  amount: number,
 ) {
+  if (amount === 0) return 0;
   if (position === "BELOW") return RANGE_START - 5;
   if (position === "ABOVE") return RANGE_END + 5;
   return RANGE_START + (barPositionPercent * (RANGE_END - RANGE_START)) / 100;
@@ -17,6 +19,7 @@ function markerPosition(
 type RangeBarProps = {
   position: BenchmarkSpendPosition;
   barPositionPercent: number;
+  amount: number;
   markerLabel: string;
   startLabel: string;
   endLabel: string;
@@ -26,6 +29,7 @@ type RangeBarProps = {
 export function RangeBar({
   position,
   barPositionPercent,
+  amount,
   markerLabel,
   startLabel,
   endLabel,
@@ -43,7 +47,7 @@ export function RangeBar({
     >
       <div className="flex flex-col">
         <OursMarker
-          position={markerPosition(position, barPositionPercent)}
+          position={markerPosition(position, barPositionPercent, amount)}
           label={markerLabel}
         />
         <div

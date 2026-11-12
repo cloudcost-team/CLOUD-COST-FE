@@ -14,6 +14,7 @@ import { useCurrencyStore } from "@/stores/currencyStore";
 import { useProfilePictureStore } from "@/stores/profilePictureStore";
 import { useSelectedConnectionStore } from "@/stores/selectedConnectionStore";
 import { useSessionExpiredStore } from "@/stores/sessionExpiredStore";
+import { useSimulationSelectionStore } from "@/stores/simulationSelectionStore";
 
 const MAX_QUERY_RETRIES = 3;
 
@@ -47,6 +48,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     useCurrencyStore.persist.rehydrate();
     useSelectedConnectionStore.persist.rehydrate();
     useProfilePictureStore.persist.rehydrate();
+    useSimulationSelectionStore.persist.rehydrate();
   }, []);
 
   return (

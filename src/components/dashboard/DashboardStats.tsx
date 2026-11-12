@@ -78,7 +78,7 @@ export function DashboardStats({ dashboard }: DashboardStatsProps) {
         caption={`실행 중 ${instanceCounts.running}대 · 중지 ${instanceCounts.stopped}대`}
       />
       <StatCard
-        label="월말 예상 비용"
+        label="현재 월 비용 대비"
         value={
           forecast === null ? "—" : formatMoney(forecast.monthEndCost, currency)
         }
