@@ -3,6 +3,7 @@
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import type { DataSource } from "@/api/dataSource";
 import {
+  getResourceWaste,
   getWaste,
   wasteKeys,
   type WasteKind,
@@ -20,5 +21,14 @@ export function useWaste(
     queryKey: wasteKeys.list(source, currency, sort, type),
     queryFn: () => getWaste(source, currency, sort, type),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useResourceWaste(accountId: string, enabled: boolean) {
+  const currency = useCurrencyStore((state) => state.currency);
+  return useQuery({
+    queryKey: wasteKeys.resources(accountId, currency),
+    queryFn: () => getResourceWaste(accountId, currency),
+    enabled,
   });
 }

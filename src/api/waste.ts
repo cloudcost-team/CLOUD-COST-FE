@@ -1,3 +1,4 @@
+import { apiRequest } from "./client";
 import type { Currency } from "./costs";
 import { getSourceKey, requestFromSource, type DataSource } from "./dataSource";
 import type { ExchangeRate } from "./reports";
@@ -93,6 +94,79 @@ export type WasteSkipped = {
   reason: string;
 };
 
+export type ResourceScanStatus =
+  "NOT_SCANNED" | "OK" | "PERMISSION_UPGRADE_REQUIRED" | "FAILED";
+
+export type ResourceScan = {
+  status: ResourceScanStatus;
+  permissionVersion: number;
+  scannedAt: string | null;
+  message: string | null;
+};
+
+export type PermissionUpgrade = {
+  method: "STACK" | "MANUAL_ROLE";
+  stackName: string | null;
+  consoleUrl: string;
+  templateUrl: string | null;
+  permissionPolicy: Record<string, unknown> | null;
+  steps: string[];
+};
+
+export type ResourceWasteKind =
+  | "UNATTACHED_VOLUME"
+  | "UNUSED_EIP"
+  | "OLD_SNAPSHOT"
+  | "IDLE_LB"
+  | "FORGOTTEN_REGION";
+
+export type ResourceType =
+  "INSTANCE" | "VOLUME" | "ADDRESS" | "SNAPSHOT" | "LOAD_BALANCER";
+
+export type ResourceWasteItem = {
+  recommendationId: string;
+  kind: ResourceWasteKind;
+  kindLabel: string;
+  resourceType: ResourceType;
+  resourceTypeLabel: string;
+  resourceId: string;
+  name: string;
+  region: string;
+  otherRegion: boolean;
+  monthlyCost: number | null;
+  evidence: string;
+  action: string;
+  consoleSteps: string[];
+  cautions: string[];
+  priceNote: string | null;
+};
+
+export type RegionServerCount = {
+  region: string;
+  runningServers: number;
+};
+
+export type ResourceWaste = {
+  costBasis: string;
+  currency: Currency;
+  homeRegion: string;
+  scan: ResourceScan;
+  upgrade: PermissionUpgrade | null;
+  refreshing: boolean;
+  findingCount: number;
+  totalMonthlyCost: number | null;
+  otherRegions: RegionServerCount[];
+  items: ResourceWasteItem[];
+  notes: string[];
+};
+
+export type ResourceWasteResponse = {
+  dataSource: "aws" | "csv" | "demo";
+  exchangeRate: ExchangeRate | null;
+  accountId: string;
+  resources: ResourceWaste;
+};
+
 export type WasteResponse = {
   dataSource: "aws" | "demo";
   costBasis: "estimated_on_demand";
@@ -114,6 +188,7 @@ export type WasteResponse = {
   freshness: Freshness;
   notes: string[];
   asOf: string;
+  resources?: ResourceWaste | null;
 };
 
 export const wasteKeys = {
@@ -124,6 +199,8 @@ export const wasteKeys = {
     sort: WasteSort,
     type: WasteKind | null,
   ) => [...wasteKeys.all, getSourceKey(source), currency, sort, type] as const,
+  resources: (accountId: string, currency: Currency) =>
+    [...wasteKeys.all, "resources", accountId, currency] as const,
 };
 
 export function getWaste(
@@ -135,4 +212,10 @@ export function getWaste(
   const params = new URLSearchParams({ currency, sort });
   if (type) params.set("type", type);
   return requestFromSource<WasteResponse>(source, "/waste", params);
+}
+
+export function getResourceWaste(accountId: string, currency: Currency) {
+  return apiRequest<ResourceWasteResponse>(
+    `/aws/accounts/${accountId}/resources/waste?${new URLSearchParams({ currency })}`,
+  );
 }

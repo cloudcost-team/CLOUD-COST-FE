@@ -5,14 +5,12 @@ import type { DataSource } from "@/api/dataSource";
 import type { WasteKind, WasteResponse, WasteSort } from "@/api/waste";
 import { DataSourceGate } from "@/components/layout/DataSourceGate";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Badge } from "@/components/ui/Badge";
 import { Banner } from "@/components/ui/Banner";
 import { CostBasisPopover } from "@/components/ui/CostBasisPopover";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { Icon } from "@/components/ui/Icon";
 import { NoticeList } from "@/components/ui/NoticeList";
-import { Panel } from "@/components/ui/Panel";
 import { SegmentedControl } from "@/components/ui/SegmentedControl";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { StatCard } from "@/components/ui/StatCard";
@@ -25,6 +23,7 @@ import {
 import { useWaste } from "@/hooks/useWaste";
 import { RecommendationCard } from "./RecommendationCard";
 import { RecommendationDetailPanel } from "./RecommendationDetailPanel";
+import { ResourceWasteSection } from "./ResourceWasteSection";
 import { SkippedServersPopover } from "./SkippedServersPopover";
 
 type WasteFilter = "ALL" | WasteKind;
@@ -176,20 +175,9 @@ function WasteBody({ source }: { source: DataSource }) {
               />
             ))}
           </div>
-          <Panel as="section">
-            <div className="flex items-center gap-gap-small">
-              <Badge>준비 중</Badge>
-              <h2 className="text-label-small text-text-strong">
-                미연결 볼륨 · 미사용 고정 IP · 스냅샷 · 로드밸런서
-              </h2>
-            </div>
-            <p className="mt-gap-xsmall text-subtext-medium text-text-tertiary">
-              지금 연결 권한(EC2·CloudWatch 읽기)으로는 찾을 수 없어요. 권한을
-              추가하려면 ADR과 팀 승인이 먼저 필요해요.
-            </p>
-          </Panel>
         </>
       )}
+      {data.resources && <ResourceWasteSection resources={data.resources} />}
       <NoticeList variant="plain" lines={data.notes} />
       <RecommendationDetailPanel
         item={selected}
@@ -206,7 +194,7 @@ export function WasteScreen() {
     <div className="flex flex-col gap-spacing-medium">
       <PageHeader
         title="낭비 리소스"
-        description="EC2 사용률을 보고 줄일 수 있는 비용을 찾아요. 실제 변경은 AWS 콘솔에서 직접 해 주세요."
+        description="서버 사용률과 방치된 리소스를 보고 줄일 수 있는 비용을 찾아요. 실제 변경은 AWS 콘솔에서 직접 해 주세요."
       />
       <DataSourceGate loading={<WasteLoading />}>
         {(source) => <WasteBody source={source} />}
