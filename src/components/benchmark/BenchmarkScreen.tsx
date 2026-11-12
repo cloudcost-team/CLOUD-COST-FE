@@ -392,18 +392,18 @@ function MonthlySpendSection({
       source={`비교 기준: ${range.source} 구독 ${sampleSize}곳으로 학습한 분위 회귀 모델 (검증 오차 ${range.model.improvementPercent}% 개선 · 참고용)`}
       chart={
         <RangeBar
-          scale={{
-            rangeStart: 0,
-            rangeEnd: 100,
-            marker: monthlySpend.barPositionPercent,
-            afterMarker: after?.barPositionPercent ?? null,
-            startLabel,
-            endLabel,
-            oursLabel: current,
-            afterLabel: after ? formatMoney(after.monthlyCost, currency) : null,
-          }}
-          rangeLabel={`일반 범위 ${startLabel}~${endLabel}`}
-          showAfter={Boolean(after)}
+          position={after?.position ?? monthlySpend.position}
+          barPositionPercent={
+            after?.barPositionPercent ?? monthlySpend.barPositionPercent
+          }
+          markerLabel={
+            after
+              ? `적용 후 ${formatMoney(after.monthlyCost, currency)}`
+              : `우리 팀 ${current}`
+          }
+          startLabel={startLabel}
+          endLabel={endLabel}
+          caption={`같은 규모 팀만큼 쓰면 월 ${startLabel}~${endLabel}`}
         />
       }
     />

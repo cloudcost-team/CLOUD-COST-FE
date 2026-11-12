@@ -1,80 +1,73 @@
-"use client";
-
 import type { CSSProperties } from "react";
-import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
-import { useProfilePicture } from "@/hooks/useProfilePicture";
-import { cn } from "@/lib/cn";
+import type { BenchmarkSpendPosition } from "./BenchmarkScreen";
+import { OursMarker } from "./OursMarker";
 
-export type SpendScale = {
-  rangeStart: number;
-  rangeEnd: number;
-  marker: number;
-  afterMarker: number | null;
-  startLabel: string;
-  endLabel: string;
-  oursLabel: string;
-  afterLabel: string | null;
-};
+const RANGE_START = 25;
+const RANGE_END = 75;
+
+function markerPosition(
+  position: BenchmarkSpendPosition,
+  barPositionPercent: number,
+) {
+  if (position === "BELOW") return RANGE_START - 5;
+  if (position === "ABOVE") return RANGE_END + 5;
+  return RANGE_START + (barPositionPercent * (RANGE_END - RANGE_START)) / 100;
+}
 
 type RangeBarProps = {
-  scale: SpendScale;
-  rangeLabel: string;
-  showAfter: boolean;
-  className?: string;
+  position: BenchmarkSpendPosition;
+  barPositionPercent: number;
+  markerLabel: string;
+  startLabel: string;
+  endLabel: string;
+  caption: string;
 };
 
 export function RangeBar({
-  scale,
-  rangeLabel,
-  showAfter,
-  className,
+  position,
+  barPositionPercent,
+  markerLabel,
+  startLabel,
+  endLabel,
+  caption,
 }: RangeBarProps) {
-  const pictureUrl = useProfilePicture();
-  const afterVisible = showAfter && scale.afterMarker !== null;
-  const positions = {
-    "--range-start": `${scale.rangeStart}%`,
-    "--range-end": `${100 - scale.rangeEnd}%`,
-    "--marker": `${scale.marker}%`,
-    "--after-marker": `${scale.afterMarker ?? 0}%`,
-  } as CSSProperties;
-
   return (
     <div
-      className={cn("flex min-w-0 flex-col gap-gap-small", className)}
-      style={positions}
+      className="flex min-w-0 flex-col gap-gap-small"
+      style={
+        {
+          "--range-start": `${RANGE_START}%`,
+          "--range-end": `${100 - RANGE_END}%`,
+        } as CSSProperties
+      }
     >
-      <div className="flex items-start justify-between">
-        <span className="text-subtext-small text-text-quaternary">
-          {scale.startLabel}
-        </span>
-        <span className="text-subtext-small text-text-quaternary">
-          {scale.endLabel}
-        </span>
-      </div>
-      <div
-        role="img"
-        aria-label={`${rangeLabel} 안에서 우리 팀 ${scale.oursLabel}`}
-        className="relative h-14 w-full rounded-large bg-fill-neutral-weak/70"
-      >
-        <div className="absolute inset-y-0 right-(--range-end) left-(--range-start) flex items-center justify-center overflow-hidden rounded-large bg-fill-brand-weak">
-          <span className="text-label-xsmall text-text-brand">
-            {rangeLabel}
-          </span>
-        </div>
-        {afterVisible && (
-          <span className="absolute inset-y-0 left-(--after-marker) w-0 -translate-x-1/2 border-l-2 border-dashed border-border-brand" />
-        )}
-      </div>
-      <div className="relative h-9">
-        <div className="absolute top-0 left-(--marker) flex -translate-x-1/2 flex-col items-center gap-gap-xxsmall">
-          <span className="size-0 border-x-5 border-b-6 border-x-transparent border-b-fill-brand-strong" />
-          <ProfileAvatar
-            pictureUrl={pictureUrl}
-            size={28}
-            className="size-7 border-2 border-fill-default shadow-default"
-          />
+      <div className="flex flex-col">
+        <OursMarker
+          position={markerPosition(position, barPositionPercent)}
+          label={markerLabel}
+        />
+        <div
+          role="img"
+          aria-label={`일반 범위 ${startLabel}~${endLabel} 기준 ${markerLabel}`}
+          className="relative h-4 overflow-hidden rounded-full bg-fill-neutral-weak"
+        >
+          <div className="absolute inset-y-0 right-(--range-end) left-(--range-start) bg-fill-brand" />
         </div>
       </div>
+      <div className="relative h-5 text-subtext-small text-text-tertiary">
+        <span className="absolute left-0">낮음</span>
+        <span className="absolute left-(--range-start) -translate-x-1/2">
+          {startLabel}
+        </span>
+        <span className="absolute left-1/2 -translate-x-1/2 text-text-brand">
+          일반
+        </span>
+        <span className="absolute right-(--range-end) translate-x-1/2">
+          {endLabel}
+        </span>
+        <span className="absolute right-0">높음</span>
+      </div>
+      <p className="text-subtext-medium text-text-tertiary">{caption}</p>
     </div>
   );
 }
