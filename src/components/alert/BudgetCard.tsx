@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type { AlertSettings } from "@/api/alerts";
-import type { BudgetResponse } from "@/api/budget";
+import type { BudgetResponse, BudgetTarget } from "@/api/budget";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import {
@@ -25,12 +25,19 @@ import { BudgetUsage } from "./BudgetUsage";
 
 type Connection = AlertSettings["budgets"][number];
 
+type DemoBudgetTarget = Extract<BudgetTarget, { kind: "demo" }>;
+
+type BudgetCardProps =
+  { connections: Connection[] } | { demoTarget: DemoBudgetTarget };
+
 function BudgetEditor({
-  connection,
+  target,
+  name,
   data,
   onDone,
 }: {
-  connection: Connection;
+  target: BudgetTarget;
+  name: string;
   data: BudgetResponse;
   onDone: () => void;
 }) {
@@ -38,13 +45,10 @@ function BudgetEditor({
   const { budget, slider, recentAverage, forecastMonthEndCost } = data;
   const [draft, setDraft] = useState(budget?.amount ?? slider.suggested);
   const [inputOpen, setInputOpen] = useState(false);
-  const save = useSaveBudget();
+  const save = useSaveBudget(target);
 
   function saveAmount(amount: number) {
-    save.mutate(
-      { accountId: connection.accountId, amount, currency },
-      { onSuccess: onDone },
-    );
+    save.mutate({ amount, currency }, { onSuccess: onDone });
   }
 
   return (
@@ -105,7 +109,7 @@ function BudgetEditor({
         <BudgetInputModal
           open
           onClose={() => setInputOpen(false)}
-          connectionName={connection.name}
+          connectionName={name}
           currency={currency}
           initialAmount={draft}
           forecastMonthEndCost={forecastMonthEndCost}
@@ -144,19 +148,18 @@ function BudgetView({ data }: { data: BudgetResponse }) {
 }
 
 function BudgetBody({
-  connection,
+  target,
+  name,
   editing,
   onDone,
 }: {
-  connection: Connection;
+  target: BudgetTarget;
+  name: string;
   editing: boolean;
   onDone: () => void;
 }) {
   const currency = useCurrencyStore((state) => state.currency);
-  const { data, isPending, isError, error } = useBudget(
-    connection.accountId,
-    currency,
-  );
+  const { data, isPending, isError, error } = useBudget(target, currency);
   if (isPending) return <Skeleton shape="block" className="h-30 w-full" />;
   if (isError)
     return (
@@ -170,8 +173,9 @@ function BudgetBody({
     );
   return editing ? (
     <BudgetEditor
-      key={`${connection.accountId}-${currency}`}
-      connection={connection}
+      key={`${target.kind === "aws" ? target.accountId : "demo"}-${currency}`}
+      target={target}
+      name={name}
       data={data}
       onDone={onDone}
     />
@@ -180,16 +184,64 @@ function BudgetBody({
   );
 }
 
-export function BudgetCard({ connections }: { connections: Connection[] }) {
+function BudgetCardFrame({
+  editing,
+  action,
+  children,
+}: {
+  editing: boolean;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card
+      title="월 예산"
+      className={cn(editing && "border-2 border-border-brand")}
+      action={action}
+    >
+      {children}
+    </Card>
+  );
+}
+
+function EditButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button variant="secondary" size="small" className="h-9" onClick={onClick}>
+      수정
+    </Button>
+  );
+}
+
+function DemoBudgetCard({ target }: { target: DemoBudgetTarget }) {
+  const [editing, setEditing] = useState(false);
+  return (
+    <BudgetCardFrame
+      editing={editing}
+      action={!editing && <EditButton onClick={() => setEditing(true)} />}
+    >
+      <p className="text-subtext-medium text-text-tertiary">
+        대시보드의 예산 대비 비율과 시뮬레이터에도 쓰여요. 체험 구성을 다시 하면
+        예산도 처음부터 정해요.
+      </p>
+      <BudgetBody
+        target={target}
+        name="체험 데이터"
+        editing={editing}
+        onDone={() => setEditing(false)}
+      />
+    </BudgetCardFrame>
+  );
+}
+
+function ConnectionBudgetCard({ connections }: { connections: Connection[] }) {
   const [selectedId, setSelectedId] = useState(connections[0]?.accountId);
   const [editing, setEditing] = useState(false);
   const connection =
     connections.find((item) => item.accountId === selectedId) ?? connections[0];
 
   return (
-    <Card
-      title="월 예산"
-      className={cn(editing && "border-2 border-border-brand")}
+    <BudgetCardFrame
+      editing={editing}
       action={
         connection && (
           <>
@@ -214,16 +266,7 @@ export function BudgetCard({ connections }: { connections: Connection[] }) {
                 ))}
               </SelectContent>
             </Select>
-            {!editing && (
-              <Button
-                variant="secondary"
-                size="small"
-                className="h-9"
-                onClick={() => setEditing(true)}
-              >
-                수정
-              </Button>
-            )}
+            {!editing && <EditButton onClick={() => setEditing(true)} />}
           </>
         )
       }
@@ -235,7 +278,8 @@ export function BudgetCard({ connections }: { connections: Connection[] }) {
             쓰여요.
           </p>
           <BudgetBody
-            connection={connection}
+            target={{ kind: "aws", accountId: connection.accountId }}
+            name={connection.name}
             editing={editing}
             onDone={() => setEditing(false)}
           />
@@ -245,6 +289,12 @@ export function BudgetCard({ connections }: { connections: Connection[] }) {
           AWS 계정을 연결하면 예산을 정할 수 있어요.
         </p>
       )}
-    </Card>
+    </BudgetCardFrame>
   );
+}
+
+export function BudgetCard(props: BudgetCardProps) {
+  if ("demoTarget" in props)
+    return <DemoBudgetCard target={props.demoTarget} />;
+  return <ConnectionBudgetCard connections={props.connections} />;
 }

@@ -4,11 +4,10 @@ import type { DataSource } from "@/api/dataSource";
 import { PermissionUpgradeNotice } from "@/components/connection/PermissionUpgradeNotice";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Icon } from "@/components/ui/Icon";
-import { useAppMode, useAppPath } from "@/hooks/useAppMode";
+import { useAppPath } from "@/hooks/useAppMode";
 import { useWaste } from "@/hooks/useWaste";
 
 export function ForgottenRegionCard({ source }: { source: DataSource }) {
-  const { demo } = useAppMode();
   const appPath = useAppPath();
   const resources = useWaste(source).data?.resources;
 
@@ -42,16 +41,14 @@ export function ForgottenRegionCard({ source }: { source: DataSource }) {
           {`연결한 기본 리전(${resources.homeRegion}) 밖이라 잊고 켜 둔 서버일 수 있어요.`}
         </p>
       </div>
-      {!demo && (
-        <ButtonLink
-          variant="secondary"
-          size="medium"
-          icon="arrow-right"
-          href={appPath("/savings/waste")}
-        >
-          방치 리소스 보기
-        </ButtonLink>
-      )}
+      <ButtonLink
+        variant="secondary"
+        size="medium"
+        icon="arrow-right"
+        href={appPath("/savings/waste")}
+      >
+        방치 리소스 보기
+      </ButtonLink>
     </section>
   );
 }

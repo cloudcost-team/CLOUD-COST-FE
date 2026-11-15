@@ -29,7 +29,9 @@ import {
   getBudget,
   saveBudget,
   type BudgetCurrency,
+  type BudgetTarget,
 } from "@/api/budget";
+import { useSaveDemoSetup } from "./useDemoSetup";
 
 const UNREAD_POLL_MS = 5 * 60_000;
 const PAGE_SIZE = 20;
@@ -107,27 +109,30 @@ export function useTestAlertChannel() {
   return useMutation({ mutationFn: testAlertChannel });
 }
 
-export function useBudget(accountId: string | null, currency: BudgetCurrency) {
+export function useBudget(target: BudgetTarget, currency: BudgetCurrency) {
   return useQuery({
-    queryKey: budgetKeys.detail(accountId ?? "", currency),
-    queryFn: () => getBudget(accountId ?? "", currency),
-    enabled: accountId !== null,
+    queryKey: budgetKeys.detail(target, currency),
+    queryFn: () => getBudget(target, currency),
     retry: false,
   });
 }
 
-export function useSaveBudget() {
+export function useSaveBudget(target: BudgetTarget) {
   const queryClient = useQueryClient();
+  const saveDemoSetup = useSaveDemoSetup();
   return useMutation({
-    mutationFn: ({
-      accountId,
-      amount,
-      currency,
-    }: {
-      accountId: string;
+    mutationFn: async (budget: {
       amount: number;
       currency: BudgetCurrency;
-    }) => saveBudget(accountId, { amount, currency }),
+    }) => {
+      if (target.kind === "aws") {
+        await saveBudget(target.accountId, budget);
+        return;
+      }
+      const setup = { ...target.setup, budget };
+      await getBudget({ kind: "demo", setup }, budget.currency);
+      saveDemoSetup(setup);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: budgetKeys.all });
       queryClient.invalidateQueries({ queryKey: alertKeys.settings });

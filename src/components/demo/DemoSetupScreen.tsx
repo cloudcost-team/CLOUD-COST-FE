@@ -49,6 +49,12 @@ const defaultSchedules: Array<{ code: DemoSchedule; label: string }> = [
   { code: "DAILY_HOURS", label: "매일 8시간" },
 ];
 
+const defaultUsagePatterns = [
+  { code: "NORMAL", label: "정상" },
+  { code: "OVERSIZED", label: "과다 사양" },
+  { code: "IDLE", label: "유휴" },
+];
+
 const initialServers: ServerRow[] = [
   {
     id: "web",
@@ -57,6 +63,7 @@ const initialServers: ServerRow[] = [
     os: "LINUX",
     count: 2,
     schedule: "ALWAYS",
+    usagePattern: "OVERSIZED",
   },
   {
     id: "batch",
@@ -65,6 +72,7 @@ const initialServers: ServerRow[] = [
     os: "LINUX",
     count: 1,
     schedule: "WEEKDAY_OFFICE",
+    usagePattern: "IDLE",
   },
   {
     id: "win",
@@ -74,6 +82,7 @@ const initialServers: ServerRow[] = [
     count: 1,
     schedule: "DAILY_HOURS",
     hoursPerDay: 8,
+    usagePattern: "NORMAL",
   },
 ];
 
@@ -130,6 +139,7 @@ export function DemoSetupScreen() {
     catalog.data?.instanceTypes.map((type) => type.instanceType) ??
     defaultInstanceTypes;
   const schedules = catalog.data?.schedules ?? defaultSchedules;
+  const usagePatterns = catalog.data?.usagePatterns ?? defaultUsagePatterns;
 
   return (
     <div className="flex flex-col gap-spacing-medium">
@@ -143,19 +153,25 @@ export function DemoSetupScreen() {
           meta={`${servers.length} / ${catalog.data?.maxServers ?? 20}`}
         >
           <div className="overflow-x-auto rounded-large border border-border-default">
-            <table className="w-full min-w-225 table-fixed text-left">
+            <table className="w-full min-w-260 table-fixed text-left">
               <thead className="bg-fill-neutral-weak text-subtext-small text-text-tertiary">
                 <tr>
-                  {["이름", "인스턴스 타입", "OS", "실행 일정", "대수", ""].map(
-                    (label) => (
-                      <th
-                        key={label}
-                        className="px-padding-medium py-padding-small font-normal"
-                      >
-                        {label}
-                      </th>
-                    ),
-                  )}
+                  {[
+                    "이름",
+                    "인스턴스 타입",
+                    "OS",
+                    "실행 일정",
+                    "사용 패턴",
+                    "대수",
+                    "",
+                  ].map((label) => (
+                    <th
+                      key={label}
+                      className="px-padding-medium py-padding-small font-normal"
+                    >
+                      {label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -243,6 +259,25 @@ export function DemoSetupScreen() {
                       </Select>
                     </td>
                     <td className="p-padding-small">
+                      <Select
+                        value={server.usagePattern ?? "NORMAL"}
+                        onValueChange={(usagePattern) =>
+                          updateServer(server.id, { usagePattern })
+                        }
+                      >
+                        <SelectTrigger aria-label="사용 패턴">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {usagePatterns.map((pattern) => (
+                            <SelectItem key={pattern.code} value={pattern.code}>
+                              {pattern.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="p-padding-small">
                       <NumberInput
                         aria-label={`${server.name} 서버 대수`}
                         min={1}
@@ -287,6 +322,7 @@ export function DemoSetupScreen() {
                   os: "LINUX",
                   count: 1,
                   schedule: "ALWAYS",
+                  usagePattern: "NORMAL",
                 },
               ])
             }

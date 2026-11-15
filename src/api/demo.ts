@@ -1,4 +1,5 @@
 import { apiRequest } from "./client";
+import type { Currency } from "./costs";
 
 type DemoLoginRequest = {
   username: string;
@@ -31,6 +32,7 @@ export type DemoSetupRequest = {
   }>;
   recommendationIds?: string[];
   trafficGrowthPercent?: number;
+  budget?: { amount: number; currency: Currency };
 };
 
 export type DemoCatalog = {

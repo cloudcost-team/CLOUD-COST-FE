@@ -4,7 +4,7 @@ import type { DataSource } from "@/api/dataSource";
 import { useWaste } from "@/hooks/useWaste";
 import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Icon } from "@/components/ui/Icon";
-import { useAppMode, useAppPath } from "@/hooks/useAppMode";
+import { useAppPath } from "@/hooks/useAppMode";
 import { formatMoney } from "@/lib/formatMoney";
 
 type SavingsOpportunityCardProps = {
@@ -14,7 +14,6 @@ type SavingsOpportunityCardProps = {
 export function SavingsOpportunityCard({
   source,
 }: SavingsOpportunityCardProps) {
-  const { demo } = useAppMode();
   const appPath = useAppPath();
   const { data } = useWaste(source);
 
@@ -44,15 +43,13 @@ export function SavingsOpportunityCard({
         </p>
         <p className="text-subtext-medium text-text-secondary">{caption}</p>
       </div>
-      {!demo && (
-        <ButtonLink
-          size="medium"
-          icon="arrow-right"
-          href={appPath("/savings/waste")}
-        >
-          줄일 서버 {data.findingCount}건 보기
-        </ButtonLink>
-      )}
+      <ButtonLink
+        size="medium"
+        icon="arrow-right"
+        href={appPath("/savings/waste")}
+      >
+        줄일 서버 {data.findingCount}건 보기
+      </ButtonLink>
     </section>
   );
 }

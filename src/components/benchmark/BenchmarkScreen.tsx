@@ -20,7 +20,7 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { TextButton } from "@/components/ui/TextButton";
 import { cn } from "@/lib/cn";
 import { formatMoney } from "@/lib/formatMoney";
-import { useAppMode, useAppPath } from "@/hooks/useAppMode";
+import { useAppPath } from "@/hooks/useAppMode";
 import { formatKoreanMonthDay } from "@/lib/kstDate";
 import { useCurrencyStore } from "@/stores/currencyStore";
 import {
@@ -687,7 +687,6 @@ function BenchmarkBody({
 }
 
 function BenchmarkContent({ source }: { source: DataSource }) {
-  const { demo } = useAppMode();
   const accountId = getSourceId(source);
   const currency = useCurrencyStore((state) => state.currency);
   const selection = useSimulationSelectionStore((state) =>
@@ -718,15 +717,13 @@ function BenchmarkContent({ source }: { source: DataSource }) {
   return (
     <>
       <div className="flex flex-wrap items-center gap-gap-medium">
-        {!demo && (
-          <BenchmarkToolbar
-            view={view}
-            onViewChange={setView}
-            appliedCount={data.appliedRecommendationIds.length}
-            selectedMonthlySavings={data.selectedMonthlySavings}
-            currency={data.currency}
-          />
-        )}
+        <BenchmarkToolbar
+          view={view}
+          onViewChange={setView}
+          appliedCount={data.appliedRecommendationIds.length}
+          selectedMonthlySavings={data.selectedMonthlySavings}
+          currency={data.currency}
+        />
         <BenchmarkNotes notes={data.notes} />
       </div>
       <BenchmarkBody data={data} view={view} />

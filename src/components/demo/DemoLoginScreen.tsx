@@ -32,6 +32,7 @@ function createDefaultDemoSetup(): DemoSetupRequest {
         os: "LINUX",
         count: 2,
         schedule: "ALWAYS",
+        usagePattern: "OVERSIZED",
       },
       {
         name: "batch-worker",
@@ -39,6 +40,7 @@ function createDefaultDemoSetup(): DemoSetupRequest {
         os: "LINUX",
         count: 1,
         schedule: "WEEKDAY_OFFICE",
+        usagePattern: "IDLE",
       },
       {
         name: "win-dev",
@@ -47,6 +49,7 @@ function createDefaultDemoSetup(): DemoSetupRequest {
         count: 1,
         schedule: "DAILY_HOURS",
         hoursPerDay: 8,
+        usagePattern: "NORMAL",
       },
     ],
   };

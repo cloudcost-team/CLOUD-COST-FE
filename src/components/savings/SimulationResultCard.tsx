@@ -2,6 +2,7 @@ import { ButtonLink } from "@/components/ui/ButtonLink";
 import { Card } from "@/components/ui/Card";
 import { Panel } from "@/components/ui/Panel";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { useAppPath } from "@/hooks/useAppMode";
 import { formatMoney } from "@/lib/formatMoney";
 import type { SimulationResponse } from "./SimulatorScreen";
 
@@ -51,6 +52,7 @@ function CostRow({
 }
 
 export function SimulationResultCard({ data }: SimulationResultCardProps) {
+  const appPath = useAppPath();
   const before = data.before?.monthlyCost ?? null;
   const after = data.after?.monthlyCost ?? null;
   return (
@@ -121,16 +123,14 @@ export function SimulationResultCard({ data }: SimulationResultCardProps) {
           <p className="text-subtext-medium text-text-tertiary">
             월 예산을 정하면 예산 안에 드는지도 보여 드려요
           </p>
-          {data.dataSource === "aws" && (
-            <ButtonLink
-              variant="assistive"
-              size="small"
-              href="/settings/alerts"
-              className="mt-gap-small"
-            >
-              예산 설정하기
-            </ButtonLink>
-          )}
+          <ButtonLink
+            variant="assistive"
+            size="small"
+            href={appPath("/settings/alerts")}
+            className="mt-gap-small"
+          >
+            예산 설정하기
+          </ButtonLink>
         </Panel>
       )}
     </Card>

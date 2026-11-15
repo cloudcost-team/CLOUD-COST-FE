@@ -14,68 +14,77 @@ type SidebarItem = {
   href: string;
   icon: IconName;
   ready: boolean;
+  demo: boolean;
 };
 
-type SidebarGroup = { title?: string; demo: boolean; items: SidebarItem[] };
+type SidebarGroup = { title?: string; items: SidebarItem[] };
 
 const SIDEBAR_GROUPS: SidebarGroup[] = [
   {
-    demo: true,
     items: [
-      { label: "대시보드", href: "/dashboard", icon: "grid", ready: true },
+      {
+        label: "대시보드",
+        href: "/dashboard",
+        icon: "grid",
+        ready: true,
+        demo: true,
+      },
     ],
   },
   {
     title: "절감",
-    demo: false,
     items: [
       {
         label: "낭비 리소스",
         href: "/savings/waste",
         icon: "trending-down",
         ready: true,
+        demo: true,
       },
       {
         label: "비용 시뮬레이터",
         href: "/savings/simulator",
         icon: "sliders",
         ready: true,
+        demo: true,
       },
     ],
   },
   {
     title: "비교",
-    demo: true,
     items: [
       {
         label: "팀 벤치마킹",
         href: "/benchmark",
         icon: "bar-chart",
         ready: true,
+        demo: true,
       },
       {
         label: "월간 리포트",
         href: "/reports",
         icon: "file-text",
         ready: true,
+        demo: true,
       },
     ],
   },
   {
     title: "설정",
-    demo: false,
     items: [
       {
         label: "데이터 연결",
         href: "/settings/connections",
         icon: "link",
         ready: true,
+        demo: false,
       },
       {
         label: "알림 설정",
         href: "/settings/alerts",
         icon: "bell",
         ready: true,
+        demo: true,
       },
     ],
   },
@@ -121,15 +130,12 @@ function SidebarLink({ item, active }: { item: SidebarItem; active: boolean }) {
 
 function SidebarNav({ pathname }: { pathname: string | null }) {
   const { demo, basePath } = useAppMode();
-  const groups = SIDEBAR_GROUPS.filter((group) => !demo || group.demo).map(
-    (group) => ({
-      ...group,
-      items: group.items.map((item) => ({
-        ...item,
-        href: `${basePath}${item.href}`,
-      })),
-    }),
-  );
+  const groups = SIDEBAR_GROUPS.map((group) => ({
+    ...group,
+    items: group.items
+      .filter((item) => !demo || item.demo)
+      .map((item) => ({ ...item, href: `${basePath}${item.href}` })),
+  }));
   return (
     <nav
       aria-label="주 메뉴"
