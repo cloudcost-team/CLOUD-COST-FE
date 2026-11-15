@@ -501,7 +501,7 @@ function DashboardView({
               : undefined
           }
           action={{
-            label: "그날 보기",
+            label: "자세히 보기",
             onClick: () =>
               setSelectedDay(
                 days.find((day) => day.date === latestSpike.date) ?? null,
