@@ -7,10 +7,15 @@ type BrandIcon = "default" | "face";
 
 type LogoProps = {
   brandIcon?: BrandIcon;
+  compact?: boolean;
   className?: string;
 };
 
-export function Logo({ brandIcon = "default", className }: LogoProps) {
+export function Logo({
+  brandIcon = "default",
+  compact = false,
+  className,
+}: LogoProps) {
   return (
     <div className={cn("inline-flex items-center gap-gap-small", className)}>
       <Image
@@ -19,7 +24,12 @@ export function Logo({ brandIcon = "default", className }: LogoProps) {
         width={32}
         height={32}
       />
-      <span className="text-title-small font-extrabold text-text-strong">
+      <span
+        className={cn(
+          "text-title-small font-extrabold text-text-strong",
+          compact && "max-sm:hidden",
+        )}
+      >
         CloudCost
       </span>
     </div>

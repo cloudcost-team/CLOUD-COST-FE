@@ -57,7 +57,7 @@ export function SidePanel({
           {children}
         </div>
         {footer && (
-          <div className="flex shrink-0 gap-gap-small border-t border-border-weak px-padding-xlarge py-padding-large">
+          <div className="flex shrink-0 flex-wrap gap-gap-small border-t border-border-weak px-padding-xlarge py-padding-large">
             {footer}
           </div>
         )}

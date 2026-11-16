@@ -65,15 +65,15 @@ export function LoginScreen() {
   }
 
   return (
-    <main className="auth-page-background flex min-h-screen items-center justify-center p-margin-screen md:p-spacing-xxxlarge">
-      <section className="grid min-h-[680px] w-full max-w-[1240px] grid-cols-1 grid-rows-[auto_1fr] gap-y-spacing-large overflow-hidden rounded-[22px] border border-border-default bg-background-default/95 p-spacing-large shadow-strong md:p-9 lg:grid-cols-[minmax(0,1fr)_minmax(400px,540px)] lg:gap-x-[55px]">
+    <main className="auth-page-background flex min-h-dvh items-center justify-center p-margin-screen-compact sm:p-margin-screen md:p-spacing-xxxlarge">
+      <section className="grid w-full max-w-[1240px] grid-cols-1 grid-rows-[auto_1fr] gap-y-spacing-medium overflow-hidden rounded-[18px] border border-border-default bg-background-default/95 p-padding-xlarge shadow-strong break-keep sm:gap-y-spacing-large sm:rounded-[22px] sm:p-spacing-large md:p-9 lg:min-h-[680px] lg:grid-cols-[minmax(0,1fr)_minmax(400px,540px)] lg:gap-x-[55px]">
         <Logo className="lg:col-span-2" />
 
         <div className="flex min-w-0 flex-col justify-center lg:justify-start lg:pt-26 lg:pl-12">
           <p className="text-title-xsmall-xweak text-text-brand">
             AWS COST INTELLIGENCE
           </p>
-          <h1 className="mt-gap-xsmall text-display-large text-text-strong">
+          <h1 className="mt-gap-xsmall text-display-small text-text-strong sm:text-display-medium md:text-display-large">
             AWS 비용,
             <br />
             바꾸면 얼마나 줄어드는지 확인하세요
@@ -83,28 +83,28 @@ export function LoginScreen() {
             <br className="hidden xl:block" /> 바꿨을 때 매달 아끼는 금액을
             근거와 함께 보여 드려요.
           </p>
-          <ul className="mt-spacing-small flex flex-col gap-gap-small">
+          <ul className="mt-spacing-small hidden flex-col gap-gap-small sm:flex">
             {sellingPoints.map((point) => (
               <li
                 key={point}
-                className="flex items-center gap-gap-small text-label-small text-text-primary"
+                className="flex items-start gap-gap-small text-label-small text-text-primary"
               >
                 <Icon name="check-circle" className="text-icon-brand" />
                 {point}
               </li>
             ))}
           </ul>
-          <div className="mt-spacing-small flex max-w-[500px] flex-col gap-gap-medium sm:flex-row">
+          <div className="mt-spacing-medium flex max-w-[500px] flex-col gap-gap-small sm:mt-spacing-small sm:flex-row sm:gap-gap-medium">
             {googleClientId && !isLoggingIn ? (
               <GoogleLoginButton
-                className="flex-1"
+                className="sm:flex-1"
                 clientId={googleClientId}
                 onCode={handleGoogleLogin}
                 onError={setLoginError}
               />
             ) : (
               <Button
-                className="flex-1"
+                className="sm:flex-1"
                 loading={isLoggingIn || authConfig.isPending}
                 disabled
               >
@@ -113,7 +113,7 @@ export function LoginScreen() {
             )}
             <Button
               variant="secondary"
-              className="flex-1"
+              className="sm:flex-1"
               onClick={() => router.push("/demo/login")}
             >
               무료로 둘러보기

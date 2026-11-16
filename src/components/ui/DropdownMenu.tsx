@@ -107,7 +107,7 @@ export function DropdownMenu({
   }
 
   return (
-    <div ref={rootRef} className="relative inline-block">
+    <div ref={rootRef} className="relative inline-block min-w-0">
       {trigger({
         ref: triggerRef,
         onClick: () => onOpenChange(!open),

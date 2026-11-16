@@ -43,7 +43,7 @@ export function ConnectionSelector() {
         <button
           type="button"
           {...triggerProps}
-          className="group relative flex h-9 max-w-60 cursor-pointer items-center gap-gap-xsmall rounded-medium border border-border-default px-padding-small focus-visible:outline-2 focus-visible:outline-border-brand"
+          className="group relative flex h-9 max-w-60 min-w-0 cursor-pointer items-center gap-gap-xsmall rounded-medium border border-border-default px-padding-small focus-visible:outline-2 focus-visible:outline-border-brand"
         >
           <InteractionOverlay tone="neutral" />
           <span className="relative truncate text-label-xsmall text-text-strong">

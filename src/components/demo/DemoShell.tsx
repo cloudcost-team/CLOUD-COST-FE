@@ -34,11 +34,26 @@ export function DemoShell({ variant, children }: DemoShellProps) {
             체험 종료
           </Button>
         }
-        mainClassName="mx-auto max-w-[1440px] px-6 py-10 md:px-20 xl:px-30"
+        mainClassName="mx-auto max-w-[1440px] px-margin-screen py-spacing-medium sm:px-6 sm:py-10 md:px-20 xl:px-30"
       >
         {children}
       </AppShell>
     );
+
+  const demoActions = (
+    <>
+      <Button
+        variant="secondary"
+        size="small"
+        onClick={() => router.push("/demo/setup")}
+      >
+        구성 다시 하기
+      </Button>
+      <Button size="small" onClick={() => router.push("/login")}>
+        내 AWS 연결하기
+      </Button>
+    </>
+  );
 
   return (
     <AppModeContext value={DEMO_APP_MODE}>
@@ -48,20 +63,14 @@ export function DemoShell({ variant, children }: DemoShellProps) {
         headerEnd={
           <>
             <CurrencyToggle />
-            <Button
-              variant="secondary"
-              size="small"
-              onClick={() => router.push("/demo/setup")}
-            >
-              구성 다시 하기
-            </Button>
-            <Button size="small" onClick={() => router.push("/login")}>
-              내 AWS 연결하기
-            </Button>
+            <div className="flex items-center gap-gap-medium max-md:hidden">
+              {demoActions}
+            </div>
           </>
         }
         sidebar={<Sidebar />}
-        mainClassName="px-spacing-xlarge pt-spacing-large pb-spacing-xxxlarge"
+        menuFooter={demoActions}
+        mainClassName="px-margin-screen pt-spacing-medium pb-spacing-xxlarge md:px-spacing-xlarge md:pt-spacing-large md:pb-spacing-xxxlarge"
       >
         {children}
       </AppShell>
