@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Suspense,
   useEffect,
   useEffectEvent,
   useState,
@@ -30,6 +31,18 @@ type MobileMenuProps = {
   children: ReactNode;
 };
 
+function CloseOnRouteChange({ onRouteChange }: { onRouteChange: () => void }) {
+  const pathname = usePathname();
+  const [openedAt] = useState(pathname);
+  const handleRouteChange = useEffectEvent(onRouteChange);
+
+  useEffect(() => {
+    if (pathname !== openedAt) handleRouteChange();
+  }, [pathname, openedAt]);
+
+  return null;
+}
+
 function MobileMenu({ open, onClose, footer, children }: MobileMenuProps) {
   const dialogProps = useModalDialog(open, onClose);
   const closeMenu = useEffectEvent(onClose);
@@ -57,6 +70,11 @@ function MobileMenu({ open, onClose, footer, children }: MobileMenuProps) {
         "transition-transform duration-300 ease-out starting:open:-translate-x-full motion-reduce:transition-none",
       )}
     >
+      {open && (
+        <Suspense fallback={null}>
+          <CloseOnRouteChange onRouteChange={onClose} />
+        </Suspense>
+      )}
       <div className="flex h-full flex-col">
         <div className="flex h-16 shrink-0 items-center justify-end border-b border-border-default px-padding-small">
           <IconButton
@@ -91,9 +109,7 @@ export function AppShell({
   mainClassName,
   children,
 }: AppShellProps) {
-  const pathname = usePathname();
-  const [menuOpenedAt, setMenuOpenedAt] = useState<string | null>(null);
-  const menuOpen = menuOpenedAt === pathname;
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen flex-col bg-background-lower">
@@ -106,7 +122,7 @@ export function AppShell({
               size="medium"
               aria-label="메뉴 열기"
               aria-expanded={menuOpen}
-              onClick={() => setMenuOpenedAt(pathname)}
+              onClick={() => setMenuOpen(true)}
               className="md:hidden"
             />
           )
@@ -123,7 +139,7 @@ export function AppShell({
       {sidebar && (
         <MobileMenu
           open={menuOpen}
-          onClose={() => setMenuOpenedAt(null)}
+          onClose={() => setMenuOpen(false)}
           footer={menuFooter}
         >
           {sidebar}
