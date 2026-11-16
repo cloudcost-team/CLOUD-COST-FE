@@ -1,6 +1,13 @@
 "use client";
 
-import { useState, type MouseEvent, type ReactNode } from "react";
+import {
+  useEffect,
+  useEffectEvent,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
+import { usePathname } from "next/navigation";
 import { IconButton } from "@/components/ui/IconButton";
 import { useModalDialog } from "@/hooks/useModalDialog";
 import { cn } from "@/lib/cn";
@@ -25,6 +32,17 @@ type MobileMenuProps = {
 
 function MobileMenu({ open, onClose, footer, children }: MobileMenuProps) {
   const dialogProps = useModalDialog(open, onClose);
+  const closeMenu = useEffectEvent(onClose);
+
+  useEffect(() => {
+    if (!open) return;
+    const desktop = window.matchMedia("(min-width: 48rem)");
+    const closeOnDesktop = () => {
+      if (desktop.matches) closeMenu();
+    };
+    desktop.addEventListener("change", closeOnDesktop);
+    return () => desktop.removeEventListener("change", closeOnDesktop);
+  }, [open]);
 
   function closeOnAction(event: MouseEvent<HTMLDivElement>) {
     if ((event.target as HTMLElement).closest("a, button")) onClose();
@@ -73,7 +91,9 @@ export function AppShell({
   mainClassName,
   children,
 }: AppShellProps) {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const [menuOpenedAt, setMenuOpenedAt] = useState<string | null>(null);
+  const menuOpen = menuOpenedAt === pathname;
 
   return (
     <div className="flex min-h-screen flex-col bg-background-lower">
@@ -86,7 +106,7 @@ export function AppShell({
               size="medium"
               aria-label="메뉴 열기"
               aria-expanded={menuOpen}
-              onClick={() => setMenuOpen(true)}
+              onClick={() => setMenuOpenedAt(pathname)}
               className="md:hidden"
             />
           )
@@ -103,7 +123,7 @@ export function AppShell({
       {sidebar && (
         <MobileMenu
           open={menuOpen}
-          onClose={() => setMenuOpen(false)}
+          onClose={() => setMenuOpenedAt(null)}
           footer={menuFooter}
         >
           {sidebar}
