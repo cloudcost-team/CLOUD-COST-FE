@@ -4,13 +4,13 @@
 >
 > 고객 AWS 계정의 리소스를 바꾸는 기능은 제공하지 않으며, AWS 계정이 없는 사용자도 체험 모드로 주요 화면을 둘러볼 수 있습니다.
 
-| 구분                     | 링크                                                             |
-| ------------------------ | ---------------------------------------------------------------- |
-| 서비스 주소              | https://www.cloud-cost.cloud                                     |
-| 발표자료 또는 포스터 PDF |                                                                  |
-| 프로젝트 결과보고서 PDF  |                                                                  |
-| 시연 영상                |                                                                  |
-| 백엔드                   | [CLOUD-COST-BE](https://github.com/cloudcost-team/CLOUD-COST-BE) |
+| 구분                    | 링크                                                             |
+| ----------------------- | ---------------------------------------------------------------- |
+| 서비스 주소             | https://www.cloud-cost.cloud                                     |
+| 포스터                  | [포스터 보기](docs/포스터_cloudcost_임세윤,고경수.png)           |
+| 프로젝트 결과보고서 PDF | [최종보고서 보기](docs/최종보고서_cloudcost_임세윤,고경수.pdf)   |
+| 시연 영상               |                                                                  |
+| 백엔드                  | [CLOUD-COST-BE](https://github.com/cloudcost-team/CLOUD-COST-BE) |
 
 ## Architecture
 
