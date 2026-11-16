@@ -116,7 +116,7 @@ export function LoginScreen() {
               className="flex-1"
               onClick={() => router.push("/demo/login")}
             >
-              무료로 둘러보기
+              계정 없이 둘러보기
             </Button>
           </div>
           {errorMessage && (
