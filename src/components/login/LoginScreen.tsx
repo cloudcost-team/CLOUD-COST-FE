@@ -11,6 +11,7 @@ import { useAuthConfig, useGoogleLogin } from "@/hooks/useAuth";
 import { trackEvent } from "@/lib/analytics";
 import { setAccessToken, takeReturnPath } from "@/lib/authSession";
 import { useProfilePictureStore } from "@/stores/profilePictureStore";
+import { useSessionExpiredStore } from "@/stores/sessionExpiredStore";
 import { GoogleLoginButton } from "./GoogleLoginButton";
 import { LoginIllustration } from "./LoginIllustration";
 
@@ -45,6 +46,7 @@ export function LoginScreen() {
     try {
       const session = await googleLogin.mutateAsync({ code });
       setAccessToken(session.accessToken);
+      useSessionExpiredStore.getState().reset();
       trackEvent("login", { method: "google" });
       const { email, picture } = session.user;
       useProfilePictureStore
