@@ -212,6 +212,14 @@ export const iconPaths = {
       linejoin: "round",
     },
   ],
+  menu: [
+    {
+      d: "M4 5.5H16M4 10H16M4 14.5H16",
+      strokeWidth: 1.8,
+      linecap: "round",
+      linejoin: "round",
+    },
+  ],
   minus: [
     {
       d: "M4.5 10H15.5",

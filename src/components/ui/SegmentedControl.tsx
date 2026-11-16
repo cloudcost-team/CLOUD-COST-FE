@@ -66,8 +66,7 @@ export function SegmentedControl<T extends string>({
     if (nextIndex === null) return;
     event.preventDefault();
     onChange(options[nextIndex].value);
-    const buttons = event.currentTarget.parentElement?.children;
-    (buttons?.[nextIndex] as HTMLElement | undefined)?.focus();
+    buttonRefs.current[nextIndex]?.focus();
   }
 
   return (

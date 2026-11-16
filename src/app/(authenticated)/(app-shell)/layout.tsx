@@ -12,13 +12,16 @@ export default function AppShellLayout({ children }: { children: ReactNode }) {
       headerEnd={
         <>
           <ConnectionSelector />
-          <CurrencyToggle />
+          <div className="max-md:hidden">
+            <CurrencyToggle />
+          </div>
           <NotificationBell />
           <UserMenu />
         </>
       }
       sidebar={<Sidebar />}
-      mainClassName="px-spacing-xlarge pt-spacing-large pb-spacing-xxxlarge"
+      menuFooter={<CurrencyToggle />}
+      mainClassName="px-margin-screen pt-spacing-medium pb-spacing-xxlarge md:px-spacing-xlarge md:pt-spacing-large md:pb-spacing-xxxlarge"
     >
       {children}
     </AppShell>

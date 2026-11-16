@@ -30,7 +30,7 @@ export function Card({
       )}
     >
       {hasHeader && (
-        <div className="flex items-center gap-gap-small">
+        <div className="flex flex-wrap items-center gap-gap-small">
           {title && (
             <h2 id={titleId} className="text-title-small text-text-strong">
               {title}

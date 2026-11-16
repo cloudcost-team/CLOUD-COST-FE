@@ -48,9 +48,9 @@ export function RecommendationCard({
 
   return (
     <Card className="relative flex-row flex-wrap items-center gap-gap-xlarge transition-colors hover:border-border-strong">
-      <div className="flex min-w-0 flex-1 flex-col gap-gap-small">
-        <div className="flex items-center gap-gap-small">
-          <h2 className="truncate text-title-small text-text-strong">
+      <div className="flex min-w-0 flex-1 basis-80 flex-col gap-gap-small">
+        <div className="flex flex-wrap items-center gap-gap-small">
+          <h2 className="max-w-full truncate text-title-small text-text-strong">
             <button
               type="button"
               onClick={onOpenDetail}

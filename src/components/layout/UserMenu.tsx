@@ -86,7 +86,7 @@ export function UserMenu() {
         >
           <InteractionOverlay tone="neutral" />
           <ProfileAvatar pictureUrl={pictureUrl} size={28} className="size-7" />
-          <span className="relative text-label-xsmall-weak text-text-primary">
+          <span className="relative text-label-xsmall-weak text-text-primary max-md:sr-only">
             {name}
           </span>
           <Icon name="chevron-down" className="relative text-icon-secondary" />

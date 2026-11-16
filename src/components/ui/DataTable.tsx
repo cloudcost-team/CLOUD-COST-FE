@@ -37,7 +37,7 @@ export function DataTable<T>({
   return (
     <div
       className={cn(
-        "w-full overflow-x-auto rounded-large border border-border-default bg-background-default",
+        "relative w-full overflow-x-auto rounded-large border border-border-default bg-background-default",
         className,
       )}
     >

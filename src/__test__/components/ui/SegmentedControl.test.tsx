@@ -110,6 +110,16 @@ describe("SegmentedControl", () => {
     );
   });
 
+  it("방향키로 선택한 칸으로 포커스가 이동한다", () => {
+    render(<Controlled initial="month" />);
+
+    fireEvent.keyDown(screen.getByRole("radio", { name: "월" }), {
+      key: "ArrowLeft",
+    });
+
+    expect(screen.getByRole("radio", { name: "주" })).toHaveFocus();
+  });
+
   it("마지막 칸에서 ArrowRight를 누르면 처음 칸으로 순환한다", () => {
     render(<Controlled initial="month" />);
 

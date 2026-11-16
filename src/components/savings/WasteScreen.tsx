@@ -163,6 +163,7 @@ function WasteBody({ source }: { source: DataSource }) {
               value={sort}
               onChange={setSort}
               aria-label="추천 정렬"
+              className="max-w-full overflow-x-auto"
             />
           </div>
           <div className="flex flex-col gap-gap-large">

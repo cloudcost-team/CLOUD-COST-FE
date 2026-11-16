@@ -152,7 +152,7 @@ export function DemoSetupScreen() {
           title="서버 구성"
           meta={`${servers.length} / ${catalog.data?.maxServers ?? 20}`}
         >
-          <div className="overflow-x-auto rounded-large border border-border-default">
+          <div className="relative overflow-x-auto rounded-large border border-border-default">
             <table className="w-full min-w-260 table-fixed text-left">
               <thead className="bg-fill-neutral-weak text-subtext-small text-text-tertiary">
                 <tr>

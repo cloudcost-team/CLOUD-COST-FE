@@ -38,7 +38,7 @@ function ChangeLabel({
     );
   const { current, recommended } = detail.comparison;
   return (
-    <span className="flex items-center gap-gap-small text-label-medium-strong">
+    <span className="flex flex-wrap items-center gap-gap-small text-label-medium-strong">
       <span className="text-text-tertiary">{current.instanceType}</span>
       <span className="text-text-quaternary">→</span>
       <span className="text-text-brand">
@@ -61,7 +61,7 @@ function SavingsSuggestionRow({
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-gap-medium">
         <div className="flex flex-wrap items-center gap-gap-large">
-          <span className="w-45 truncate text-title-small text-text-strong">
+          <span className="w-full truncate text-title-small text-text-strong sm:w-45">
             {item.name ?? item.instanceId}
           </span>
           <span className="min-w-0 flex-1">
