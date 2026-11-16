@@ -11,7 +11,7 @@
 | 서비스 주소             | https://www.cloud-cost.cloud                                     |
 | 포스터                  | [포스터 보기](docs/포스터_cloudcost_임세윤,고경수.png)           |
 | 프로젝트 결과보고서 PDF | [최종보고서 보기](docs/최종보고서_cloudcost_임세윤,고경수.pdf)   |
-| 시연 영상               |                                                                  |
+| 시연 영상               | [YouTube에서 보기](https://www.youtube.com/watch?v=BXqHyHRUO8U)  |
 | 백엔드                  | [CLOUD-COST-BE](https://github.com/cloudcost-team/CLOUD-COST-BE) |
 
 ## Architecture
