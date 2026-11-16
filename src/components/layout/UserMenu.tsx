@@ -10,6 +10,7 @@ import { ProfileAvatar } from "@/components/ui/ProfileAvatar";
 import { useLogout, useMe } from "@/hooks/useAuth";
 import { clearAccessToken } from "@/lib/authSession";
 import { useProfilePictureStore } from "@/stores/profilePictureStore";
+import { useSessionExpiredStore } from "@/stores/sessionExpiredStore";
 
 const PROVIDER_LABELS: Record<string, string> = {
   google: "Google 계정으로 로그인됨",
@@ -33,6 +34,7 @@ export function UserMenu() {
     clearAccessToken();
     useProfilePictureStore.getState().clear();
     queryClient.clear();
+    useSessionExpiredStore.getState().reset();
     router.replace("/login");
   }
 
