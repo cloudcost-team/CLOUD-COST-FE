@@ -1,3 +1,5 @@
+![CloudCost 커버](assets/Cover.png)
+
 # CloudCost Frontend
 
 > AWS 계정을 **읽기 전용 IAM Role**로 연결하면 EC2 사용 시간과 비용(사용 시간 × 온디맨드 단가 기준)을 보여 주고, 불필요한 리소스와 비용 급증, 절감 가능 금액까지 확인할 수 있는 클라우드 비용 관리 서비스의 프론트엔드입니다.
