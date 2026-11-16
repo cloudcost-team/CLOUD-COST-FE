@@ -14,7 +14,7 @@
 
 ## Architecture
 
-![CloudCost 아키텍처](assets/architecture.png)
+![CloudCost 아키텍처](assets/architecture.png.png)
 
 - **FE**: Next.js 16 · React 19 앱을 Vercel(서울 엣지)에서 서비스합니다. `dev`에 푸시하면 Vercel Git 연동으로 자동 배포되고, GitHub Actions는 린트 · 타입 · 포맷 · 테스트 · 빌드를 검사합니다.
 - **API 호출**: 브라우저는 같은 출처의 `/api/v1/*`로 요청하고, Vercel 리라이트(`API_PROXY_TARGET`)가 `api.cloud-cost.cloud`(BE)로 넘깁니다. 같은 출처라 HttpOnly 리프레시 쿠키가 그대로 오갑니다.
